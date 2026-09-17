@@ -88,6 +88,35 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     fun subscriptionInfo(): Pair<String?, String?> = rules.subscriptionInfo()
 
+    // ── 备份与应急恢复 ────────────────────────────────────────────
+    fun listBackups(): List<String> =
+        runCatching { kotlinx.coroutines.runBlocking(Dispatchers.IO) { engine.listBackups() } }
+            .getOrDefault(emptyList())
+
+    fun restoreBackup(path: String, onDone: (String) -> Unit) {
+        viewModelScope.launch {
+            val msg = withContext(Dispatchers.IO) {
+                engine.restoreBackup(path).fold(
+                    onSuccess = { "已恢复备份（IFW 即时生效；pm 状态重启后完全生效）" },
+                    onFailure = { "恢复失败：${it.message}" }
+                )
+            }
+            onDone(msg)
+        }
+    }
+
+    fun clearAllIfw(onDone: (String) -> Unit) {
+        viewModelScope.launch {
+            val msg = withContext(Dispatchers.IO) {
+                engine.clearAllIfw().fold(
+                    onSuccess = { "已清除 $it 个 IFW 规则文件" },
+                    onFailure = { "清除失败：${it.message}" }
+                )
+            }
+            onDone(msg)
+        }
+    }
+
     fun visibleApps(apps: List<ScannedApp>, showSystem: Boolean): List<ScannedApp> =
         apps.filter { showSystem || !it.isSystem }
 

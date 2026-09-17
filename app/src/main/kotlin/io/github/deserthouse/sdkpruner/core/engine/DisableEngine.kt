@@ -9,8 +9,29 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+// IFW XML 生成（纯函数，便于单测）——格式经 Blocker MIT 源码对照验证：
+// <activity block="true" log="true"><component-filter name="pkg/cls"/></activity>
+// provider 不受 IFW 支持，跳过
+object IfwXmlBuilder {
+    fun build(byType: Map<String, List<String>>): String? {
+        val groups = byType.mapNotNull { (type, comps) ->
+            if (comps.isEmpty() || type == "provider") return@mapNotNull null
+            val tag = when (type) {
+                "service" -> "service"
+                "receiver" -> "receiver"
+                else -> "activity"
+            }
+            "  <$tag block=\"true\" log=\"true\">\n" +
+                comps.joinToString("\n") { "    <component-filter name=\"$it\" />" } +
+                "\n  </$tag>"
+        }
+        if (groups.isEmpty()) return null
+        return "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\" ?>\n<rules>\n" +
+            groups.joinToString("\n") + "\n</rules>"
+    }
+}
+
 // M1-R4 禁用引擎：IFW 主 + pm disable 辅，含安全层（备份/恢复/系统白名单）
-// 参考实现：Blocker core/ifw-api（MIT）的 CRUD 语义：按包分文件、空规则删文件
 class DisableEngine(
     private val context: Context,
     private val rules: RuleRepository
@@ -18,84 +39,78 @@ class DisableEngine(
     companion object {
         init { Shell.enableVerboseLogging = false; Shell.setDefaultBuilder(Shell.Builder.create().setTimeout(10)) }
 
-        // 系统/框架包白名单（M1 硬拦截，绝不允许写入任何规则；数据底座见 blocker-general-rules components/）
+        // 系统/框架包白名单（M1 硬拦截；数据底座见 blocker-general-rules components/）
         val SYSTEM_PREFIXES = listOf(
             "android", "com.android.", "com.google.android.", "androidx.",
             "com.android.internal.", "miui", "com.miui.", "com.samsung.",
             "com.huawei.", "com.hihonor.", "com.oplus.", "com.coloros.",
-            "com.vivo.", "com.xiaomi.", "com.tencent.android.tpush.", "org.chromium."
+            "com.vivo.", "com.xiaomi.", "org.chromium."
         )
 
         fun isForbidden(packageName: String): Boolean =
             packageName in SYSTEM_PREFIXES || SYSTEM_PREFIXES.any { packageName.startsWith(it) }
 
         private fun ifwPath(pkg: String) = "/data/system/ifw/$pkg.xml"
+        private const val IFW_DIR = "/data/system/ifw"
+        private const val PKG_RESTRICTIONS = "/data/system/users/0/package-restrictions.xml"
     }
 
-    // ── 安全层：操作前全量备份 ─────────────────────────────────────
+    // ── 安全层：操作前全量备份（IFW 规则目录 + pm 组件限制状态，单个 tar 归档） ──
     suspend fun backup(): Result<String> = withContext(Dispatchers.IO) {
         runCatching {
             val dir = "${context.filesDir.absolutePath}/backups"
             Shell.cmd("mkdir -p $dir").exec()
             val ts = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date())
             val out = "$dir/backup_$ts.tar.gz"
-            // IFW 规则 + pm 组件限制状态一并打包（root 可读）
-            Shell.cmd(
-                "tar -czf $out -C / data/system/ifw 2>/dev/null; " +
-                "cp /data/system/users/0/package-restrictions.xml $dir/_pr_$ts.xml 2>/dev/null; " +
-                "tar -czf $out -C $dir _pr_$ts.xml 2>/dev/null || true; rm -f $dir/_pr_$ts.xml"
+            // 单次归档两个路径（-C / 用相对路径），失败则整体报错——不能静默丢一半
+            val r = Shell.cmd(
+                "tar -czf $out -C / $IFW_DIR $PKG_RESTRICTIONS"
             ).exec()
-            if (Shell.cmd("test -f $out").exec().isSuccess) out
-            else throw IllegalStateException("backup file not created (root unavailable?)")
+            val has = Shell.cmd("test -s $out").exec().isSuccess
+            check(has) { "backup not created (tar rc=${r.code}, root ok?): ${r.err}" }
+            out
         }
     }
 
-    // ── 安全层：一键清除全部 IFW 规则（紧急恢复）──────────────────
-    suspend fun clearAllIfw(): Result<Int> = withContext(Dispatchers.IO) {
-        runCatching {
-            val res = Shell.cmd("ls /data/system/ifw/*.xml 2>/dev/null").exec()
-            val files = res.out.toList()
-            if (files.isNotEmpty()) Shell.cmd("rm -f ${files.joinToString(" ")}").exec()
-            files.size
-        }
-    }
-
+    // ── 安全层：恢复备份（tar 解包回原路径 + 归属/上下文修复） ─────
     suspend fun restoreBackup(backupPath: String): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
-            Shell.cmd("tar -xzf $backupPath -C /").exec()
+            val r = Shell.cmd(
+                "tar -xzf $backupPath -C / && " +
+                "chown -R system:system $IFW_DIR && chmod 644 $IFW_DIR/*.xml; " +
+                "chown system:system $PKG_RESTRICTIONS && restorecon -R $IFW_DIR $PKG_RESTRICTIONS"
+            ).exec()
+            check(r.isSuccess) { "restore failed: ${r.err}" }
             Unit
         }
     }
 
     fun listBackups(): List<String> =
         Shell.cmd("ls ${context.filesDir.absolutePath}/backups/backup_*.tar.gz 2>/dev/null")
-            .exec().out.toList()
+            .exec().out.toList().sortedDescending()
+
+    // ── 安全层：一键清除全部 IFW 规则（紧急恢复） ─────────────────
+    suspend fun clearAllIfw(): Result<Int> = withContext(Dispatchers.IO) {
+        runCatching {
+            val res = Shell.cmd("ls $IFW_DIR/*.xml 2>/dev/null").exec()
+            val files = res.out.toList()
+            if (files.isNotEmpty()) Shell.cmd("rm -f ${files.joinToString(" ")}").exec()
+            files.size
+        }
+    }
 
     // ── IFW 主引擎 ────────────────────────────────────────────────
-    // IFW 真实格式（经 Blocker 对照验证）：<activity block="true" log="true"><component-filter name="pkg/cls"/></activity>
-    // 注意不是 <activity-blocks> 容器语法；provider 不受 IFW 支持（Blocker 同样跳过）
     suspend fun applyIfw(pkg: String, byType: Map<String, List<String>>): Result<Int> =
         withContext(Dispatchers.IO) {
             runCatching {
                 require(!isForbidden(pkg)) { "system app blocked by whitelist: $pkg" }
-                val groups = byType.mapNotNull { (type, comps) ->
-                    if (comps.isEmpty() || type == "provider") return@mapNotNull null
-                    val tag = when (type) {
-                        "service" -> "service"
-                        "receiver" -> "receiver"
-                        else -> "activity"
-                    }
-                    "  <$tag block=\"true\" log=\"true\">\n" +
-                        comps.joinToString("\n") { "    <component-filter name=\"$pkg/$it\" />" } +
-                        "\n  </$tag>"
-                }
-                if (groups.isEmpty()) return@runCatching 0
-                val xml = "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\" ?>\n<rules>\n" +
-                    groups.joinToString("\n") + "\n</rules>"
+                val named = byType.mapValues { (_, comps) -> comps.map { "$pkg/$it" } }
+                val xml = IfwXmlBuilder.build(named)
+                    ?: return@runCatching 0
                 val tmp = "${context.cacheDir.absolutePath}/ifw_$pkg.xml"
                 java.io.File(tmp).writeText(xml)
                 val r = Shell.cmd(
-                    "mkdir -p /data/system/ifw && cp $tmp ${ifwPath(pkg)} && " +
+                    "mkdir -p $IFW_DIR && cp $tmp ${ifwPath(pkg)} && " +
                     "chmod 644 ${ifwPath(pkg)} && restorecon ${ifwPath(pkg)} 2>/dev/null; rm -f $tmp"
                 ).exec()
                 check(r.isSuccess) { "ifw write failed: ${r.err}" }

@@ -36,6 +36,15 @@
             </intent-filter>
         </receiver>
 
+        <receiver
+            android:name=".core.engine.RecoveryReceiver"
+            android:exported="true"
+            tools:ignore="ExportedReceiver">
+            <intent-filter>
+                <action android:name="io.github.deserthouse.sdkpruner.action.CLEAR_IFW" />
+            </intent-filter>
+        </receiver>
+
         <service
             android:name=".core.engine.RuleGuardService"
             android:exported="false"

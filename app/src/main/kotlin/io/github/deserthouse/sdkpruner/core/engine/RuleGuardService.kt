@@ -8,13 +8,18 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.IBinder
 import android.util.Log
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 // M3-R8：规则守护前台服务——保持进程活跃，使包安装/更新广播可投递
 // （Android 15+ 对 cached 进程的 manifest receiver 强制跳过：Background execution not allowed）
-// 动态注册 receiver 收 PACKAGE_ADDED/REPLACED，自动增量重应用已应用规则
+// 动态注册两个 receiver：包事件（自动重应用）+ 应急清除（无 data scheme，须独立 filter）
 class RuleGuardService : Service() {
 
-    private val receiver = object : BroadcastReceiver() {
+    private lateinit var engine: DisableEngine
+
+    private val packageReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             val pkg = intent.data?.schemeSpecificPart ?: return
             if (AutoReapply.shouldHandle(context, pkg)) {
@@ -24,14 +29,38 @@ class RuleGuardService : Service() {
         }
     }
 
+    private val recoveryReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (!intent.getBooleanExtra(RecoveryReceiver.EXTRA_CONFIRM, false)) {
+                Log.w("SdkPruner", "guard: recovery missing confirm, ignored")
+                return
+            }
+            Log.w("SdkPruner", "guard: recovery clearing all IFW")
+            CoroutineScope(Dispatchers.IO).launch {
+                val n = engine.clearAllIfw().getOrDefault(-1)
+                Log.w("SdkPruner", "guard: recovery cleared $n IFW files")
+            }
+        }
+    }
+
     override fun onCreate() {
         super.onCreate()
-        val filter = IntentFilter().apply {
-            addAction(Intent.ACTION_PACKAGE_ADDED)
-            addAction(Intent.ACTION_PACKAGE_REPLACED)
-            addDataScheme("package")
-        }
-        registerReceiver(receiver, filter)
+        engine = DisableEngine(this, io.github.deserthouse.sdkpruner.core.rules.RuleRepository(this))
+        // 系统 受保护广播 → NOT_EXPORTED；应急清除需外部 adb 触发 → RECEIVER_EXPORTED
+        registerReceiver(
+            packageReceiver,
+            IntentFilter().apply {
+                addAction(Intent.ACTION_PACKAGE_ADDED)
+                addAction(Intent.ACTION_PACKAGE_REPLACED)
+                addDataScheme("package")
+            },
+            Context.RECEIVER_NOT_EXPORTED
+        )
+        registerReceiver(
+            recoveryReceiver,
+            IntentFilter(RecoveryReceiver.ACTION),
+            Context.RECEIVER_EXPORTED
+        )
         startForeground(NOTIFY_ID, buildNotification())
     }
 
@@ -40,14 +69,13 @@ class RuleGuardService : Service() {
             this, 0, Intent(this, io.github.deserthouse.sdkpruner.MainActivity::class.java),
             android.app.PendingIntent.FLAG_IMMUTABLE
         )
-        val notification = Notification.Builder(this, CHANNEL_ID)
+        return Notification.Builder(this, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_menu_manage)
             .setContentTitle("SDK-Pruner")
             .setContentText("规则守护运行中：应用更新后自动重应用已选规则")
             .setOngoing(true)
             .setContentIntent(pi)
             .build()
-        return notification
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int = START_STICKY
@@ -55,7 +83,8 @@ class RuleGuardService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onDestroy() {
-        unregisterReceiver(receiver)
+        unregisterReceiver(packageReceiver)
+        unregisterReceiver(recoveryReceiver)
         super.onDestroy()
     }
 

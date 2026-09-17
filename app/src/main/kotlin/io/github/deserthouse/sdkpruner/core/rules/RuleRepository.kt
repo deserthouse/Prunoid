@@ -29,10 +29,7 @@ class RuleRepository(context: Context) {
 
     /** 重建合并视图与索引（订阅变更后调用） */
     fun rebuild() {
-        val subById = subscription.loadSubscribed().associateBy { it.id }
-        val rules = if (subById.isEmpty()) snapshot.sdks
-        else snapshot.sdks.map { subById[it.id] ?: it } +
-            subById.values.filter { sub -> snapshot.sdks.none { it.id == sub.id } }
+        val rules = RuleMerger.merge(snapshot.sdks, subscription.loadSubscribed())
         effectiveRules = rules
         rulesById = rules.associateBy { it.id }
         val m = HashMap<String, MutableList<String>>()

@@ -19,7 +19,10 @@ import io.github.deserthouse.sdkpruner.core.scanner.ScannedApp
 fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, modifier: Modifier = Modifier) {
     val st by vm.state.collectAsState()
     var showSubscribe by remember { mutableStateOf(false) }
+    var showRecovery by remember { mutableStateOf(false) }
     var subMsg by remember { mutableStateOf<String?>(null) }
+    var query by remember { mutableStateOf("") }
+    val pm = androidx.compose.ui.platform.LocalContext.current.packageManager
     val (subUrl, subAt) = remember(st) { vm.subscriptionInfo() }
     Column(modifier.fillMaxSize()) {
         Row(
@@ -46,6 +49,7 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, modifier: Modi
             )
             TextButton(onClick = { showSubscribe = true }) { Text(if (subUrl == null) "订阅源" else "更换") }
             if (subUrl != null) TextButton(onClick = { vm.unsubscribe { subMsg = it } }) { Text("退订") }
+            TextButton(onClick = { showRecovery = true }) { Text("应急恢复") }
         }
         subMsg?.let {
             Text(it, Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.primary)
@@ -63,12 +67,44 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, modifier: Modi
                 }
             )
         }
-        val apps = remember(st.apps, st.showSystem) { st.apps.filter { st.showSystem || !it.isSystem } }
+        if (showRecovery) {
+            RecoveryDialog(
+                vm = vm,
+                onMessage = { subMsg = it },
+                onDismiss = { showRecovery = false }
+            )
+        }
+        OutlinedTextField(
+            value = query,
+            onValueChange = { query = it },
+            singleLine = true,
+            placeholder = { Text("搜索 app 名 / 包名 / SDK 名") },
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)
+        )
+        val apps = remember(st.apps, st.showSystem, query) {
+            st.apps
+                .filter { st.showSystem || !it.isSystem }
+                .filter {
+                    query.isBlank() || it.label.contains(query, true) ||
+                        it.packageName.contains(query, true) ||
+                        it.matchedSdks.any { s -> s.name.contains(query, true) }
+                }
+        }
         LazyColumn(Modifier.weight(1f).fillMaxWidth()) {
             items(apps, key = { it.packageName }) { app ->
+                val icon = remember(app.packageName) {
+                    runCatching { pm.getApplicationIcon(app.packageName) }.getOrNull()
+                }
                 ListItem(
                     headlineContent = { Text(app.label.ifEmpty { app.packageName }) },
                     supportingContent = { Text(app.packageName) },
+                    leadingContent = {
+                        coil.compose.AsyncImage(
+                            model = icon,
+                            contentDescription = null,
+                            modifier = Modifier.size(40.dp)
+                        )
+                    },
                     trailingContent = {
                         if (app.matchedSdks.isNotEmpty()) AssistChip(
                             onClick = { onOpen(app) },
@@ -107,6 +143,61 @@ fun SubscribeDialog(initial: String, onDismiss: () -> Unit, onConfirm: (String) 
             ) { Text("订阅") }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } }
+    )
+}
+
+@Composable
+fun RecoveryDialog(vm: AppViewModel, onMessage: (String) -> Unit, onDismiss: () -> Unit) {
+    var selected by remember { mutableStateOf<String?>(null) }
+    var confirmClear by remember { mutableStateOf(false) }
+    val backups = remember { vm.listBackups() }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("备份与应急恢复") },
+        text = {
+            Column {
+                if (backups.isEmpty()) {
+                    Text("暂无备份（应用规则时会自动创建）")
+                } else {
+                    Text("恢复点（新→旧）：", style = MaterialTheme.typography.bodySmall)
+                    backups.take(10).forEach { path ->
+                        val name = path.substringAfterLast('/')
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(
+                                selected = selected == path,
+                                onClick = { selected = path }
+                            )
+                            Text(name, style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "紧急通道（UI 外可用）：\nadb shell am broadcast -a io.github.deserthouse.sdkpruner.action.CLEAR_IFW --ez confirm true",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.tertiary
+                )
+            }
+        },
+        confirmButton = {
+            Row {
+                TextButton(
+                    onClick = { confirmClear = true },
+                    enabled = !confirmClear
+                ) { Text(if (confirmClear) "再点一次确认" else "清除全部 IFW") }
+                Spacer(Modifier.width(4.dp))
+                TextButton(
+                    onClick = {
+                        selected?.let { p ->
+                            vm.restoreBackup(p) { onMessage(it) }
+                            onDismiss()
+                        }
+                    },
+                    enabled = selected != null
+                ) { Text("恢复所选") }
+            }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("关闭") } }
     )
 }
 
