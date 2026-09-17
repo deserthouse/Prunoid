@@ -39,13 +39,15 @@ FUCKAD_ROOTS = [
 ]
 
 CAT_RULES = [
-    (re.compile(r"广告|Ad[s]? SDK|Ads|Advertising|Monetization", re.I), "ads"),
-    (re.compile(r"推送|Push|Notification|Message|messaging|GCM|FCM", re.I), "push"),
-    (re.compile(r"统计|分析|Analytics|Statistics|Tracking|Tracker|Attribution|测量", re.I), "analytics"),
-    (re.compile(r"崩溃|Crash|性能|Performance|APM|监控|Monitoring", re.I), "quality"),
-    (re.compile(r"登录|分享|Share|Login|Account|支付|Pay", re.I), "social_or_pay"),
-    (re.compile(r"地图|Location|定位|Map", re.I), "maps"),
-    (re.compile(r"云|存储|Storage|数据库|Database|下载|Download|Update", re.I), "infra"),
+    (re.compile(r"广告|Ad[s]? SDK|Ads$|Advertising|Monetization|聚合|联盟广告|穿山甲|优量汇|百青藤|开屏|Pangle|CSJ|GroMore|AdMob|AdColony|Inmobi|IronSource|Vungle|Mintegral|Mbridge|AppLovin|Unity Ads|Sigmob|TopOn|AnyThink|TradPlus|Windmill|AdsWizz|SmartAd|Adform|Adaptive|Mediation", re.I), "ads"),
+    (re.compile(r"推送|Push|JPush|极光|个推|Getui|信鸽|XG Push|MiPush|小米推送|HMS Push|FCM|GCM|OneSignal|Pushwoosh|Airship|巴法云|友盟推送|TPush|云推送|MCS", re.I), "push"),
+    (re.compile(r"统计|分析|Analytics|Statistics|Tracking|Tracker|Attribution|测量|埋点|AppsFlyer|Adjust|Branch|Kochava|Sensors|神策|GrowingIO|友盟|Umeng|Flurry|Amplitude|Mixpanel|Braze|CleverTap|Localytics|mParticle|Segment|Tealium|Comscore|Nielsen|Appsflyer|数说|TalkingData|热云|Tracking", re.I), "analytics"),
+    (re.compile(r"崩溃|Crash|性能|Performance|APM|监控|Monitoring|Bugly|Crashlytics|Sentry|Fresco|FIR|Bugtags|Instabug|xCrash|Matrix|APM", re.I), "quality"),
+    (re.compile(r"登录|分享|Share|Login|Account|OAuth|支付|Pay|微信|微博|QQ互联|新浪|支付宝|银联|OneTap|Auth", re.I), "social_or_pay"),
+    (re.compile(r"地图|Location|定位|Map|BaiduMap|AMap|高德|腾讯地图|Geofence|Beacon|蓝牙|BLE|NFC|Wi-Fi 扫描", re.I), "maps"),
+    (re.compile(r"云|存储|Storage|数据库|Database|下载|Download|Update|升级|热修|Hotfix|Sophix|Tinker|Robust|网络|Network|OkHttp|Retrofit|Volley|Cronet|加速|CDN|直播|Live|播放器|Player|RTC|IM|推送通道|WebView|Chaquopy|Python", re.I), "infra"),
+    (re.compile(r"安全|风控|Security|Risk|反作弊|Anti-|加固|Bangcle|360加固|梆梆|爱加密|Verify|Device ID|设备指纹|Fingerprint|Shumei|数美|同盾|TongDun", re.I), "security"),
+    (re.compile(r"androidx|Jetpack|Kotlin|Coroutines|Google Play|Play Services|Guava|gRPC|Protobuf|Firebase(?! Analytics)|WorkManager|Room|Compose|Lifecycle|Startup|Profile", re.I), "framework"),
 ]
 
 def categorize(name):

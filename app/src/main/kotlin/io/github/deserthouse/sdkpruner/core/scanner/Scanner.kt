@@ -23,7 +23,8 @@ data class SdkHit(
     val componentTypes: Map<String, String> = emptyMap()  // 组件全类名 -> 类型（activity/service/receiver）
 )
 
-// M1-R3 扫描器：PackageManager 枚举第三方 app + 四类组件，按规则匹配 SDK
+// M1-R3 扫描器：PackageManager 枚举第三方 app + 四类组件，三路匹配：
+// ① app 包名前缀 ② 组件全类名精确锚点（LCR）③ 组件类名前缀（blocker/oF2pks 的 searchKeyword 语义）
 class Scanner(
     context: Context,
     private val rules: RuleRepository
@@ -31,9 +32,8 @@ class Scanner(
     private val pm = context.packageManager
 
     private val componentIndex: Map<String, Pair<String, String>> by lazy {
-        // 组件全类名 -> (规则id, 类型)；跨 app 直接查表
         val m = HashMap<String, Pair<String, String>>()
-        for (r in rules.snapshot.sdks) {
+        for (r in rules.effectiveRules) {
             for (c in r.components) {
                 if (c.type != "native") m[c.`class`] = r.id to c.type
             }
@@ -41,20 +41,22 @@ class Scanner(
         m
     }
 
+    private val prefixMatcher: PrefixMatcher by lazy { PrefixMatcher(rules.effectiveRules) }
+
     fun scanAll(): List<ScannedApp> {
         val out = mutableListOf<ScannedApp>()
         val flags = PackageManager.GET_ACTIVITIES or PackageManager.GET_SERVICES or
             PackageManager.GET_RECEIVERS or PackageManager.GET_PROVIDERS
         for (app in pm.getInstalledApplications(PackageManager.GET_META_DATA)) {
             if (app.packageName == "io.github.deserthouse.sdkpruner") continue
-            val comps: List<String> = try {
+            val comps: List<Pair<String, String>> = try {
                 val pkg = pm.getPackageInfo(app.packageName, flags)
-                val names = mutableListOf<String>()
-                pkg.activities?.let { names.addAll(it.map { a -> a.name }) }
-                pkg.services?.let { names.addAll(it.map { s -> s.name }) }
-                pkg.receivers?.let { names.addAll(it.map { r -> r.name }) }
-                pkg.providers?.let { names.addAll(it.map { p -> p.name }) }
-                names
+                val pairs = mutableListOf<Pair<String, String>>()
+                pkg.activities?.let { names -> names.forEach { pairs.add(it.name to "activity") } }
+                pkg.services?.let { names -> names.forEach { pairs.add(it.name to "service") } }
+                pkg.receivers?.let { names -> names.forEach { pairs.add(it.name to "receiver") } }
+                pkg.providers?.let { names -> names.forEach { pairs.add(it.name to "provider") } }
+                pairs
             } catch (_: Exception) {
                 emptyList()
             }
@@ -63,27 +65,37 @@ class Scanner(
         return out.sortedWith(compareByDescending<ScannedApp> { it.matchedSdks.size }.thenBy { it.label })
     }
 
-    fun scanOne(app: ApplicationInfo, components: List<String>): ScannedApp {
+    fun scanOne(app: ApplicationInfo, components: List<Pair<String, String>>): ScannedApp {
         val hits = LinkedHashMap<String, SdkHit>()
-        // 1) 包名前缀匹配（最长前缀优先展示）
-        for (r in rules.match(app.packageName)) {
-            hits[r.id] = SdkHit(r.id, r.name, r.category, r.safety(), emptyList())
-        }
-        // 2) 组件全类名锚点匹配（记录类型，供 IFW 分组写入）
-        for (cn in components) {
-            componentIndex[cn]?.let { (rid, type) ->
-                val r = rules.rule(rid) ?: return@let
-                val prev = hits[rid]
-                if (prev == null) {
-                    hits[rid] = SdkHit(rid, r.name, r.category, r.safety(), listOf(cn), mapOf(cn to type))
-                } else if (cn !in prev.matchedComponents) {
-                    hits[rid] = prev.copy(
-                        matchedComponents = prev.matchedComponents + cn,
-                        componentTypes = prev.componentTypes + (cn to type)
-                    )
-                }
+        fun addHit(rid: String, cn: String?, type: String?) {
+            val r = rules.rule(rid) ?: return
+            val prev = hits[rid]
+            when {
+                prev == null -> hits[rid] = SdkHit(
+                    rid, r.name, r.category, r.safety(),
+                    listOfNotNull(cn), if (cn != null && type != null) mapOf(cn to type) else emptyMap()
+                )
+                cn != null && cn !in prev.matchedComponents -> hits[rid] = prev.copy(
+                    matchedComponents = prev.matchedComponents + cn,
+                    componentTypes = prev.componentTypes + (cn to (type ?: prev.componentTypes[cn].orEmpty()))
+                )
             }
         }
+
+        // ① app 包名前缀匹配（app 本身就是 SDK 附属包的罕见场景）
+        for (r in rules.match(app.packageName)) addHit(r.id, null, null)
+
+        for ((cn, manifestType) in components) {
+            // ② 精确锚点（LCR 组件规则；anchor 携带上游标注类型）
+            val anchor = componentIndex[cn]
+            if (anchor != null) {
+                addHit(anchor.first, cn, anchor.second)
+                continue
+            }
+            // ③ 前缀匹配（blocker/oF2pks searchKeyword 语义，类型取 manifest 实际值）
+            for (rid in prefixMatcher.match(cn)) addHit(rid, cn, manifestType)
+        }
+
         return ScannedApp(
             packageName = app.packageName,
             label = app.loadLabel(pm).toString(),

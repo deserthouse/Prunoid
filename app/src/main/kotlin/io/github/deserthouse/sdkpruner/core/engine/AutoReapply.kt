@@ -30,6 +30,7 @@ object AutoReapply {
             val scanner = io.github.deserthouse.sdkpruner.core.scanner.Scanner(context, rules)
             val appInfo = context.packageManager.getApplicationInfo(pkg, 0)
             val comps = enumerateComponents(context, pkg)
+            val compNames = comps.map { it.first }.toSet()
             val scanned = scanner.scanOne(appInfo, comps)
             // 新目标：当前规则下的 CAUTION+/SAFE 组件
             val byType = scanned.matchedSdks
@@ -39,7 +40,7 @@ object AutoReapply {
                 .toMutableMap()
             // 并集：旧记录组件若仍存在于最新 manifest 则保留（规则退订后用户已应用的选择不丢）
             val present = entry.types.entries
-                .filter { it.key in comps.toSet() }
+                .filter { it.key in compNames }
                 .groupBy({ it.value }, { it.key })
             for ((type, classes) in present) {
                 val merged = (byType[type].orEmpty() + classes).distinct()
@@ -58,7 +59,7 @@ object AutoReapply {
         Unit
     }
 
-    fun enumerateComponents(context: Context, pkg: String): List<String> {
+    fun enumerateComponents(context: Context, pkg: String): List<Pair<String, String>> {
         val pm = context.packageManager
         val flags = PackageManager.GET_ACTIVITIES or
             PackageManager.GET_SERVICES or
@@ -66,9 +67,9 @@ object AutoReapply {
         return runCatching {
             buildList {
                 pm.getPackageInfo(pkg, flags)?.let {
-                    it.activities?.let { a -> addAll(a.map { x -> x.name }) }
-                    it.services?.let { s -> addAll(s.map { x -> x.name }) }
-                    it.receivers?.let { r -> addAll(r.map { x -> x.name }) }
+                    it.activities?.let { a -> a.forEach { add(it.name to "activity") } }
+                    it.services?.let { s -> s.forEach { add(it.name to "service") } }
+                    it.receivers?.let { r -> r.forEach { add(it.name to "receiver") } }
                 }
             }
         }.getOrDefault(emptyList())
