@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -45,6 +46,7 @@ import io.github.deserthouse.prunoid.core.engine.DisableEngine
 import io.github.deserthouse.prunoid.core.engine.Engine
 import io.github.deserthouse.prunoid.core.rules.Safety
 import io.github.deserthouse.prunoid.core.scanner.ScannedApp
+import io.github.deserthouse.prunoid.core.scanner.SdkHit
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -477,19 +479,8 @@ fun SubscribeDialog(initial: String, onDismiss: () -> Unit, onConfirm: (String) 
 @Composable
 fun RecoveryDialog(vm: AppViewModel, onMessage: (String) -> Unit, onDismiss: () -> Unit) {
     var selected by remember { mutableStateOf<String?>(null) }
-    var confirmClear by remember { mutableStateOf(false) }
-    var confirmRestore by remember { mutableStateOf(false) }
     val backups = remember { vm.listBackups() }
-
-    // 双击确认 3 秒未完成自动复位
-    LaunchedEffect(confirmClear, confirmRestore) {
-        if (confirmClear || confirmRestore) {
-            kotlinx.coroutines.delay(3000)
-            confirmClear = false
-            confirmRestore = false
-        }
-    }
-
+    val busy = vm.state.collectAsState().value.busy
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("备份与应急恢复") },
@@ -536,28 +527,26 @@ fun RecoveryDialog(vm: AppViewModel, onMessage: (String) -> Unit, onDismiss: () 
         },
         confirmButton = {
             Row {
-                TextButton(
-                    onClick = {
-                        if (confirmClear) {
-                            confirmClear = false
-                            vm.clearAllIfw { onMessage(it) }
-                        } else confirmClear = true
-                    },
-                    enabled = !vm.state.collectAsState().value.busy
-                ) { Text(if (confirmClear) "再点一次确认清除" else "清除全部 IFW") }
+                // 清除全部 IFW：最高危级 → 倒计时锁定（Thanox 式）
+                CountdownConfirmTextButton(
+                    label = "清除全部 IFW",
+                    armedLabel = "确认清除全部",
+                    enabled = !busy,
+                    onConfirm = { vm.clearAllIfw { onMessage(it) } }
+                )
                 Spacer(Modifier.width(4.dp))
-                TextButton(
-                    onClick = {
+                // 恢复所选：倒计时锁定
+                CountdownConfirmTextButton(
+                    label = "恢复所选",
+                    armedLabel = "确认恢复所选",
+                    enabled = selected != null && !busy,
+                    onConfirm = {
                         selected?.let { p ->
-                            if (confirmRestore) {
-                                confirmRestore = false
-                                vm.restoreBackup(p) { onMessage(it) }
-                                onDismiss()
-                            } else confirmRestore = true
+                            vm.restoreBackup(p) { onMessage(it) }
+                            onDismiss()
                         }
-                    },
-                    enabled = selected != null && !vm.state.collectAsState().value.busy
-                ) { Text(if (confirmRestore) "再点一次确认恢复" else "恢复所选") }
+                    }
+                )
             }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("关闭") } }
@@ -581,6 +570,8 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
     var selected by remember(app.packageName) { mutableStateOf(defaultSelected) }
     // 分类筛选：null = 全部
     var catFilter by remember(app.packageName) { mutableStateOf<String?>(null) }
+    // SDK 档案卡弹层（Blocker/LibChecker 模式）：点卡片打开
+    var sheetFor by remember { mutableStateOf<SdkHit?>(null) }
     val appliedEntry = st.applied[app.packageName]
     // 安全分层：白名单命中（框架/核心）= 硬拦截；其余系统 app = 警告后可操作
     val framework = DisableEngine.isForbidden(app.packageName)
@@ -727,6 +718,21 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                 }
                             }
                         }
+                        // 已检出 SDK 快捷条（LibChecker 式）：点头像直达档案卡
+                        if (app.matchedSdks.isNotEmpty()) {
+                            Spacer(Modifier.height(8.dp))
+                            Row(
+                                Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                app.matchedSdks.forEach { hit ->
+                                    SdkMonogram(
+                                        hit.ruleId, hit.name,
+                                        Modifier.clickable { sheetFor = hit }
+                                    )
+                                }
+                            }
+                        }
                         appliedEntry?.let { e ->
                             Spacer(Modifier.height(6.dp))
                             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -818,155 +824,39 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                 }
             }
             items(visibleSdks, key = { it.ruleId }) { hit ->
-                var expanded by remember(hit.ruleId) { mutableStateOf(false) }
-                val sideEffect = remember(hit.ruleId) { vm.ruleSideEffect(hit.ruleId) }
                 val checked = hit.ruleId in selected
-                val rot by animateFloatAsState(if (expanded) 180f else 0f, label = "chevron")
-                // 整卡 = 展开/折叠按钮；仅左侧复选框独立点选
+                // 整卡 = 打开 SDK 档案卡弹层；仅左侧复选框独立点选
                 Card(
-                    onClick = { expanded = !expanded },
+                    onClick = { sheetFor = hit },
                     Modifier
                         .fillMaxWidth()
-                        .animateContentSize()
+                        .animateItem()
                 ) {
-                    Column(Modifier.padding(14.dp)) {
-                        Row(
-                            Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Checkbox(
-                                checked = checked,
-                                onCheckedChange = { on ->
-                                    selected = if (on) selected + hit.ruleId else selected - hit.ruleId
-                                }
-                            )
-                            SdkMonogram(hit.ruleId, hit.name, Modifier.padding(end = 8.dp))
-                            Column(Modifier.weight(1f)) {
-                                Text(hit.name, style = MaterialTheme.typography.titleSmall)
-                                Text(
-                                    categoryLabel(hit.category),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                    Row(
+                        Modifier.padding(horizontal = 10.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Checkbox(
+                            checked = checked,
+                            onCheckedChange = { on ->
+                                selected = if (on) selected + hit.ruleId else selected - hit.ruleId
                             }
-                            SafetyBadge(hit.safety)
-                            Icon(
-                                Icons.Outlined.ExpandMore,
-                                contentDescription = if (expanded) "收起" else "展开",
-                                modifier = Modifier
-                                    .padding(start = 6.dp)
-                                    .rotate(rot)
-                            )
-                        }
-                        if (expanded) {
-                            Spacer(Modifier.height(8.dp))
-                            HorizontalDivider()
-                            Spacer(Modifier.height(8.dp))
-                            // 规则元信息：开发者 / 置信度 / 来源数（说明文本）
-                            val info = remember(hit.ruleId) { vm.ruleInfo(hit.ruleId) }
-                            if (info != null) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                ) {
-                                    val dev = info.devTeam.ifBlank { info.company }
-                                    if (dev.isNotBlank()) {
-                                        Text("开发者：$dev", style = MaterialTheme.typography.labelMedium)
-                                    }
-                                    Text(
-                                        "置信度：${confidenceLabel(info.confidence)}",
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                    if (info.sources.isNotEmpty()) {
-                                        Text(
-                                            "来源 ×${info.sources.size}",
-                                            style = MaterialTheme.typography.labelMedium,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                }
-                                if (info.description.isNotBlank()) {
-                                    Spacer(Modifier.height(6.dp))
-                                    Text(
-                                        info.description,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                                if (info.sourceLink.isNotBlank()) {
-                                    Spacer(Modifier.height(4.dp))
-                                    Text(
-                                        info.sourceLink,
-                                        fontFamily = FontFamily.Monospace,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.tertiary,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                }
-                                Spacer(Modifier.height(6.dp))
-                            }
-                            // 命中组件按类型分组（数据源 componentTypes，缺失时按类名后缀兜底）
-                            val groups = remember(hit.ruleId) {
-                                hit.matchedComponents.groupBy { cn ->
-                                    hit.componentTypes[cn] ?: when {
-                                        cn.endsWith("Activity") -> "activity"
-                                        cn.endsWith("Service") -> "service"
-                                        cn.endsWith("Receiver") -> "receiver"
-                                        cn.endsWith("Provider") -> "provider"
-                                        else -> "other"
-                                    }
-                                }
-                            }
-                            val typeOrder = listOf("activity", "service", "receiver", "provider", "other")
+                        )
+                        SdkMonogram(hit.ruleId, hit.name, Modifier.padding(end = 8.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(hit.name, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             Text(
-                                "命中组件 ${hit.matchedComponents.size}",
-                                style = MaterialTheme.typography.labelMedium
+                                categoryLabel(hit.category),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                            typeOrder.forEach { t ->
-                                val comps = groups[t] ?: return@forEach
-                                Spacer(Modifier.height(6.dp))
-                                Surface(
-                                    color = MaterialTheme.colorScheme.secondaryContainer,
-                                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                                    shape = RoundedCornerShape(50)
-                                ) {
-                                    Text(
-                                        "${typeLabel(t)} × ${comps.size}",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                                    )
-                                }
-                                comps.forEach { c ->
-                                    Text(
-                                        c,
-                                        fontFamily = FontFamily.Monospace,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
                         }
-                        sideEffect
-                            ?.takeIf { it.isNotBlank() && !it.equals("unknown", true) && it != "未知" }
-                            ?.let {
-                                Spacer(Modifier.height(6.dp))
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        Icons.Outlined.Info,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(13.dp),
-                                        tint = MaterialTheme.colorScheme.tertiary
-                                    )
-                                    Spacer(Modifier.width(4.dp))
-                                    Text(
-                                        "影响：$it",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.tertiary
-                                    )
-                                }
-                            }
+                        SafetyBadge(hit.safety)
+                        Icon(
+                            Icons.Outlined.ExpandMore,
+                            contentDescription = "详情",
+                            modifier = Modifier.padding(start = 6.dp)
+                        )
                     }
                 }
             }
@@ -1050,6 +940,20 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
         }
     }
 
+    sheetFor?.let { hit ->
+        SdkArchiveSheet(
+            hit = hit,
+            app = app,
+            vm = vm,
+            appliedEntry = appliedEntry,
+            checked = hit.ruleId in selected,
+            onToggle = { on ->
+                selected = if (on) selected + hit.ruleId else selected - hit.ruleId
+            },
+            onDismiss = { sheetFor = null }
+        )
+    }
+
     if (showApplyConfirm) {
         AlertDialog(
             onDismissRequest = { showApplyConfirm = false },
@@ -1117,4 +1021,209 @@ fun safetyLabel(s: Safety) = when (s) {
     Safety.CAUTION -> "谨慎禁用"
     Safety.RISKY -> "禁用有风险"
     Safety.UNKNOWN -> "影响未知"
+}
+
+
+/** SDK 档案卡底部弹层（LibChecker 结构 ⊕ Blocker 结构化字段 ⊕ 量化句） */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SdkArchiveSheet(
+    hit: SdkHit,
+    app: ScannedApp,
+    vm: AppViewModel,
+    appliedEntry: AppliedRulesStore.AppliedEntry?,
+    checked: Boolean,
+    onToggle: (Boolean) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val info = remember(hit.ruleId) { vm.ruleInfo(hit.ruleId) }
+    // 量化句：N matched / N blocked（blocked = 已应用记录中命中的组件数）
+    val blocked = appliedEntry?.components?.count { c -> hit.matchedComponents.any { it == c } } ?: 0
+    val groups = remember(hit.ruleId) {
+        hit.matchedComponents.groupBy { cn ->
+            hit.componentTypes[cn] ?: when {
+                cn.endsWith("Activity") -> "activity"
+                cn.endsWith("Service") -> "service"
+                cn.endsWith("Receiver") -> "receiver"
+                cn.endsWith("Provider") -> "provider"
+                else -> "other"
+            }
+        }
+    }
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp)
+                .padding(bottom = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            SdkMonogram(hit.ruleId, hit.name, Modifier.size(56.dp))
+            Spacer(Modifier.height(8.dp))
+            Text(hit.name, style = MaterialTheme.typography.titleLarge)
+            Text(
+                categoryLabel(hit.category),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "${hit.matchedComponents.size} matched, $blocked blocked.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Row(
+                Modifier.padding(top = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("纳入禁用选择", style = MaterialTheme.typography.labelMedium)
+                Spacer(Modifier.width(8.dp))
+                Switch(checked = checked, onCheckedChange = onToggle)
+            }
+            Spacer(Modifier.height(12.dp))
+            info?.description?.takeIf { it.isNotBlank() }?.let {
+                ArchiveFieldCard("描述") { Text(it, style = MaterialTheme.typography.bodySmall) }
+                Spacer(Modifier.height(8.dp))
+            }
+            info?.sourceLink?.takeIf { it.isNotBlank() }?.let {
+                ArchiveFieldCard("相关链接") {
+                    Text(
+                        it,
+                        fontFamily = FontFamily.Monospace,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.tertiary
+                    )
+                }
+                Spacer(Modifier.height(8.dp))
+            }
+            ArchiveFieldCard("可安全禁用") {
+                Text(
+                    if (info?.safeToBlock == true) "是" else "否（谨慎评估）",
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+            ArchiveFieldCard("副作用") {
+                Text(
+                    info?.sideEffect?.takeIf { it.isNotBlank() && !it.equals("unknown", true) && it != "未知" }
+                        ?: "未知",
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+            ArchiveFieldCard("开发者团队 / 置信度") {
+                Text(
+                    listOf(
+                        info?.devTeam?.ifBlank { info?.company }?.takeIf { it.isNotBlank() },
+                        info?.confidence?.let { "置信度 ${confidenceLabel(it)}" }
+                    ).filterNotNull().joinToString(" · ").ifBlank { "未知" },
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+            info?.contributors?.takeIf { it.isNotEmpty() }?.let { c ->
+                ArchiveFieldCard("规则贡献者") {
+                    Text(c.joinToString("、"), style = MaterialTheme.typography.bodySmall)
+                }
+                Spacer(Modifier.height(8.dp))
+            }
+            ArchiveFieldCard("命中组件 ${hit.matchedComponents.size}") {
+                Column {
+                    val typeOrder = listOf("activity", "service", "receiver", "provider", "other")
+                    typeOrder.forEach { t ->
+                        val comps = groups[t] ?: return@forEach
+                        Spacer(Modifier.height(6.dp))
+                        Surface(
+                            color = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                            shape = RoundedCornerShape(50)
+                        ) {
+                            Text(
+                                "${typeLabel(t)} × ${comps.size}",
+                                style = MaterialTheme.typography.labelSmall,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                            )
+                        }
+                        comps.forEach { c ->
+                            Text(
+                                c,
+                                fontFamily = FontFamily.Monospace,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ArchiveFieldCard(label: String, content: @Composable ColumnScope.() -> Unit) {
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(Modifier.padding(12.dp)) {
+            Text(label, style = MaterialTheme.typography.labelSmall)
+            Spacer(Modifier.height(2.dp))
+            content()
+        }
+    }
+}
+
+/**
+ * 倒计时锁定确认按钮（Thanox "Be careful!" 模式）：
+ * 首次点击进入倒计时（disabled 递减），归零后才可点确认执行。
+ */
+@Composable
+fun CountdownConfirmTextButton(
+    label: String,
+    armedLabel: String,
+    enabled: Boolean,
+    onConfirm: () -> Unit,
+    seconds: Int = 4
+) {
+    var armed by remember { mutableStateOf(false) }
+    var tick by remember { mutableIntStateOf(seconds) }
+    LaunchedEffect(armed) {
+        if (armed) {
+            tick = seconds
+            while (tick > 0) {
+                kotlinx.coroutines.delay(1000)
+                tick--
+            }
+        }
+    }
+    // 已解锁但 5 秒未确认 → 自动回到锁定态
+    LaunchedEffect(armed, tick) {
+        if (armed && tick == 0) {
+            kotlinx.coroutines.delay(5000)
+            if (armed && tick == 0) armed = false
+        }
+    }
+    TextButton(
+        onClick = {
+            if (armed) {
+                armed = false
+                onConfirm()
+            } else {
+                armed = true
+            }
+        },
+        enabled = enabled
+    ) {
+        Text(
+            when {
+                armed && tick > 0 -> "$armedLabel（${tick}s）"
+                armed -> armedLabel
+                else -> label
+            },
+            color = if (armed) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+        )
+    }
 }
