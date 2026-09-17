@@ -28,6 +28,7 @@ import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -87,23 +88,54 @@ private val MONOGRAM_COLORS = listOf(
     Color(0xFFCFD8DC) to Color(0xFF37474F)
 )
 
+/** 规则 id → LibChecker-Rules-Bundle 矢量图标名（Apache-2.0，assets/icons/lib_icons.json，构建期生成，覆盖主流 SDK） */
+@Volatile private var libIconsCache: Map<String, String>? = null
+
+private fun loadLibIcons(ctx: android.content.Context): Map<String, String> {
+    libIconsCache?.let { return it }
+    val m = runCatching {
+        val json = ctx.assets.open("icons/lib_icons.json").bufferedReader().use { it.readText() }
+        kotlinx.serialization.json.Json.decodeFromString<Map<String, String>>(json)
+    }.getOrDefault(emptyMap())
+    libIconsCache = m
+    return m
+}
+
 @Composable
 fun SdkMonogram(ruleId: String, name: String, modifier: Modifier = Modifier) {
     val dark = isSystemInDarkTheme()
     val (bg, fg) = MONOGRAM_COLORS[ruleId.hashCode().let { if (it < 0) -it else it } % MONOGRAM_COLORS.size]
     val bgC = if (dark) fg.copy(alpha = 0.25f) else bg
     val fgC = if (dark) MaterialTheme.colorScheme.onSurface else fg
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    val iconName = remember { loadLibIcons(ctx)[ruleId] }
+    val iconRes = iconName?.let {
+        remember(it) {
+            runCatching {
+                val id = ctx.resources.getIdentifier(it, "drawable", ctx.packageName)
+                if (id != 0) id else null
+            }.getOrNull()
+        }
+    }
     Box(
         modifier
             .size(32.dp)
             .background(bgC, RoundedCornerShape(50)),
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            name.firstOrNull()?.uppercase() ?: "?",
-            style = MaterialTheme.typography.labelMedium,
-            color = fgC
-        )
+        if (iconRes != null) {
+            Icon(
+                painterResource(iconRes),
+                contentDescription = null,
+                modifier = Modifier.size(22.dp)
+            )
+        } else {
+            Text(
+                name.firstOrNull()?.uppercase() ?: "?",
+                style = MaterialTheme.typography.labelMedium,
+                color = fgC
+            )
+        }
     }
 }
 

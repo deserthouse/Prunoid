@@ -1,0 +1,17 @@
+# NOTICE / 署名
+
+## SDK 图标资产
+
+`app/src/main/res/drawable/ic_lib_*.xml`（166 个矢量图标）与
+`app/src/main/assets/icons/lib_icons.json`（规则 id → 图标映射，构建期生成）
+改编自 [LibChecker-Rules-Bundle](https://github.com/LibChecker/LibChecker-Rules-Bundle)
+（Apache License 2.0，Copyright LibChecker contributors）。
+
+上述资产按 Apache-2.0 许可使用并保留其许可与署名；本应用其余代码与资产
+另见仓库 LICENSE。
+
+## 规则数据
+
+内置规则快照（snapshot.json）的数据来源与逐源许可判定，
+见规则仓库的 [NOTICE](https://github.com/deserthouse/sdk-pruner-rules/blob/main/NOTICE)
+与 `research/2026-09-17_数据源合规与建库原则.md`。
