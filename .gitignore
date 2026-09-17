@@ -1,0 +1,24 @@
+# Gradle / Android build
+.gradle/
+build/
+app/build/
+local.properties
+*.iml
+.idea/
+captures/
+.externalNativeBuild/
+.cxx/
+
+# 外部克隆仓库（可随时重新 clone，不入本项目库）
+research/lcr_repo/
+research/blocker_src/
+research/blocker_rules_repo/
+
+# 大体积二进制与归档（迁移 zip 由 make_migration_zip.py 按需重建）
+reference_apk/
+archive/*.zip
+research/screen_check.png
+
+# 密钥（双保险：签名 keystore 走仓库外 gradle.properties 覆盖）
+*.jks
+*.keystore

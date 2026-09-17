@@ -1,0 +1,2204 @@
+libxguardian.so	信鸽推送	0	0	
+libmarsxlog.so	Mars	0	0	
+libxcrash.so	xCrash	0	0	
+libweexjss.so	Weex	0	0	
+libfile_lock_pg.so	Pangle SDK	0	0	
+libMNN_CL.so	MNN	0	0	
+libsdk_patcher_jni.so	小米更新 SDK	0	0	
+libhuawei_arengine_impl.so	HUAWEI AR Engine	0	0	
+libnative-imagetranscoder.so	Fresco	0	0	
+liblib_fb_fbjni.so	Yoga	0	0	
+libBugly.so	Bugly	0	0	
+libreactnativejnifb.so	React Native	0	0	
+libandfix.so	AndFix	0	0	
+libnative-filters.so	Fresco	0	0	
+libBugly-rqd.so	Bugly	0	0	
+libImgRecognition.so	DuMix	0	0	
+libfb.so	Facebook SDK	0	0	
+libgpuimage-library.so	GPUImage	0	0	
+libwebpimage.so	Fresco	0	0	
+libjsinspector.so	React Native	0	0	
+libyoga.so	Yoga	0	0	
+libsqlcipher.so	SQLCipher	0	0	
+libsaturn.so	腾讯云直播 SDK	0	0	
+libqalcodecwrapper.so	腾讯云通信 SDK	0	0	
+libimagepipeline.so	Fresco	0	0	
+libtxplayer.so	腾讯云短视频 SDK	0	0	
+libtensorflowlite_jni.so	LiteRT	0	0	
+libglog.so	glog	0	0	
+libuptsmaddonmi.so	银联 SDK	0	0	
+libijkplayer.so	IJKPlayer	0	0	
+libyouga.so	Yoga	0	0	
+libhttpdns.so	腾讯云 HTTPDNS	0	0	
+libluajava.so	AndroLua	0	0	
+libsgmain.so	阿里聚安全	0	0	
+libhuawei_arengine_jni.so	HUAWEI AR Engine	0	0	
+libmain.so	Unity	0	0	
+libsgavmp.so	阿里聚安全	0	0	
+libweexcore.so	Weex	0	0	
+libtxsdl.so	腾讯云短视频 SDK	0	0	
+libmonodroid_bundle_app.so	Xamarin	0	0	
+librsjni_androidx.so	RenderScript	0	0	
+libreactnativeblob.so	React Native	0	0	
+libdexjni.so	梆梆安全	0	0	
+libapp.so	Flutter	0	0	
+libweexjsb.so	Weex	0	0	
+libcrashsdk.so	岳鹰 SDK	0	0	
+libhyphenate.so	环信 IM	0	0	
+libmibraindec.so	小爱 SDK	0	0	
+libA3AEECD8.so	MSA SDK	0	0	
+libijkffmpeg.so	IJKPlayer	0	0	
+libsgsgmiddletier.so	阿里聚安全	0	0	
+lib39285EFA.so	MSA SDK	0	0	
+libconnectionbase.so	小米游戏 SDK	0	0	
+libsecsdk.so	MSA SDK	0	0	
+libarcore_sdk_jni.so	ARCore	0	0	
+libreactnative.so	React Native	0	0	
+libMtaNativeCrash.so	腾讯移动分析	0	0	
+libweibosdkcore.so	微博 SDK	0	0	
+libmonodroid.so	Xamarin	0	0	
+libweexjst.so	Weex	0	0	
+libaot-mscorlib.dll.so	Xamarin	0	0	
+libapssdk.so	高德 SDK	0	0	
+libarcore_sdk_c.so	ViroCore	0	0	
+libtxmapengine.so	腾讯地图 SDK	0	0	
+libbmob.so	Bmob 后端云	0	0	
+libSecShell.so	梆梆安全	0	0	
+libbuffer_pg.so	Pangle SDK	0	0	
+libJavaScriptCore.so	React Native	0	0	
+libwind.so	微博 SDK	0	0	
+libucrop.so	uCrop	0	0	
+libflutter.so	Flutter	0	0	
+libRongIMLib.so	融云 IM	0	0	
+libbitmaps.so	Fresco	0	0	
+libJni_wgs2gcj.so	wgs2gcj	0	0	
+libbugsnag-plugin-android-anr.so	Bugsnag	0	0	
+librealm-jni.so	realm	0	0	
+libopencv_java3.so	OpenCV	0	0	
+libboost_multidex.so	BoostMultiDex	0	0	
+libchrome.so	libchrome	0	0	
+libglog_init.so	React Native	0	0	
+libopenssl.so	OpenSSL	0	0	
+libpl_droidsonroids_gif.so	android-gif-drawable	0	0	
+libCtaApiLib.so	极光认证 SDK	0	0	
+libgetuiext3.so	个推	0	0	
+libunity.so	Unity	0	0	
+libBeacon.so	腾讯流量联盟	0	0	
+libgifimage.so	GIFLIB	0	0	
+libjsc.so	React Native	0	0	
+libmonosgen-2.0.so	Xamarin	0	0	
+libmibrainjni.so	小爱 SDK	0	0	
+libmmkv.so	MMKV	0	0	
+libweexjssr.so	Weex	0	0	
+libSecShell-x86.so	梆梆安全	0	0	
+libliteavsdk.so	腾讯云短视频 SDK	0	0	
+libijksdl.so	IJKPlayer	0	0	
+libbugsnag-ndk.so	Bugsnag	0	0	
+libgcanvas.so	GCanvas	0	0	
+libindoor.so	百度 LBS	0	0	
+libhuawei_arengine_ndk.so	HUAWEI AR Engine	0	0	
+libgnustl_shared.so	C++ Shared	0	0	
+libmilinkconnection.so	小米游戏 SDK	0	0	
+libc++_shared.so	C++ Shared	0	0	
+libWTF.so	Weex	0	0	
+libQPlayer.so	PLDroidPlayer	0	0	
+libsgsecuritybody.so	阿里聚安全	0	0	
+libtobEmbedEncrypt.so	Pangle SDK	0	0	
+libuptsmaddon.so	银联 SDK	0	0	
+libuptsmservice.so	银联 SDK	0	0	
+libreactnativejni.so	React Native	0	0	
+libjscexecutor.so	React Native	0	0	
+libmibrainvad2.so	小爱 SDK	0	0	
+libwcdb.so	WCDB	0	0	
+libjiagu.so	360 加固	0	0	
+libtxffmpeg.so	腾讯云短视频 SDK	0	0	
+libtraeimp-rtmp.so	TRTC SDK	0	0	
+libentryexpro.so	银联 SDK	0	0	
+libstlport_shared.so	SQLCipher	0	0	
+libYUV.so	libYUV	0	0	
+libstatic-webp.so	Fresco	0	0	
+libpingpp.so	Ping++	0	0	
+libxamarin-app.so	Xamarin	0	0	
+libDexHelper.so	梆梆安全	0	0	
+libyuv.so	libYUV	0	0	
+libtpnsSecurity.so	信鸽推送	0	0	
+libmono.so	Unity	0	0	
+libndkbitmap.so	烈焰弹幕使	0	0	
+libMNN.so	MNN	0	0	
+libtencentloc.so	腾讯地图 SDK	0	0	
+libMNN_Express.so	MNN	0	0	
+libxcrash_dumper.so	xCrash	0	0	
+libframesequence.so	FrameSequence	0	0	
+libmono-btls-shared.so	Xamarin	0	0	
+libfreetype.so	FreeType	0	0	
+libtdjni.so	TDLib	0	0	
+libmemchunk.so	Fresco	0	0	
+libDexHelper-x86.so	梆梆安全	0	0	
+libmtanativecrash_v2.so	腾讯移动分析	0	0	
+libfolly_json.so	Folly	0	0	
+libutility.so	微博 SDK	0	0	
+libWeexEagle.so	Weex	0	0	
+libmp3lame.so	LAME	0	0	
+libqalmsfboot.so	腾讯云通信 SDK	0	0	
+libcrashlytics.so	Crashlytics	0	0	
+libUE4.so	Unreal Engine	0	0	
+libmono-native.so	Xamarin	0	0	
+libgojni.so	Golang	0	0	
+libepic.so	Epic	0	0	
+librsjni.so	RenderScript	0	0	
+libwtecdh.so	米大师	0	0	
+libmsc.so	讯飞 SDK	0	0	
+libwtcrypto.so	腾讯云通信 SDK	0	0	
+libhardcoder.so	HardCoder	0	0	
+libwebp.so	WebP Codec	0	0	
+libImSDK.so	腾讯云通信 SDK	0	0	
+libandfix_x86.so	AndFix	0	0	
+libRSSupport.so	RenderScript	0	0	
+libagora-rtc-sdk-jni.so	Agora RTC SDK	0	0	
+libhippybridge.so	Hippy	0	0	
+libmibrainsdk.so	小爱 SDK	0	0	
+libsecexe.so	梆梆安全	0	0	
+libnms.so	Pangle SDK	0	0	
+libflexbox.so	Hippy	0	0	
+libAMapSDK_MAP_v(.*)\.so	高德地图 SDK	0	1	regex_amap_sdk
+libaot-Xamarin\.Android\.(.*)\.dll\.so	Xamarin	0	1	regex_xamarin
+libcronet\.(.*)\.so	Cronet	0	1	regex_cronet
+libcocklogic-(.*)\.so	百川 SDK	0	1	regex_ali_baichuan
+libbdpush_V(.*)\.so	百度云推送	0	1	regex_baidu_push
+libjcore(.*)\.so	极光推送	0	1	regex_jpush
+libtnet-(.*)\.so	libtnet	0	1	regex_libtnet
+libsgavmpso-(.*)\.so	阿里聚安全	0	1	regex_ali_security
+libsgsecuritybodyso(.*)\.so	阿里聚安全	0	1	regex_ali_security
+libsgsgmiddletierso-(.*)\.so	阿里聚安全	0	1	regex_ali_security
+libBaiduMapSDK_(.*)\.so	百度地图 SDK	0	1	regex_baidu_map
+liblocSDK(.*)\.so	百度地图 SDK	0	1	regex_baidu_map
+libshell-super(.*)\.so	腾讯乐固	0	1	regex_tencent_legu
+libshella-(.*)\.so	腾讯乐固	0	1	regex_tencent_legu
+com.xiaomi.mipush.sdk.MessageHandleService	MiPush	1	0	
+com.xiaomi.mipush.sdk.PushMessageHandler	MiPush	1	0	
+com.huawei.hms.support.api.push.service.HmsMsgService	HUAWEI Push	1	0	
+androidx.room.MultiInstanceInvalidationService	Jetpack Room	1	0	
+com.google.android.gms.auth.api.signin.RevocationBoundService	Google Sign-In	1	0	
+com.umeng.message.UmengService	友盟推送	1	0	
+org.hapjs.(.*)	快应用	1	1	regex_hapjs
+com.google.android.gms.cast.framework.ReconnectionService	Google Cast	1	0	
+mtopsdk.xstate.XStateService	Mtop SDK	1	0	
+com.baidu.android.pushservice.HmsPushPatchMessageService	百度云推送	1	0	
+com.tencent.tpns.mqttchannel.services.MqttService	腾讯移动推送	1	0	
+com.xiaomi.push.service.XMJobService	MiPush	1	0	
+com.tencent.matrix.resource.CanaryWorkerService	Matrix	1	0	
+com.alibaba.sdk.android.push.channel.KeepChannelService	阿里移动推送	1	0	
+com.google.firebase.components.ComponentDiscoveryService	Firebase	1	0	
+com.huawei.agconnect.core.ServiceDiscovery	AppGallery Connect	1	0	
+com.bytedance.boost_multidex.OptimizeService	BoostMultiDex	1	0	
+com.evernote.android.job.JobRescheduleService	Android-Job	1	0	
+com.google.android.datatransport.runtime.scheduling.jobscheduling.JobInfoSchedulerService	Firebase	1	0	
+com.taobao.accs.data.MsgDistributeService	阿里移动推送	1	0	
+com.tencent.smtt.export.external.DexClassLoaderProviderService	TBS	1	0	
+com.google.android.gms.cast.framework.media.MediaNotificationService	Google Cast	1	0	
+com.coloros.mcssdk.PushService	OPPO Push	1	0	
+com.qq.e.downloader.DownloadService	腾讯广告 SDK	1	0	
+com.ksad.download.service.DownloadService	快手广告 SDK	1	0	
+com.google.android.datatransport.runtime.backends.TransportBackendDiscovery	Firebase	1	0	
+com.heytap.msp.push.service.DataMessageCallbackService	OPPO Push	1	0	
+com.didi.virtualapk.delegate.RemoteService	VirtualAPK	1	0	
+com.umeng.message.UmengMessageCallbackHandlerService	友盟推送	1	0	
+com.liulishuo.filedownloader.services.FileDownloadService$SeparateProcessService	FileDownloader	1	0	
+com.taobao.agoo.TaobaoMessageIntentReceiverService	阿里移动推送	1	0	
+com.google.firebase.messaging.FirebaseMessagingService	FCM	1	0	
+com.umeng.update.net.DownloadingService	友盟推送	1	0	
+com.meizu.cloud.pushsdk.NotificationService	Meizu Push	1	0	
+com.tencent.qalsdk.service.QalAssistService	腾讯云通信	1	0	
+com.heytap.mcssdk.AppPushService	OPPO Push	1	0	
+com.umeng.message.XiaomiIntentService	友盟推送	1	0	
+com.alibaba.sdk.android.push.channel.TaobaoRecvService	阿里移动推送	1	0	
+com.evernote.android.job.v14.PlatformAlarmService	Android-Job	1	0	
+com.evernote.android.job.v21.PlatformJobService	Android-Job	1	0	
+com.alibaba.sdk.android.push.channel.CheckService	阿里移动推送	1	0	
+com.netease.nimlib.job.NIMJobService	网易云通信 SDK	1	0	
+com.tencent.android.tpush.service.XGDaemonService	信鸽推送	1	0	
+androidx.work.impl.background.systemjob.SystemJobService	Jetpack WorkManager	1	0	
+com.taobao.accs.internal.AccsJobService	阿里移动推送	1	0	
+com.evernote.android.job.v14.PlatformAlarmServiceExact	Android-Job	1	0	
+com.baidu.android.pushservice.PushService	百度云推送	1	0	
+com.google.android.gms.measurement.AppMeasurementJobService	Firebase Analytics	1	0	
+com.taobao.accs.ChannelService	阿里移动推送	1	0	
+com.tencent.matrix.resource.CanaryResultService	Matrix	1	0	
+com.tencent.tinker.lib.service.TinkerPatchService	Tinker	1	0	
+com.alibaba.sdk.android.push.AliyunPushIntentService	阿里移动推送	1	0	
+com.baidu.location.f	百度地图 SDK	1	0	
+com.huawei.updatesdk.service.deamon.download.DownloadService	HUAWEI Push	1	0	
+com.tencent.bugly.beta.tinker.TinkerResultService	Bugly	1	0	
+com.tencent.android.tpush.service.XGPushService	信鸽推送	1	0	
+com.alibaba.sdk.android.push.MsgService	阿里移动推送	1	0	
+com.alibaba.android.bindingx.plugin.weex.WXBindingXModuleService	Weex	1	0	
+cn.jpush.android.service.PushService	极光推送	1	0	
+com.xiaomi.push.service.XMPushService	MiPush	1	0	
+com.qq.e.comm.DownloadService	腾讯广告 SDK	1	0	
+com.amap.api.location.APSService	高德地图 SDK	1	0	
+com.tencent.qalsdk.service.QalService	腾讯云通信	1	0	
+com.umeng.message.UmengDownloadResourceService	友盟推送	1	0	
+com.alipay.android.app.MspService	支付宝 SDK	1	0	
+com.tencent.tinker.lib.service.TinkerPatchService$IntentServiceRunner$InnerService	Tinker	1	0	
+com.baidu.android.pushservice.CommandService	百度云推送	1	0	
+com.edge.pcdn.PcdnLiveService	PCDN SDK	1	0	
+com.netease.nimlib.service.NimService$Aux	网易云通信 SDK	1	0	
+com.google.android.gms.measurement.AppMeasurementService	Firebase Analytics	1	0	
+com.google.android.gms.analytics.AnalyticsJobService	Google Analytics	1	0	
+com.tencent.tinker.lib.service.TinkerPatchService$InnerService	Tinker	1	0	
+com.netease.nimlib.service.ResponseService	网易云通信 SDK	1	0	
+com.bytedance.tea.crash.upload.CrashUploadService	Pangle SDK	1	0	
+com.blankj.utilcode.util.MessengerUtils$ServerService	AndroidUtilCode	1	0	
+com.google.android.gms.analytics.AnalyticsService	Google Analytics	1	0	
+com.edge.pcdn.PcdnVodService	PCDN SDK	1	0	
+com.google.firebase.iid.FirebaseInstanceIdService	Firebase	1	0	
+com.tencent.android.tpush.service.XGPushServiceV4	信鸽推送	1	0	
+com.tencent.android.tpush.service.XGPushServiceV3	信鸽推送	1	0	
+com.didi.virtualapk.delegate.LocalService	VirtualAPK	1	0	
+com.netease.nimlib.service.NimService	网易云通信 SDK	1	0	
+com.tencent.android.tpush.service.XGVipPushService	腾讯移动推送	1	0	
+com.umeng.message.UmengIntentService	友盟推送	1	0	
+com.vivo.push.sdk.service.CommandClientService	vivo Push	1	0	
+com.taobao.accs.ChannelService$KernelService	阿里移动推送	1	0	
+cn.jpush.android.service.DownloadService	极光推送	1	0	
+com.baidu.android.pushservice.job.PushJobService	百度云推送	1	0	
+com.tencent.tinker.lib.service.TinkerPatchForeService	Tinker	1	0	
+androidx.work.impl.foreground.SystemForegroundService	Jetpack WorkManager	1	0	
+com.igexin.sdk.PushService	个推	1	0	
+cn.jpush.android.service.DaemonService	极光推送	1	0	
+com.yanzhenjie.permission.bridge.BridgeService	AndPermission	1	0	
+com.heytap.mcssdk.PushService	OPPO Push	1	0	
+com.liulishuo.filedownloader.services.FileDownloadService$SharedMainProcessService	FileDownloader	1	0	
+com.tencent.android.tpush.rpc.XGRemoteService	腾讯移动推送	1	0	
+cmb.pb.cmbsafe.CmbService	招商银行 SDK	1	0	
+com.tencent.tinker.lib.service.DefaultTinkerResultService	Tinker	1	0	
+org.android.agoo.accs.AgooService	阿里移动推送	1	0	
+com.umeng.message.UmengMessageIntentReceiverService	友盟推送	1	0	
+com.heytap.msp.push.service.CompatibleDataMessageCallbackService	OPPO Push	1	0	
+com.qihoo360.replugin.component.service.server.PluginPitService(.*)	RePlugin	1	1	regex_replugin
+com.ss.android.socialbase.(.*)	Pangle SDK	1	1	regex_pangle
+com.bytedance.sdk.openadsdk.(.*)	Pangle SDK	1	1	regex_pangle
+com.tencent.midas.wx.APMidasWXPayActivity	米大师	2	0	
+com.tencent.connect.common.AssistActivity	腾讯开放平台	2	0	
+com.qq.e.ads.RewardvideoLandscapeADActivity	腾讯广告 SDK	2	0	
+com.tencent.tauth.AuthActivity	腾讯开放平台	2	0	
+com.kuaishou.commercial.downloader.center.AdDownloadCenterV2Activity	快手广告 SDK	2	0	
+com.unionpay.uppay.PayActivity	银联 SDK	2	0	
+com.qq.e.ads.PortraitADActivity	腾讯广告 SDK	2	0	
+com.huawei.updatesdk.service.otaupdate.AppUpdateActivity	HMS Update	2	0	
+com.qq.e.ads.LandscapeADActivity	腾讯广告 SDK	2	0	
+com.igexin.sdk.GActivity	个推	2	0	
+com.alipay.sdk.app.H5PayActivity	支付宝 SDK	2	0	
+com.vivo.push.sdk.LinkProxyClientActivity	vivo Push	2	0	
+com.blankj.utilcode.util.UtilsTransActivity	AndroidUtilCode	2	0	
+com.tencent.smtt.sdk.VideoActivity	TBS	2	0	
+com.qq.e.ads.ADActivity	腾讯广告 SDK	2	0	
+com.ali.auth.third.ui.LoginWebViewActivity	百川电商 SDK - 授权	2	0	
+com.ali.auth.third.ui.LoginActivity	百川电商 SDK - 授权	2	0	
+com.baidu.android.pushservice.hwproxy.HwNotifyActivity	HUAWEI Push(Baidu Cloud Proxy)	2	0	
+com.alipay.sdk.app.H5OpenAuthActivity	支付宝 SDK	2	0	
+com.taobao.weex.WXGlobalEventReceiver	Weex	2	0	
+com.alipay.sdk.app.AlipayResultActivity	支付宝 SDK	2	0	
+com.huawei.hms.activity.EnableServiceActivity	HMS Core	2	0	
+cn.jpush.android.service.JNotifyActivity	极光推送	2	0	
+com.cmic.sso.sdk.activity.LoginAuthActivity	移动号码认证	2	0	
+com.google.android.gms.ads.AdActivity	Google AdMob	2	0	
+pub.devrel.easypermissions.AppSettingsDialogHolderActivity	EasyPermissions	2	0	
+com.yanzhenjie.permission.PermissionActivity	AndPermission	2	0	
+com.huawei.android.hms.agent.hwid.HMSSignInAgentActivity	HMS Core	2	0	
+com.huawei.hms.dtm.PreviewActivity	HUAWEI DTM	2	0	
+com.sina.weibo.sdk.web.WeiboSdkWebActivity	微博 SDK	2	0	
+com.google.ar.core.InstallActivity	ARCore	2	0	
+com.tencent.android.tpush.TpnsActivity	腾讯移动推送	2	0	
+com.ali.auth.third.ui.webview.BaseWebViewActivity	百川电商 SDK - 授权	2	0	
+com.huawei.updatesdk.support.pm.PackageInstallerActivity	HMS Update	2	0	
+com.alibaba.wireless.security.open.middletier.fc.ui.ContainerActivity	阿里聚安全	2	0	
+com.qq.e.ads.RewardvideoPortraitADActivity	腾讯广告 SDK	2	0	
+com.facebook.FacebookActivity	Facebook SDK	2	0	
+com.soundcloud.android.crop.CropImageActivity	android-crop	2	0	
+net.openid.appauth.RedirectUriReceiverActivity	AppAuth	2	0	
+com.facebook.CustomTabMainActivity	Facebook SDK	2	0	
+cn.jpush.android.ui.PushActivity	极光推送	2	0	
+com.alipay.sdk.app.PayResultActivity	支付宝 SDK	2	0	
+com.blankj.utilcode.util.UtilsTransActivity4MainProcess	AndroidUtilCode	2	0	
+com.unionpay.UPPayWapActivity	银联 SDK	2	0	
+com.facebook.react.devsupport.DevSettingsActivity	React Native	2	0	
+com.igexin.sdk.PushActivity	个推	2	0	
+com.yanzhenjie.permission.bridge.BridgeActivity	AndPermission	2	0	
+net.openid.appauth.AuthorizationManagementActivity	AppAuth	2	0	
+com.xiaomi.account.openauth.AuthorizeActivity	小米账号开放平台	2	0	
+com.google.android.gms.common.api.GoogleApiActivity	Google Play Service	2	0	
+com.pingplusplus.android.PaymentActivity	Ping++	2	0	
+com.bestpay.app.H5PayActivity	翼支付	2	0	
+com.baidu.mobads.AppActivity	移动应用推广 SDK	2	0	
+com.zhihu.matisse.internal.ui.SelectedPreviewActivity	Matisse	2	0	
+com.google.android.gms.auth.api.signin.internal.SignInHubActivity	Google Sign-In	2	0	
+com.zhihu.matisse.internal.ui.AlbumPreviewActivity	Matisse	2	0	
+com.alibaba.sdk.android.push.keeplive.PushExtActivity	阿里移动推送	2	0	
+com.sina.weibo.sdk.component.WeiboSdkBrowser	微博 SDK	2	0	
+com.sina.weibo.sdk.share.WbShareToStoryActivity	微博 SDK	2	0	
+org.hapjs.(.*)	快应用	2	1	regex_hapjs
+com.facebook.CustomTabActivity	Facebook SDK	2	0	
+com.yalantis.ucrop.UCropActivity	uCrop	2	0	
+com.tencent.midas.proxyactivity.APMidasPayProxyActivity	米大师	2	0	
+com.tencent.bugly.beta.ui.BetaActivity	Bugly	2	0	
+com.sina.weibo.sdk.share.WbShareResultActivity	微博 SDK	2	0	
+com.umeng.socialize.media.WBShareCallBackActivity	U-Share	2	0	
+androidx.slice.compat.SlicePermissionActivity	Jetpack Slice	2	0	
+com.huawei.android.hms.agent.common.HMSAgentActivity	HMS Core	2	0	
+com.android.billingclient.api.ProxyBillingActivity	Google Play Billing	2	0	
+com.huawei.android.hms.agent.pay.HMSPayAgentActivity	HMS Core	2	0	
+com.sina.weibo.sdk.share.WbShareTransActivity	微博 SDK	2	0	
+com.zhihu.matisse.ui.MatisseActivity	Matisse	2	0	
+com.tencent.captchasdk.TCaptchaPopupActivity	防水墙	2	0	
+com.huawei.hms.activity.BridgeActivity	HMS Core	2	0	
+com.alipay.sdk.auth.AuthActivity	支付宝 SDK	2	0	
+cn.jpush.android.ui.PopWinActivity	极光推送	2	0	
+com.unity3d.player.UnityPlayerActivity	Unity	2	0	
+com.yalantis.ucrop.PictureMultiCuttingActivity	uCrop	2	0	
+com.alipay.sdk.app.H5AuthActivity	支付宝 SDK	2	0	
+cmb.pb.ui.PBKeyboardActivity	招商银行 SDK	2	0	
+com.tencent.tinker.loader.hotplug.ActivityStubs(.*)	Tinker	2	1	regex_tinker
+com.bytedance.sdk.openadsdk.(.*)	Pangle SDK	2	1	regex_pangle
+com.ss.android.socialbase.(.*)	Pangle SDK	2	1	regex_pangle
+com.ss.android.downloadlib.(.*)	Pangle SDK	2	1	regex_pangle
+com.yxcorp.gifshow.ad(.*)	Pangle SDK	2	1	regex_pangle
+com.yxcorp.map.advertisement.(.*)	Pangle SDK	2	1	regex_pangle
+com.igexin.sdk.FlymePushReceiver	Meizu Push(GeTui Proxy)	3	0	
+com.google.android.gms.analytics.AnalyticsReceiver	Google Analytics	3	0	
+com.huawei.hms.support.api.push.PushMsgReceiver	HUAWEI Push	3	0	
+com.ss.android.downloadlib.core.download.DownloadReceiver	Pangle SDK	3	0	
+cn.jpush.android.service.SchedulerReceiver	极光推送	3	0	
+com.google.firebase.iid.FirebaseInstanceIdReceiver	Firebase	3	0	
+com.bytedance.embedapplog.collector.Collector	Pangle SDK	3	0	
+com.microsoft.appcenter.distribute.DownloadManagerReceiver	App Center	3	0	
+com.google.android.gms.measurement.AppMeasurementReceiver	Firebase Analytics	3	0	
+com.market.sdk.DownloadCompleteReceiver	小米更新 SDK	3	0	
+com.evernote.android.job.v14.PlatformAlarmReceiver	Android-Job	3	0	
+com.xiaomi.push.service.receivers.NetworkStatusReceiver	MiPush	3	0	
+com.igexin.sdk.PushReceiver	个推	3	0	
+com.huawei.hms.support.api.push.PushReceiver	HUAWEI Push	3	0	
+com.tencent.android.mzpush.MZPushMessageReceiver	Meizu Push(TPNS Proxy)	3	0	
+com.evernote.android.job.JobBootReceiver	Android-Job	3	0	
+androidx.work.impl.background.systemalarm.RescheduleReceiver	Jetpack WorkManager	3	0	
+com.google.android.gms.cast.framework.media.MediaIntentReceiver	Google Cast	3	0	
+com.alibaba.sdk.android.push.SystemEventReceiver	阿里移动推送	3	0	
+com.taobao.accs.ServiceReceiver	阿里移动推送	3	0	
+androidx.media.session.MediaButtonReceiver	Jetpack Media	3	0	
+cn.jpush.android.service.PluginMeizuPlatformsReceiver	Meizu Push(JPush Proxy)	3	0	
+org.android.agoo.xiaomi.MiPushBroadcastReceiver	MiPush(Aliyun Proxy)	3	0	
+cn.jpush.android.service.PushReceiver	极光推送	3	0	
+com.taobao.accs.EventReceiver	阿里移动推送	3	0	
+com.umeng.message.NotificationProxyBroadcastReceiver	友盟推送	3	0	
+com.igexin.download.DownloadReceiver	个推	3	0	
+org.android.agoo.vivo.PushMessageReceiverImpl	vivo Push(Aliyun Proxy)	3	0	
+com.tencent.android.mipush.XMPushMessageReceiver	MiPush(TPNS Proxy)	3	0	
+com.baidu.android.pushservice.RegistrationReceiver	百度云推送	3	0	
+com.netease.nimlib.service.NimReceiver	网易云通信 SDK	3	0	
+androidx.work.impl.diagnostics.DiagnosticsReceiver	Jetpack WorkManager	3	0	
+cn.jpush.android.service.PluginXiaomiPlatformsReceiver	MiPush(JPush Proxy)	3	0	
+com.meizu.cloud.pushsdk.SystemReceiver	Meizu Push	3	0	
+androidx.work.impl.utils.ForceStopRunnable$BroadcastReceiver	Jetpack WorkManager	3	0	
+com.google.android.datatransport.runtime.scheduling.jobscheduling.AlarmManagerSchedulerBroadcastReceiver	Firebase	3	0	
+com.igexin.sdk.HmsPushSubReceiver	HUAWEI Push(GeTui Proxy)	3	0	
+com.huawei.android.pushagent.PushBootReceiver	HUAWEI Push	3	0	
+org.android.agoo.huawei.HuaweiPushReceiver	HUAWEI Push(Aliyun Proxy)	3	0	
+com.baidu.android.pushservice.PushServiceReceiver	百度云推送	3	0	
+com.google.android.gms.measurement.AppMeasurementInstallReferrerReceiver	Firebase Analytics	3	0	
+com.huawei.hms.support.api.push.PushEventReceiver	HUAWEI Push	3	0	
+com.ksad.download.DownloadReceiver	快手广告 SDK	3	0	
+com.netease.nimlib.service.ResponseReceiver	网易云通信 SDK	3	0	
+cn.jpush.android.service.AlarmReceiver	极光推送	3	0	
+com.facebook.CurrentAccessTokenExpirationBroadcastReceiver	Facebook SDK	3	0	
+com.tencent.android.tpush.XGPushReceiver	腾讯移动推送	3	0	
+com.xiaomi.push.service.receivers.PingReceiver	MiPush	3	0	
+com.huawei.android.pushagent.PushEventReceiver	HUAWEI Push	3	0	
+com.igexin.sdk.MiuiPushReceiver	MiPush(GeTui Proxy)	3	0	
+com.taobao.agoo.AgooCommondReceiver	阿里移动推送	3	0	
+com.tencent.android.vivopush.VivoPushMessageReceiver	vivo Push(TPNS Proxy)	3	0	
+androidx.remotecallback.ProviderRelayReceiver	Jetpack Remote Callback	3	0	
+androidx.work.impl.background.systemalarm.ConstraintProxyUpdateReceiver	Jetpack WorkManager	3	0	
+com.sensorsdata.analytics.android.sdk.SensorsDataContentProvider	神策分析 SDK	4	0	
+com.liulishuo.okdownload.OkDownloadProvider	OkDownload	4	0	
+com.tencent.mid.api.MidProvider	腾讯移动分析	4	0	
+com.squareup.picasso.PicassoProvider	Picasso	4	0	
+android.support.v4.content.FileProvider	File Provider	4	0	
+cn.jpush.android.service.DownloadProvider	极光推送	4	0	
+com.facebook.internal.FacebookInitProvider	Facebook SDK	4	0	
+androidx.work.impl.WorkManagerInitializer	Jetpack WorkManager	4	0	
+androidx.startup.InitializationProvider	Jetpack App Startup	4	0	
+me.jessyan.autosize.InitProvider	AndroidAutoSize	4	0	
+androidx.lifecycle.ProcessLifecycleOwnerInitializer	Jetpack Lifecycle	4	0	
+com.sensorsdata.analytics.android.sdk.data.SensorsDataContentProvider	神策分析 SDK	4	0	
+com.tencent.tpns.baseapi.base.SettingsContentProvider	腾讯移动推送	4	0	
+com.facebook.ads.AudienceNetworkContentProvider	Audience Network	4	0	
+cn.bmob.v3.util.BmobContentProvider	Bmob 后端云	4	0	
+com.baidu.mobads.openad.FileProvider	移动应用推广 SDK	4	0	
+cn.sharesdk.framework.utils.ShareSDKFileProvider	ShareSDK	4	0	
+com.huawei.updatesdk.fileprovider.UpdateSdkFileProvider	HMS Update	4	0	
+moe.shizuku.api.ShizukuProvider	Shizuku	4	0	
+androidx.core.content.FileProvider	File Provider	4	0	
+com.facebook.FacebookContentProvider	Facebook SDK	4	0	
+com.qiyukf.nim.uikit.provider.UnicornProvider	七鱼 SDK	4	0	
+com.just.agentweb.AgentWebFileProvider	AgentWeb	4	0	
+com.tencent.bugly.beta.utils.BuglyFileProvider	Bugly	4	0	
+android.arch.lifecycle.ProcessLifecycleOwnerInitializer	Jetpack Lifecycle	4	0	
+com.huawei.hms.update.provider.UpdateProvider	HMS Update	4	0	
+com.yanzhenjie.permission.FileProvider	AndPermission	4	0	
+com.igexin.download.DownloadProvider	个推	4	0	
+com.netease.nimlib.ipc.NIMContentProvider	网易云通信 SDK	4	0	
+com.umeng.message.provider.MessageProvider	友盟推送	4	0	
+com.crashlytics.android.CrashlyticsInitProvider	Crashlytics	4	0	
+com.tencent.android.tpush.XGPushProvider	腾讯移动推送	4	0	
+com.huawei.hms.aaid.InitProvider	HMS Core AAID	4	0	
+com.google.firebase.provider.FirebaseInitProvider	Firebase	4	0	
+cn.jpush.android.service.Downloadrovider	极光推送	4	0	
+com.blankj.utilcode.util.UtilsFileProvider	AndroidUtilCode	4	0	
+com.qihoo360.mobilesafe.svcmanager.ServiceProvider	RePlugin	4	0	
+com.tencent.android.tpush.SettingsContentProvider	腾讯移动推送	4	0	
+com.google.android.gms.ads.MobileAdsInitProvider	Google AdMob	4	0	
+com.huawei.agconnect.core.provider.AGConnectInitializeProvider	AppGallery Connect	4	0	
+cn.jpush.android.service.DataProvider	极光推送	4	0	
+com.baidu.android.pushservice.PushInfoProvider	百度云推送	4	0	
+com.huawei.hms.support.api.push.PushProvider	HUAWEI Push	4	0	
+com.huawei.openalliance.ad.download.DownloadFileProvider	HUAWEI Ads Kit	4	0	
+com.blankj.utilcode.util.Utils$FileProvider4UtilCode	AndroidUtilCode	4	0	
+com.google.firebase.perf.provider.FirebasePerfProvider	Firebase Performance	4	0	
+com.tencent.android.tpush.XGVipPushKAProvider	腾讯移动推送	4	0	
+com.qihoo360.replugin.(.*)	RePlugin	4	1	regex_replugin
+com.google.android.material	Material Design Components	5	0	
+androidx.lifecycle	Jetpack Lifecycle	5	0	
+androidx.interpolator	Jetpack Interpolator	5	0	
+tv.danmaku.ijk	IJKPlayer	5	0	
+com.google.protobuf	Protocol Buffer	5	0	
+androidx.loader	Jetpack Loader	5	0	
+com.tencent.smtt	TBS	5	0	
+androidx.transition	Jetpack Transition	5	0	
+androidx.drawerlayout	Jetpack DrawerLayout	5	0	
+com.xiaomi.push	MiPush	5	0	
+androidx.appcompat	Jetpack AppCompat	5	0	
+butterknife.internal	Butter Knife	5	0	
+androidx.recyclerview	Jetpack RecyclerView	5	0	
+com.tencent.map	腾讯地图 SDK	5	0	
+androidx.documentfile	Jetpack DocumentFile	5	0	
+androidx.media	Jetpack Media	5	0	
+androidx.multidex	Jetpack MultiDex	5	0	
+com.ta.utdid2	UTDID	5	0	
+androidx.slidingpanelayout	Jetpack SlidingPaneLayout	5	0	
+android.support.v4	Support Library	5	0	
+android.support.v7	Support Library	5	0	
+com.xiaomi.xmpush	MiPush	5	0	
+org.greenbot.greendao	GreenDAO	5	0	
+androidx.collection	Jetpack Collection	5	0	
+com.huawei.hianalytics	HMS Analytics Kit	5	0	
+androidx.swiperefreshlayout	Jetpack SwipeRefreshLayout	5	0	
+androidx.asynclayoutinflater	Jetpack AsyncLayoutInflater	5	0	
+androidx.preference	Jetpack Preference	5	0	
+androidx.viewpager	Jetpack ViewPager	5	0	
+com.alibaba.fastjson	fastjson	5	0	
+androidx.browser	Jetpack Browser	5	0	
+androidx.vectordrawable	Jetpack VectorDrawable	5	0	
+com.google.android.flexbox	FlexBox	5	0	
+com.google.firebase	Firebase	5	0	
+com.microsoft.appcenter	App Center	5	0	
+androidx.room	Jetpack Room	5	0	
+androidx.constraintlayout	Jetpack ConstraintLayout	5	0	
+org.greenbot.eventbus	EventBus	5	0	
+androidx.coordinatorlayout	Jetpack CoordinatorLayout	5	0	
+com.xiaomi.mipush	MiPush	5	0	
+com.bumptech.glide	Glide	5	0	
+androidx.customview	Jetpack CustomView	5	0	
+com.sina.weibo	微博 SDK	5	0	
+androidx.cardview	Jetpack CardView	5	0	
+com.google.android.gms	Google Mobile Service	5	0	
+androidx.arch	Jetpack Arch Core	5	0	
+androidx.annotation	Jetpack Annotation	5	0	
+com.airbnb.lottie	Lottie	5	0	
+androidx.print	Jetpack Print	5	0	
+butterknife.runtime	Butter Knife	5	0	
+com.facebook.fresco	Fresco	5	0	
+androidx.fragment	Jetpack Fragment	5	0	
+com.amap.api	高德 SDK	5	0	
+androidx.legacy	Jetpack Legacy	5	0	
+androidx.cursoradapter	Jetpack CursorAdapter	5	0	
+androidx.versionedparcelable	Jetpack Versionedparcelable	5	0	
+androidx.savedstate	Jetpack Savedstate	5	0	
+androidx.sqlite	Jetpack SQLite	5	0	
+com.tencent.bugly	Bugly	5	0	
+com.google.zxing	ZXing	5	0	
+androidx.exifinterface	Jetpack ExifInterface	5	0	
+androidx.core	Jetpack Core	5	0	
+androidx.work	Jetpack WorkManager	5	0	
+kotlin.sequences	Kotlin Sequences	5	0	
+kotlin.reflect	Kotlin Reflect	5	0	
+androidx.viewpager2	Jetpack ViewPager2	5	0	
+com.tencent.tbs	TBS	5	0	
+com.google.android.exoplayer2	ExoPlayer	5	0	
+androidx.databinding	Jetpack DataBinding	5	0	
+com.google.gson	gson	5	0	
+androidx.localbroadcastmanager	Jetpack LocalBroadcastManager	5	0	
+androidx.activity	Jetpack Activity	5	0	
+kotlin.coroutines.(.*)	Kotlin Coroutines	5	1	regex_kotlin_coroutines
+kotlinx.coroutines.(.*)	Kotlin Coroutines	5	1	regex_kotlin_coroutines
+kotlin.(.*)	Kotlin	5	1	regex_kotlin
+okhttp3.(.*)	OkHttp3	5	1	regex_okhttp3
+retrofit2.(.*)	Retrofit2	5	1	regex_retrofit2
+okio.(.*)	Okio	5	1	regex_okio
+com.alipay.(.*)	支付宝 SDK	5	1	regex_alipay
+io.flutter.(.*)	Flutter	5	1	regex_flutter
+libmediainfo.so	MediaInfoLib	0	0	
+libSDL2.so	libSDL	0	0	
+libtmessages.(.*)\.so	Telegram APIs	0	1	regex_telegram_apis
+libumeng-spy.so	U-App SDK	0	0	
+com.lody.virtual.(.*)	VirtualApp	2	1	regex_virtual_app
+com.lody.virtual.client.stub.DaemonService	VirtualApp	1	0	
+androidx.work.impl.background.systemalarm.ConstraintProxy$NetworkStateProxy	Jetpack WorkManager	3	0	
+androidx.work.impl.background.systemalarm.ConstraintProxy$StorageNotLowProxy	Jetpack WorkManager	3	0	
+androidx.work.impl.background.systemalarm.ConstraintProxy$BatteryNotLowProxy	Jetpack WorkManager	3	0	
+androidx.work.impl.background.systemalarm.ConstraintProxy$BatteryChargingProxy	Jetpack WorkManager	3	0	
+com.google.android.play.core.common.PlayCoreDialogWrapperActivity	Google Play Service	2	0	
+com.google.android.play.core.missingsplits.PlayCoreMissingSplitsActivity	Google Play Service	2	0	
+com.google.android.libraries.phenotype.registration.PhenotypeMetadataHolderService	Google Play Service	1	0	
+com.google.android.libraries.phenotype.client.stable.AccountRemovedBroadcastReceiver	Google Play Service	3	0	
+com.google.android.libraries.phenotype.client.stable.PhenotypeUpdateBackgroundBroadcastReceiver	Google Play Service	3	0	
+com.market.sdk.LazyFileProvider	小米更新 SDK	4	0	
+com.xiaomi.market.sdk.DownloadCompleteReceiver	小米更新 SDK	3	0	
+libAVProLocal.so	AVPro Video	0	0	
+libaria2c.so	libaria2	0	0	
+libgdx-box2d.so	libGDX	0	0	
+libgdx.so	libGDX	0	0	
+libgdx-freetype.so	libGDX	0	0	
+libjlibtorrent-(.*).so	jlibtorrent	0	1	regex_jlibtorrent
+libtorrent4j-(.*).so	libtorrent4j	0	1	regex_libtorrent4j
+androidx.work.impl.background.systemalarm.SystemAlarmService	Jetpack WorkManager	1	0	
+com.sina.weibo.sdk.web.WebActivity	微博 SDK	2	0	
+com.sina.weibo.sdk.share.ShareChatActivity	微博 SDK	2	0	
+com.sina.weibo.sdk.share.ShareTransActivity	微博 SDK	2	0	
+com.sina.weibo.sdk.share.ShareStoryActivity	微博 SDK	2	0	
+com.sina.weibo.sdk.share.ShareResultActivity	微博 SDK	2	0	
+libsmsdk.so	数美 SDK	0	0	
+com.google.android.play.core.assetpacks.AssetPackExtractionService	Google Play Service	1	0	
+com.baidu.mobads.production.rewardvideo.MobRewardVideoActivity	移动应用推广 SDK	2	0	
+mtopsdk.extra.antiattack.CheckCodeValidateActivity	Mtop SDK	2	0	
+com.tencent.midas.jsbridge.APWebJSBridgeActivity	米大师	2	0	
+com.sobot.chat.conversation.SobotChatActivity	智齿客服 SDK	2	0	
+com.sobot.chat.activity.SobotPhotoActivity	智齿客服 SDK	2	0	
+com.sobot.chat.activity.WebViewActivity	智齿客服 SDK	2	0	
+com.sobot.chat.activity.SobotSkillGroupActivity	智齿客服 SDK	2	0	
+com.sobot.chat.activity.SobotPostMsgActivity	智齿客服 SDK	2	0	
+com.sobot.chat.activity.SobotConsultationListActivity	智齿客服 SDK	2	0	
+com.sobot.chat.activity.SobotPhotoListActivity	智齿客服 SDK	2	0	
+com.sobot.chat.activity.SobotCusFieldActivity	智齿客服 SDK	2	0	
+com.sobot.chat.activity.SobotPostCategoryActivity	智齿客服 SDK	2	0	
+com.sobot.chat.activity.SobotQueryFromActivity	智齿客服 SDK	2	0	
+com.sobot.chat.activity.SobotChooseCityActivity	智齿客服 SDK	2	0	
+com.sobot.chat.activity.SobotChooseFileActivity	智齿客服 SDK	2	0	
+com.sobot.chat.activity.SobotFileDetailActivity	智齿客服 SDK	2	0	
+com.sobot.chat.activity.SobotCameraActivity	智齿客服 SDK	2	0	
+com.sobot.chat.activity.SobotVideoActivity	智齿客服 SDK	2	0	
+com.sobot.chat.activity.SobotTicketDetailActivity	智齿客服 SDK	2	0	
+com.sobot.chat.activity.SobotHelpCenterActivity	智齿客服 SDK	2	0	
+com.sobot.chat.activity.SobotProblemCategoryActivity	智齿客服 SDK	2	0	
+com.sobot.chat.activity.SobotProblemDetailActivity	智齿客服 SDK	2	0	
+com.sobot.chat.activity.SobotPostLeaveMsgActivity	智齿客服 SDK	2	0	
+com.sobot.chat.widget.dialog.SobotRobotListActivity	智齿客服 SDK	2	0	
+com.sobot.chat.widget.dialog.SobotReplyActivity	智齿客服 SDK	2	0	
+com.sobot.chat.widget.dialog.SobotTicketEvaluateActivity	智齿客服 SDK	2	0	
+com.sobot.chat.widget.dialog.SobotEvaluateActivity	智齿客服 SDK	2	0	
+com.sobot.chat.widget.dialog.SobotPostMsgTmpListActivity	智齿客服 SDK	2	0	
+com.sobot.chat.core.channel.SobotTCPServer	智齿客服 SDK	1	0	
+com.sobot.chat.server.SobotSessionServer	智齿客服 SDK	1	0	
+com.sobot.chat.provider.SobotFileProvider	智齿客服 SDK	4	0	
+libhpplayae.so	乐播 SDK	0	0	
+libed25519.so	乐播 SDK	0	0	
+com.hpplay.sdk.source.permission.PermissionBridgeActivity	乐播 SDK	2	0	
+com.hpplay.sdk.source.process.LelinkSdkService	乐播 SDK	1	0	
+com.hpplay.sdk.source.mirror.ScreenCastService	乐播 SDK	1	0	
+libavcodec.so	FFmpeg	0	0	
+libavfilter.so	FFmpeg	0	0	
+libavformat.so	FFmpeg	0	0	
+libavutil.so	FFmpeg	0	0	
+libfolly_futures.so	Folly	0	0	
+libglide-webp.so	GlideWebpDecoder	0	0	
+leakcanary.internal.PlumberInstaller	LeakCanary	4	0	
+leakcanary.internal.HeapAnalyzerService	LeakCanary	1	0	
+leakcanary.internal.RequestStoragePermissionActivity	LeakCanary	2	0	
+leakcanary.internal.activity.LeakLauncherActivity	LeakCanary	2	0	
+leakcanary.internal.activity.LeakActivity	LeakCanary	2	0	
+leakcanary.internal.NotificationReceiver	LeakCanary	3	0	
+leakcanary.internal.LeakCanaryFileProvider	LeakCanary	4	0	
+leakcanary.internal.AppWatcherInstaller$MainProcess	LeakCanary	4	0	
+no.nordicsemi.android.support.v18.scanner.PendingIntentReceiver	ABSCL	3	0	
+no.nordicsemi.android.support.v18.scanner.ScannerService	ABSCL	1	0	
+libxlua.so	xLua	0	0	
+libapmart.so	QAPM	0	0	
+libapmcrash.so	QAPM	0	0	
+libapmdalvik.so	QAPM	0	0	
+libapmioFake.so	QAPM	0	0	
+com.luck.picture.lib.PictureFileProvider	PictureSelector	4	0	
+com.luck.picture.lib.PictureSelectorActivity	PictureSelector	2	0	
+com.luck.picture.lib.PictureSelectorWeChatStyleActivity	PictureSelector	2	0	
+com.luck.picture.lib.PictureSelectorCameraEmptyActivity	PictureSelector	2	0	
+com.luck.picture.lib.PictureCustomCameraActivity	PictureSelector	2	0	
+com.luck.picture.lib.PicturePreviewActivity	PictureSelector	2	0	
+com.luck.picture.lib.PictureSelectorPreviewWeChatStyleActivity	PictureSelector	2	0	
+com.luck.picture.lib.PictureVideoPlayActivity	PictureSelector	2	0	
+com.luck.picture.lib.PictureExternalPreviewActivity	PictureSelector	2	0	
+com.luck.picture.lib.PicturePlayAudioActivity	PictureSelector	2	0	
+cn.sharesdk.tencent.qq.ReceiveActivity	ShareSDK	2	0	
+libswscale.so	FFmpeg	0	0	
+libswresample.so	FFmpeg	0	0	
+libavdevice.so	FFmpeg	0	0	
+rikka.shizuku.ShizukuProvider	Shizuku	4	0	
+com.tencent.midas.qq.APMidasQQWalletActivity	米大师	2	0	
+cn.jpush.android.service.PluginHuaweiPlatformsService	极光推送	1	0	
+cn.jpush.android.service.PluginOppoPushService	极光推送	1	0	
+cn.jpush.android.service.PluginVivoMessageReceiver	极光推送	3	0	
+cn.jpush.android.asus.AsusPushMessageReceiver	极光推送	3	0	
+cn.jpush.android.service.DActivity	极光推送	2	0	
+com.qq.e.comm.GDTFileProvider	腾讯广告 SDK	4	0	
+io.flutter.plugins.urllauncher.WebViewActivity	Flutter	2	0	
+io.flutter.embedding.android.FlutterActivity	Flutter	2	0	
+com.idlefish.flutterboost.containers.BoostFlutterActivity	FlutterBoost	2	0	
+libcri_mana_vpx.so	CRI Sofdec2	0	0	
+libcri_ware_unity.so	CRI ADX2	0	0	
+libiconv.so	iconv	0	0	
+libil2cpp.so	Unity	0	0	
+libsqlite.so	SQLite	0	0	
+libsqlite3.so	SQLite	0	0	
+libMMANDKSignature.so	MMA SDK	0	0	
+libcocos2dcpp.so	cocos2d-cpp	0	0	
+libmla.so	LibVLC	0	0	
+libvlc.so	LibVLC	0	0	
+libvlcjni.so	LibVLC	0	0	
+libopencv_core.so	OpenCV	0	0	
+libopencv_imgproc.so	OpenCV	0	0	
+libjingle_peerconnection_so.so	WebRTC	0	0	
+libapng-drawable.so	ApngDrawable	0	0	
+libgvr.so	Google VR SDK	0	0	
+com.paypal.android.sdk.payments.PayPalService	PayPal	1	0	
+libQt5(.*)\.so	Qt5	0	1	regex_qt5
+libplugins_audio(.*)\.so	Qt5	0	1	regex_qt5
+libplugins_bearer(.*)\.so	Qt5	0	1	regex_qt5
+libplugins_gamepads(.*)\.so	Qt5	0	1	regex_qt5
+libplugins_geometryloaders(.*)\.so	Qt5	0	1	regex_qt5
+libplugins_geoservices(.*)\.so	Qt5	0	1	regex_qt5
+libplugins_iconengines(.*)\.so	Qt5	0	1	regex_qt5
+libplugins_mediaservice(.*)\.so	Qt5	0	1	regex_qt5
+libplugins_platforms_android(.*)\.so	Qt5	0	1	regex_qt5
+libplugins_playlistformats(.*)\.so	Qt5	0	1	regex_qt5
+libplugins_position(.*)\.so	Qt5	0	1	regex_qt5
+libplugins_qmltooling(.*)\.so	Qt5	0	1	regex_qt5
+libplugins_renderplugins(.*)\.so	Qt5	0	1	regex_qt5
+libplugins_sceneparsers(.*)\.so	Qt5	0	1	regex_qt5
+libplugins_sensors_libqtsensors(.*)\.so	Qt5	0	1	regex_qt5
+libplugins_sqldrivers(.*)\.so	Qt5	0	1	regex_qt5
+libplugins_styles(.*)\.so	Qt5	0	1	regex_qt5
+libplugins_texttospeech(.*)\.so	Qt5	0	1	regex_qt5
+libplugins_video_videonode(.*)\.so	Qt5	0	1	regex_qt5
+libplugins_webview(.*)\.so	Qt5	0	1	regex_qt5
+libqml_Qt3D(.*)\.so	Qt5	0	1	regex_qt5
+libqml_Qt(.*)\.so	Qt5	0	1	regex_qt5
+libssl.so	OpenSSL	0	0	
+libcrypto.so	OpenSSL	0	0	
+libplugins_imageformats(.*)\.so	Qt5	0	1	regex_qt5
+libBurstLinker.so	BurstLinker	0	0	
+libcrashlytics-common.so	Crashlytics	0	0	
+libcrashlytics-handler.so	Crashlytics	0	0	
+libcrashlytics-trampoline.so	Crashlytics	0	0	
+libjiagu_a64.so	360 加固	0	0	
+libjiagu_x64.so	360 加固	0	0	
+libjiagu_x86.so	360 加固	0	0	
+com.alipay.sdk.app.APayEntranceActivity	支付宝 SDK	2	0	
+com.bytedance.applog.util.SimulateLaunchActivity	DataFinder	2	0	
+com.bytedance.applog.migrate.MigrateDetectorActivity	DataFinder	2	0	
+com.bytedance.applog.collector.Collector	DataFinder	3	0	
+com.tencent.android.tpush.inappmessage.InAppMessageActivity	腾讯移动推送	2	0	
+github.ryuunoakaihitomi.retoast._Initializer	ReToast	4	0	
+libfire.so	Sofire	0	0	
+com.baidu.sofire.MyProvider	Sofire	4	0	
+libzbar.so	ZBar	0	0	
+librclone.so	Rclone	0	0	
+libAMapSDK_NAVI_v(.*)\.so	高德地图 SDK	0	1	regex_amap_sdk
+libopencv_java4.so	OpenCV	0	0	
+librenpython.so	Ren'Py	0	0	
+org.android.agoo.huawei.HuaweiPushMessageService	HUAWEI Push(Aliyun Proxy)	1	0	
+com.reactnativecommunity.webview.RNCWebViewFileProvider	React Native	4	0	
+com.huawei.hms.mlsdk.common.provider.MLInitializerProvider	HMS ML Kit	4	0	
+libzbarjni.so	ZBar	0	0	
+libconscrypt_jni.so	Conscrypt	0	0	
+libmetasec_ml.so	Pangle SDK	0	0	
+libxhook_lib.so	xHook	0	0	
+libkoom-java.so	KOOM	0	0	
+libkwai-linker.so	KOOM	0	0	
+com.kwai.koom.javaoom.analysis.HeapAnalyzeService	KOOM	1	0	
+libsentry.so	Sentry	0	0	
+libsentry-android.so	Sentry	0	0	
+io.sentry.android.core.SentryInitProvider	Sentry	4	0	
+com.igexin.sdk.OppoPushService	OPPO Push(GeTui Proxy)	1	0	
+com.igexin.sdk.VivoPushMessageReceiver	vivo Push(GeTui Proxy)	3	0	
+org.hapjs.(.*)	快应用	3	1	regex_hapjs
+com.karumi.dexter.DexterActivity	Dexter	2	0	
+com.google.android.gms.ads.AdService	Google AdMob	1	0	
+libbugrpt.so	网易云捕	0	0	
+com.kepler.jd.login.AuthSuccessActivity	开普勒 SDK	2	0	
+com.kepler.jd.sdk.KeplerMidActivity	开普勒 SDK	2	0	
+com.kepler.jd.sdk.WebViewActivity	开普勒 SDK	2	0	
+com.kepler.jd.sdk.KeplerBackActivity	开普勒 SDK	2	0	
+com.google.android.trichromelibrary	Trichrome	6	0	
+libcurl.so	LibCurl	0	0	
+libopencc.so	OpenCC	0	0	
+libopus.so	Opus	0	0	
+liblog4cpp.so	Log for C++	0	0	
+libLive2DCubismCore.so	Live2D Cubism SDK	0	0	
+libYandexSpeechKitJni.(.*)\.so	Yandex SpeechKit	0	1	regex_yandex_speechKit
+libmegazord.so	Megazord	0	0	
+libxgVipSecurity.so	腾讯移动推送	0	0	
+com.huawei.android.hms.tpns.HWHmsMessageService	HUAWEI Push(TPNS Proxy)	1	0	
+com.lxj.xpopup.util.XPermission$PermissionActivity	XPopup	2	0	
+com.bilibili.xpref.XprefProvider	Xpref	4	0	
+com.google.mlkit.common.internal.MlKitInitProvider	ML Kit	4	0	
+com.google.mlkit.common.internal.MlKitComponentDiscoveryService	ML Kit	1	0	
+libtorrent4j.so	Torrent library for java	0	0	
+libgocryptfs.so	gocryptsfs	0	0	
+libtiff.so	Android-TiffBitmapFactory	0	0	
+libraw.so	LibRaw	0	0	
+libQt6(.*)\.so	Qt6	0	1	regex_qt6
+libadcolony.so	AdColony	0	0	
+libsodium.so	Sodium	0	0	
+libWXVoice.so	腾讯语音识别	0	0	
+com.huawei.hms.hwid.internal.ui.activity.HwIdSignInHubActivity	华为帐号服务	2	0	
+com.huawei.hms.account.internal.ui.activity.AccountSignInHubActivity	华为帐号服务	2	0	
+com.huawei.hms.analytics.receiver.HiAnalyticsSvcEvtReceiver	HMS Analytics Kit	3	0	
+com.huawei.hms.analytics.provider.AnalyticsInitializeProvider	HMS Analytics Kit	4	0	
+com.secneo.apkwrapper.CP	梆梆安全	4	0	
+libShanYCore.so	闪验 SDK	0	0	
+libDXRisk(.*)\.so	顶象无感验证 SDK	0	1	regex_dx_risk
+libchrome_android_linker.so	Android Crazy Linker	0	0	
+libDXRiskComm(.*)\.so	顶象无感验证 SDK	0	1	regex_dx_risk
+libDXCaptcha(.*)\.so	顶象无感验证 SDK	0	1	regex_dx_risk
+libclash.so	Clash Core	0	0	
+libartemis.so	Artemis Engine	0	0	
+libmapbox-gl.so	Mapbox GL Native	0	0	
+libkraken_jsc.so	kraken	0	0	
+androidx.compose.ui.tooling.PreviewActivity	Jetpack Compose	2	0	
+androidx.compose.ui.tooling.data.TestActivity	Jetpack Compose	2	0	
+androidx.compose.ui.tooling.preview.PreviewActivity	Jetpack Compose	2	0	
+com.bytedance.tools.codelocator.CodeLocatorProvider	CodeLocator	4	0	
+androidx.profileinstaller.ProfileInstallReceiver	Jetpack ProfileInstaller	3	0	
+com.iqiyi.android.qigsaw.core.splitinstall.remote.SplitInstallService	Qigsaw	1	0	
+com.iqiyi.android.qigsaw.core.splitinstall.SplitCleanService	Qigsaw	1	0	
+com.iqiyi.android.qigsaw.core.splitrequest.splitinfo.SplitUpdateService	Qigsaw	1	0	
+com.iqiyi.android.qigsaw.core.DefaultObtainUserConfirmationDialog	Qigsaw	2	0	
+com.google.android.play.core.assetpacks.ExtractionForegroundService	Google Play Service	1	0	
+com.journeyapps.barcodescanner.CaptureActivity	ZXing Android Embedded	2	0	
+com.jakewharton.processphoenix.ProcessPhoenix	ProcessPhoenix	2	0	
+tv.danmaku.ijk.media.player.services.IjkMediaPlayerService	IJKPlayer	1	0	
+tv.danmaku.ijk.media.player.services.IjkMediaPlayerNoUIActivity	IJKPlayer	2	0	
+libFirebaseCpp(.*)\.so	Firebase C++ SDK	0	1	regex_firebase_cpp
+liblspd.so	LSPatch	0	0	
+org.lsposed.lspatch	LSPatch	5	0	
+libtrojan-go.so	Trojan-Go	0	0	
+librime.so	Rime Core	0	0	
+librime_jni.so	Rime Core	0	0	
+libxul.so	Lib XUL	0	0	
+libsgmiddletier.so	阿里聚安全	0	0	
+com.xiaomi.accountsdk.diagnosis.ui.PassportDiagnosisActivity	小米账号开放平台	2	0	
+com.qq.e.ads.DialogActivity	腾讯广告 SDK	2	0	
+com.alibaba.security.realidentity.activity.RPWebViewActivity	实人认证 SDK	2	0	
+com.alibaba.security.realidentity.activity.RPTakePhotoActivity	实人认证 SDK	2	0	
+com.alibaba.security.biometrics.activity.ALModelLoadingActivity	实人认证 SDK	2	0	
+com.alibaba.security.biometrics.activity.ALBiometricsActivity	实人认证 SDK	2	0	
+libALBiometricsJni.so	实人认证 SDK	0	0	
+libsharewind.so	微博 SDK	0	0	
+libfbjni.so	Facebook SDK	0	0	
+io.sentry.android.core.SentryPerformanceProvider	Sentry	4	0	
+com.sina.weibo.sdk.content.FileProvider	微博 SDK	4	0	
+com.umeng.message.notify.UPushMessageNotifyActivity	友盟推送	2	0	
+com.umeng.message.UPushBoardActivity	友盟推送	2	0	
+com.umeng.message.UMessageNotifyActivity	友盟推送	2	0	
+com.meizu.cloud.pushsdk.MzPushSystemReceiver	Meizu Push	3	0	
+com.bytedance.sdk.open.douyin.ui.DouYinWebAuthorizeActivity	抖音 SDK	2	0	
+com.bytedance.sdk.openadsdk.stub.server.DownloaderServerManager	Pangle SDK	4	0	
+com.bytedance.pangle.servermanager.MainServerManager	Pangle SDK	4	0	
+com.bytedance.pangle.provider.MainProcessProviderProxy	Pangle SDK	4	0	
+cn.bertsir.zbar.utils.QrFileProvider	ZBar	4	0	
+org.qiyi.pluginlibrary.install.PluginInstallerService	Neptune	2	0	
+org.qiyi.pluginlibrary.pm.PluginPackageManagerService	Neptune	2	0	
+org.qiyi.pluginlibrary.component.(.*)	Neptune	1	1	regex_neptune
+org.qiyi.pluginlibrary.component.ServiceProxy0	Neptune	2	0	
+org.qiyi.pluginlibrary.component.ServiceProxy1	Neptune	2	0	
+org.qiyi.pluginlibrary.component.ServiceProxy2	Neptune	2	0	
+org.qiyi.pluginlibrary.component.ServiceProxy3	Neptune	2	0	
+org.qiyi.pluginlibrary.component.ContentProviderProxy1	Neptune	4	0	
+org.qiyi.pluginlibrary.pm.PluginPackageManagerProvider	Neptune	4	0	
+libX86Bridge.so	360 加固	0	0	
+org.hapjs.(.*)	快应用	4	1	regex_hapjs
+com.didi.virtualapk.delegate.RemoteContentProvider	VirtualAPK	4	0	
+com.didi.virtualapk.(.*)	VirtualAPK	2	1	regex_virtual_apk
+com.igexin.sdk.OppoAppPushService	OPPO Push(GeTui Proxy)	1	0	
+com.igexin.sdk.HmsPushMessageService	HUAWEI Push(GeTui Proxy)	1	0	
+com.huawei.hms.device.provider.CheckHmsProvider	HMS Core	4	0	
+cmbapi.CMBApiEntryActivity	招商银行 SDK	2	0	
+libpangleflipped.so	Pangle SDK	0	0	
+libagora_ai_denoise_extension.so	Agora RTC SDK	0	0	
+libagora_ci_extension.so	Agora RTC SDK	0	0	
+libagora_dav1d_extension.so	Agora RTC SDK	0	0	
+libagora_fd_extension.so	Agora RTC SDK	0	0	
+libagora_fdkaac.so	Agora RTC SDK	0	0	
+libagora_jnd_extension.so	Agora RTC SDK	0	0	
+libagora-mpg123.so	Agora RTC SDK	0	0	
+libagora_segmentation_extension.so	Agora RTC SDK	0	0	
+libagora_super_resolution_extension.so	Agora RTC SDK	0	0	
+libagora_video_process_extension.so	Agora RTC SDK	0	0	
+libagora-core.so	Agora RTC SDK	0	0	
+libagora-ffmpeg.so	Agora RTC SDK	0	0	
+libagora-rtc-sdk.so	Agora RTC SDK	0	0	
+libagora-soundtouch.so	Agora RTC SDK	0	0	
+libfilament-utils-jni.so	Filament	0	0	
+libfilament-jni.so	Filament	0	0	
+libgltfio-jni.so	Filament	0	0	
+androidx.test.core.app.InstrumentationActivityInvoker$BootstrapActivity	Jetpack Test	2	0	
+androidx.test.core.app.InstrumentationActivityInvoker$EmptyActivity	Jetpack Test	2	0	
+androidx.test.core.app.InstrumentationActivityInvoker$EmptyFloatingActivity	Jetpack Test	2	0	
+libhermes-executor-debug.so	Hermes	0	0	
+libhermes-executor-release.so	Hermes	0	0	
+libhermes-inspector.so	Hermes	0	0	
+libhermes.so	Hermes	0	0	
+libsgmainso(.*)\.so	阿里聚安全	0	1	regex_ali_security
+libmsaoaidauth.so	MSA SDK	0	0	
+libmsaoaidsec.so	MSA SDK	0	0	
+com.chuanglan.shanyan_sdk.view.ShanYanOneKeyActivity	闪验 SDK	2	0	
+com.chuanglan.shanyan_sdk.view.CmccLoginActivity	闪验 SDK	2	0	
+com.chuanglan.shanyan_sdk.view.CTCCPrivacyProtocolActivity	闪验 SDK	2	0	
+com.bytedance.sdk.openadsdk.(.*)	Pangle SDK	4	1	regex_pangle
+libne_audio.so	网易云信	0	0	
+libhigh-available.so	网易云信	0	0	
+libnertc_sdk.so	网易云信	0	0	
+libvideoeffect.so	网易云信	0	0	
+liblivestreaming.so	网易云信	0	0	
+libnelprender.so	网易云信	0	0	
+libnelpengine.so	网易云信	0	0	
+libRtsSDK.so	网易云信	0	0	
+libneliveplayer.so	网易云信	0	0	
+com.highcapable.sense.SenseActivity	Sense	2	0	
+libquack.so	Quack	0	0	
+com.applovin.sdk.AppLovinInitProvider	AppLovin	4	0	
+com.applovin.(.*)	AppLovin	2	1	regex_applovin
+com.applovin.impl.sdk.utils.AppKilledService	AppLovin	1	0	
+com.applovin.impl.adview.activity.FullscreenAdService	AppLovin	1	0	
+com.facebook.ads.AudienceNetworkActivity	Audience Network SDK	2	0	
+com.kwad.sdk.api.proxy.(.*)	Kwai Ad SDK	2	1	regex_kwai_ad_sdk
+com.kwad.sdk.api.proxy.(.*)	Kwai Ad SDK	1	1	regex_kwai_ad_sdk
+com.kwad.sdk.api.proxy.app.AdSdkFileProvider	Kwai Ad SDK	4	0	
+com.getui.gtc.GtcService	个推	2	0	
+com.getui.gtc.base.GtcProvider	个推	4	0	
+com.kwai.auth.login.kwailogin.h5login.KwaiH5LoginActivity	快手开放平台	2	0	
+com.kwai.auth.login.kwailogin.applogin.RouteHandlerActivity	快手开放平台	2	0	
+com.kwai.opensdk.sdk.openapi.KwaiHandlerActivity	快手开放平台	2	0	
+com.kwai.opensdk.sdk.openapi.KwaiRouterActivity	快手开放平台	2	0	
+com.kwai.opensdk.sdk.LoadingActivity	快手开放平台	2	0	
+com.google.games.bridge.(.*)	Games plugin for Unity	2	1	regex_google_play_games_for_unity
+libgpg.so	Games plugin for Unity	0	0	
+liblbs.so	TBS	0	0	
+libMyGame.so	cocos2d-x	0	0	
+libgl4es.so	GL4ES	0	0	
+libwebviewchromium.huawei.so	HUAWEI WebView	0	0	
+libxquic.so	XQUIC	0	0	
+libr_upgrade_lib.so	RUpgrade	0	0	
+libquiche.so	quiche	0	0	
+libgodot_android.so	Godot Engine	0	0	
+libyoyo.so	GameMaker Studio	0	0	
+liblocationbeaconid.so	腾讯地图 SDK	0	0	
+liblocationlocalenc.so	腾讯地图 SDK	0	0	
+com.baidu.swan.(.*)	智能小程序	2	1	regex_baidu_swan
+com.baidu.swan.(.*)	智能小程序	1	1	regex_baidu_swan
+com.baidu.swan.uuid.sync.SyncProvider	智能小程序	3	0	
+com.tencent.android.tpush.InnerTpnsActivity	腾讯移动推送	2	0	
+com.cmic.sso.sdk.view.LoginAuthActivity	移动号码认证	2	0	
+com.miui.zeus.mimo.sdk.ad.reward.RewardVideoAdActivity	小米广告 SDK	2	0	
+com.miui.zeus.mimo.sdk.view.WebViewActivity	小米广告 SDK	2	0	
+com.miui.zeus.landingpage.sdk.activity.WebViewActivity	小米广告 SDK	2	0	
+androidx.camera.core.impl.MetadataHolderService	Jetpack CameraX	1	0	
+com.tencent.mmkv.MMKVContentProvider	MMKV	4	0	
+libmatrix-fd.so	Matrix	0	0	
+libmatrix-hookcommon.so	Matrix	0	0	
+libmatrix-jectl.so	Matrix	0	0	
+libmatrix-memguard.so	Matrix	0	0	
+libmatrix-memoryhook.so	Matrix	0	0	
+libmatrix-pthreadhook.so	Matrix	0	0	
+libmatrix-opengl-leak.so	Matrix	0	0	
+libmatrix-traffic.so	Matrix	0	0	
+libmatrix_resource_canary.so	Matrix	0	0	
+libmatrixmrs.so	Matrix	0	0	
+libAgoraMediaPlayer.so	Agora RTC SDK	0	0	
+libagora-player-ffmpeg.so	Agora RTC SDK	0	0	
+com.tencent.smtt.utils.FileProvider	TBS	4	0	
+com.huawei.hms.hmsscankit.ScanKitActivity	HMS Scan Kit	2	0	
+libsdkcore.so	FinClip	0	0	
+libfin-yuvutil.so	FinClip	0	0	
+libimebra_lib.so	imebra	0	0	
+libfmod.so	FMOD	0	0	
+androidx.compose	Jetpack Compose	5	0	
+com.alipay.mobile.nebulacore.ui.H5Activity	Nebula SDK	2	0	
+com.alipay.mobile.nebulacore.ui.H5TransActivity	Nebula SDK	2	0	
+com.alipay.mobile.nebulacore.ui.H5FileChooserActivity	Nebula SDK	2	0	
+com.alipay.mobile.nebulacore.ui.H5NetworkCheckActivity	Nebula SDK	2	0	
+com.alipay.mobile.nebulacore.wallet.H5DevAppActivity	Nebula SDK	2	0	
+com.alipay.mobile.nebulacore.dev.ui.H5BugMeSettingsActivity	Nebula SDK	2	0	
+com.alipay.mobile.nebulacore.ui.H5MainProcTinyActivity	Nebula SDK	2	0	
+com.alipay.mobile.nebulacore.ui.H5Activity$H5Activity1	Nebula SDK	2	0	
+com.alipay.mobile.nebulacore.ui.H5Activity$H5Activity2	Nebula SDK	2	0	
+com.alipay.mobile.nebulacore.ui.H5Activity$H5Activity3	Nebula SDK	2	0	
+com.alipay.mobile.nebulacore.ui.H5Activity$H5Activity4	Nebula SDK	2	0	
+com.alipay.mobile.nebulacore.ui.H5Activity$H5Activity5	Nebula SDK	2	0	
+com.alipay.mobile.nebulacore.ui.H5TransActivity$H5TransActivity0	Nebula SDK	2	0	
+com.alipay.mobile.nebulacore.ui.H5TransActivity$H5TransActivity1	Nebula SDK	2	0	
+com.alipay.mobile.nebulacore.ui.H5TransActivity$H5TransActivity2	Nebula SDK	2	0	
+com.alipay.mobile.nebulacore.ui.H5TransActivity$H5TransActivity3	Nebula SDK	2	0	
+com.alipay.mobile.nebulacore.ui.H5TransActivity$H5TransActivity4	Nebula SDK	2	0	
+com.alipay.mobile.nebulacore.ui.H5TransActivity$H5TransActivity5	Nebula SDK	2	0	
+com.alipay.mobile.nebulacore.ui.H5NebulaAppActivity	Nebula SDK	2	0	
+com.alipay.mobile.nebulacore.ui.H5TransLandscapeActivity	Nebula SDK	2	0	
+com.alipay.mobile.nebula.appcenter.apphandler.loadingview.H5LoadingActivity	Nebula SDK	2	0	
+com.alipay.mobile.nebulaappproxy.activity.MiniProgramOpenSettingActivity	Nebula SDK	2	0	
+com.alipay.mobile.nebulaappproxy.ipc.H5ProcessTransActivity	Nebula SDK	2	0	
+com.alipay.mobile.nebulaappproxy.inside.contact.H5ContactTransparentActivity	Nebula SDK	2	0	
+com.alipay.mobile.nebulaappproxy.inside.account.AlipayMiniProgramAuthActivity	Nebula SDK	2	0	
+com.alipay.mobile.nebulaappproxy.inside.account.MiniProgramAuthService	Nebula SDK	3	0	
+com.alipay.mobile.scansdk.activity.ToolsCaptureActivity	mPaaS 扫一扫	2	0	
+com.alipay.mobile.scansdk.activity.MPaasToolsCaptureActivity	mPaaS 扫一扫	2	0	
+com.xiaomi.mipush.sdk.NotificationClickedActivity	MiPush	2	0	
+com.megvii.meglive_sdk.detect.fmp.FmpLivenessActivity	旷视 SDK	2	0	
+com.megvii.meglive_sdk.detect.action.ActionLivenessActivity	旷视 SDK	2	0	
+com.megvii.meglive_sdk.detect.color.FmpColorfulActivity	旷视 SDK	2	0	
+com.megvii.meglive_sdk.detect.guide.GrantActivity	旷视 SDK	2	0	
+com.megvii.meglive_sdk.detect.agreement.UserAgreementActivity	旷视 SDK	2	0	
+com.alipay.mobile.core.loading.impl.LoadingPage	mPaaS	2	0	
+com.alipay.mobile.common.logging.process.LogServiceInlite1	mPaaS	1	0	
+com.alipay.mobile.common.logging.process.LogServiceInlite2	mPaaS	1	0	
+com.alipay.mobile.common.logging.process.LogServiceInlite3	mPaaS	1	0	
+com.alipay.mobile.common.logging.process.LogServiceInlite4	mPaaS	1	0	
+com.alipay.mobile.common.logging.process.LogServiceInlite5	mPaaS	1	0	
+com.alipay.mobile.common.logging.process.LogServiceInMainProcess	mPaaS	1	0	
+com.alipay.mobile.common.logging.process.LogServiceInPushProcess	mPaaS	1	0	
+com.alipay.mobile.common.logging.process.LogServiceInToolsProcess	mPaaS	1	0	
+com.alipay.mobile.logmonitor.TraceStubReceiver	mPaaS	3	0	
+com.alipay.mobile.logmonitor.ClientMonitorExtReceiver	mPaaS	3	0	
+com.alipay.android.phone.mobilesdk.apm.service.APMInnerService	mPaaS	1	0	
+com.alipay.mobile.logmonitor.ClientMonitorService	mPaaS	1	0	
+com.alipay.mobile.quinox.activity.StubActivity	mPaaS	2	0	
+com.alipay.mobile.quinox.classloader.DexOptServiceInToolsProcess	mPaaS	1	0	
+com.alipay.mobile.quinox.preload.PreloadFodderActivity	mPaaS	2	0	
+com.alipay.mobile.quinox.preload.PreloadService	mPaaS	1	0	
+com.alipay.mobile.quinox.preload.MainPldService	mPaaS	1	0	
+com.alipay.mobile.quinox.preload.ExcaliburService	mPaaS	1	0	
+com.alipay.android.shareassist.ui.WeiboEditActivity	mPaaS 社交分享	2	0	
+com.alipay.android.shareassist.ui.WeiboAuthActivity	mPaaS 社交分享	2	0	
+com.alipay.auth.AuthWeiboActivity	mPaaS 社交分享	2	0	
+com.alipay.android.shareassist.ui.WeiboFrindListActivity	mPaaS 社交分享	2	0	
+com.alipay.android.shareassist.ui.WeiboCallbackActivity	mPaaS 社交分享	2	0	
+com.alipay.android.shareassist.ui.QQCallbackActivity	mPaaS 社交分享	2	0	
+com.alipay.mobile.common.fgbg.FgBgMonitorService	mPaaS	1	0	
+com.alipay.mobile.rome.syncsdk.service.LongLinkService	mPaaS	1	0	
+com.baidu.swan.(.*)	智能小程序	4	1	regex_baidu_swan
+com.baidu.mobads.sdk.api.BdFileProvider	移动应用推广 SDK	4	0	
+io.flutter.plugins.imagepicker.ImagePickerFileProvider	Flutter	4	0	
+com.hpplay.sdk.source.process.LelinkReceiver	乐播 SDK	3	0	
+libTmsdk-(.*)-mfr\.so	腾讯御安全	0	1	regex_tencent_security
+libandroidndkgif.so	Android NDK GIF	0	0	
+lib7-Zip-JBinding.so	7-Zip	0	0	
+libgmesdk.so	GME	0	0	
+libffmpeg.so	FFmpeg	0	0	
+libmobileffmpeg.so	FFmpeg	0	0	
+libquickjs.so	QuickJS	0	0	
+libnode.so	Node.js	0	0	
+liblspatch.so	LSPatch	0	0	
+com.tencent.matrix.backtrace.WarmUpService	Matrix	2	0	
+com.just.agentweb.ActionActivity	AgentWeb	2	0	
+libMegActionFmpJni.so	旷视 SDK	0	0	
+libMegviiInnerUtils-(.*)\.so	旷视 SDK	0	1	regex_megvii
+libbucket2-new.so	旷视 SDK	0	0	
+libscannative.so	HMS Scan Kit	0	0	
+liblogan.so	Logan	0	0	
+com.huawei.hms.support.api.push.TransActivity	HUAWEI Push	2	0	
+libmnnkitcore.so	MNN	0	0	
+libBugly-ext.so	Bugly	0	0	
+libBugly-webank.so	Bugly	0	0	
+libcocos2djs.so	cocos2d-x	0	0	
+libtxmapvis.so	腾讯地图 SDK	0	0	
+libtmsqmp.so	腾讯地图 SDK	0	0	
+libnesec.so	网易易盾	0	0	
+libvorbis.so	Vorbis	0	0	
+androidx.camera.camera2.impl.Camera2Initializer	Jetpack Camera2	4	0	
+com.qq.e.tg.TransPortraitADActivity	腾讯广告 SDK	2	0	
+com.qq.e.tg.RewardvideoPortraitADActivity	腾讯广告 SDK	2	0	
+com.qq.e.tg.RewardvideoLandscapeADActivity	腾讯广告 SDK	2	0	
+com.qq.e.tg.LandscapeADActivity	腾讯广告 SDK	2	0	
+com.qq.e.tg.ADActivity	腾讯广告 SDK	2	0	
+com.umeng.message.UmengNotificationReceiver	友盟推送	3	0	
+cn.android.service.JTransitActivity	极光推送	2	0	
+libp7zip.so	AndroidP7zip	0	0	
+cn.jiguang.ads.app.service.UserService	JAd SDK	1	0	
+cn.jiguang.ads.base.component.JAdActivity	JAd SDK	2	0	
+cn.jiguang.ads.base.component.JTransparentActivity	JAd SDK	2	0	
+cn.jiguang.ads.base.component.JAdProvider	JAd SDK	4	0	
+cn.jiguang.ads.base.component.JAdFileProvider	JAd SDK	4	0	
+cn.jiguang.ads.base.component.JAdReceiver	JAd SDK	3	0	
+cn.jiguang.union.ads.service.JAdFileProvider	JAd SDK	4	0	
+com.microsoft.appcenter.distribute.DeepLinkActivity	App Center	2	0	
+com.microsoft.appcenter.distribute.AppCenterPackageInstallerReceiver	App Center	3	0	
+com.bytedance.pangle.FileProvider	Pangle SDK	4	0	
+com.mapbox.android.telemetry.provider.MapboxTelemetryInitProvider	Mapbox Mobile Events	4	0	
+com.mapbox.android.telemetry.errors.ErrorReporterJobIntentService	Mapbox Mobile Events	1	0	
+com.mapbox.android.telemetry.MapboxTelemetryService	Mapbox Mobile Events	1	0	
+com.facebook.flipper.android.diagnostics.FlipperDiagnosticActivity	Flipper 	2	0	
+com.huawei.caas.messageservice.JumpActivity	HUAWEI CaaS Engine	2	0	
+com.huawei.hms.hihealth.activity.HealthKitAuthHubActivity	HUAWEI Health Kit	2	0	
+com.huawei.hms.hihealth.activity.HealthKitTransparentActivity	HUAWEI Health Kit	2	0	
+com.huawei.hms.hihealth.activity.HealthKitWebViewActivity	HUAWEI Health Kit	2	0	
+cn.bertsir.zbar.QRActivity	ZBar	2	0	
+cn.bertsir.zbar.utils.PermissionUtils$PermissionActivity	ZBar	2	0	
+libvolcenginertc.so	实时音视频	0	0	
+com.sensorsdata.analytics.android.sdk.dialog.SchemeActivity	神策分析 SDK	2	0	
+libusb.so	libusb	0	0	
+libbson.so	MongoDB	0	0	
+libcjson.so	cJSON	0	0	
+libzip.so	libzip	0	0	
+libzlib.so	zlib	0	0	
+libygsiyu.so	iApp	0	0	
+libAisound.so	离线语音合成	0	0	
+libYUVDecoder.so	libYUV	0	0	
+libyuv-decoder.so	libYUV	0	0	
+libarmepic	Epic	0	0	
+librxffmpeg-core.so	RxFFmpeg	0	0	
+librxffmpeg-invoke.so	RxFFmpeg	0	0	
+librxffmpeg-player.so	RxFFmpeg	0	0	
+libfmodL.so	FMOD	0	0	
+libshook.so	SHook	0	0	
+libfoza.so	SHook	0	0	
+libspatch.so	SHook	0	0	
+libmace.so	MACE	0	0	
+libmiio.so	小米 IoT SDK	0	0	
+libmiot_patch.so	小米 IoT SDK	0	0	
+libtensorflowlite_gpu_jni.so	LiteRT	0	0	
+libhermes-executor-common-debug.so	Hermes	0	0	
+libhermes-executor-common-release.so	Hermes	0	0	
+libnesec-x86.so	网易易盾	0	0	
+libDexHelper-x86_64.so	梆梆安全	4	0	
+libagora-crypto.so	Agora RTC SDK	0	0	
+libagora-fdkaac.so	Agora RTC SDK	0	0	
+libagora-rtm-sdk-jni.so	Agora RTC SDK	0	0	
+libagora_spatial_audio_extension.so	Agora RTC SDK	0	0	
+libagora_full_audio_format_extension.so	Agora RTC SDK	0	0	
+libMMASignature.so	MMA SDK	0	0	
+libsgcore.so	阿里聚安全	0	0	
+libsgnocaptcha.so	阿里聚安全	0	0	
+libsgmisc.so	阿里聚安全	0	0	
+libsgnocaptchaso(.*)\.so	阿里聚安全	0	1	regex_ali_security
+libquicklogin.so	极光认证 SDK	0	0	
+cn.jpush.android.service.JPluginFCMMessagingService	极光推送	1	0	
+libbytehook.so	BHook	0	0	
+libmp3decoder.so	高德地图 SDK	0	0	
+librtbt828.so	高德地图 SDK	0	0	
+libwtbt828.so	高德地图 SDK	0	0	
+libmonochrome_64.so	libmonochrome	0	0	
+libncnn.so	ncnn	0	0	
+libxp2p.so	libp2p	0	0	
+libandroidlame.so	AndroidLame	0	0	
+libmonobdwgc-2.0.so	Unity Mono	0	0	
+libMonoPosixHelper.so	Unity Mono	0	0	
+libhpatchz.so	HDiffPatch	0	0	
+libpnc-crypto.so	梆梆安全	4	0	
+libaria2.so	aria2	0	0	
+libfree-reflection.so	FreeReflection	0	0	
+lib_burst_generated.so	Burst	0	0	
+libxa-internal-api.so	Xamarin	0	0	
+libvivo_account_sdk.so	vivo 网游联运 SDK	0	0	
+liblofelt_sdk.so	Lofelt SDK	0	0	
+libeasymobile.so	Easy Mobile	0	0	
+libjniPdfium.so	Pdfium	0	0	
+libsandhook.so	SandHook	0	0	
+libsandhook-native.so	SandHook	0	0	
+libsandhook-art.so	SandHook	0	0	
+libsandhook64.so	SandHook	0	0	
+liblsplant.so	LSPlant	0	0	
+libApkPatchLibrary.so	Smart App Updates	0	0	
+libpano_video_renderer.so	Cardboard SDK	0	0	
+libpanorenderer.so	Cardboard SDK	0	0	
+libvraudio_engine.so	Cardboard SDK	0	0	
+libvrtoolkit.so	Cardboard SDK	0	0	
+libgvrbase.so	Cardboard SDK	0	0	
+libNativeImageProcessor.so	AndroidPhotoFilters	0	0	
+libsqlitex.so	SQLite	0	0	
+libopenal.so	OpenAL	0	0	
+libadmob.so	Google AdMob	0	0	
+libadmob-google.so	Google AdMob	0	0	
+liblayaair.so	LayaAir	0	0	
+libenet.so	ENet	0	0	
+libalicomphonenumberauthsdk-release_alijtca_plus.so	号码认证服务	0	0	
+libalicomphonenumberauthsdk-log-release_alijtca_plus.so	号码认证服务	0	0	
+libalicomphonenumberauthsdk-log-online-standard-release_alijtca_plus.so	号码认证服务	0	0	
+libzipw.so	zipw	0	0	
+libantitrace.so	EasyProtector	0	0	
+libmnnpybridge.so	MNN	0	0	
+libmnncv.so	MNN	0	0	
+libbangcle_crypto_tool.so	梆梆安全	4	0	
+libbangcle_risk.so	梆梆安全	4	0	
+libmodft2.so	Pdfium	0	0	
+libmodpdfium.so	Pdfium	0	0	
+libttboringssl.so	BoringSSL	0	0	
+libSipCryptor.so	CFCA	0	0	
+libcfcaMLog.so	CFCA	0	0	
+libcfcamkit.so	CFCA	0	0	
+libHKESipCryptor.so	CFCA	0	0	
+libthreadfix.so	Threadfix	0	0	
+libpag.so	PAG	0	0	
+liblibpag.so	PAG	0	0	
+libwebpbackport.so	WebP	0	0	
+libmediastreamer_base.so	Mediastreamer2	0	0	
+libmediastreamer_voip.so	Mediastreamer2	0	0	
+libmsx264.so	Mediastreamer2	0	0	
+libalivcffmpeg.so	阿里云短视频 SDK	0	0	
+libaliresample.so	阿里云短视频 SDK	0	0	
+libtongdun.so	同盾设备指纹	0	0	
+libCNamaSDK.so	Faceunity Nama SDK	0	0	
+libfuai.so	Faceunity Nama SDK	0	0	
+libbd_etts.so	离线语音合成 SDK	0	0	
+libBDSpeechDecoder_V1.so	离线语音合成 SDK	0	0	
+libnllvm(.*)\.so	MSA SDK	0	1	regex_msa
+libexec.so	爱加密	0	0	
+libexecmain.so	爱加密	0	0	
+libexecmain_x86.so	爱加密	0	0	
+libexecoat.so	爱加密	0	0	
+libexecoat_x86.so	爱加密	0	0	
+libBaiduSpeechSDK.so	语音识别 SDK	0	0	
+libbd_easr_s1_merge_normal_20151216.dat.so	语音识别 SDK	0	0	
+libbdEASRAndroid.so	语音识别 SDK	0	0	
+libbdSpilWakeup.so	语音识别 SDK	0	0	
+libvad.dnn.so	语音识别 SDK	0	0	
+libswappy.so	Frame Pacing	0	0	
+libswappyVk.so	Frame Pacing	0	0	
+libsecurityenv.so	U-Game 金融风控组件	0	0	
+libhfyuv.so	libhfyuv	0	0	
+libquickjs-android.so	QuickJS Binding	0	0	
+libnetsecsdk-(.*)\.so	网易易盾	0	1	regex_netease_sec
+libnetmobsec-(.*)\.so	网易易盾	0	1	regex_netease_sec
+libbspatch.so	bspatch	0	0	
+libtess.so	Tesseract	0	0	
+libPaddle.so	Paddle Lite	0	0	
+libpaddle_light_api_shared.so	Paddle Lite	0	0	
+libpaddle_mobile_jni.so	Paddle Lite	0	0	
+libpaddle-mobile.so	Paddle Lite	0	0	
+libpaddle_full_api_shared.so	Paddle Lite	0	0	
+liblite_pybind.so	Paddle Lite	0	0	
+libspeex.so	Speex	0	0	
+libspeexdsp.so	Speex	0	0	
+libapms_ndk_anr.so	AGC APM	0	0	
+libandroid-phone-(.*)\.so	mPaaS	0	1	regex_mpaas
+libcom-mpaas-(.*)\.so	mPaaS	0	1	regex_mpaas
+libztcodec2.so	阿里云语音服务 SDK	0	0	
+libsophix.so	阿里移动热修复	0	0	
+libkraken.so	Kraken	0	0	
+libtersafe.so	手游安全 SDK	0	0	
+libtersafe2.so	手游安全 SDK	0	0	
+libsls_producer.so	日志服务 SLS	0	0	
+libaiui.so	AIUI	0	0	
+libmegface.so	旷视 SDK	0	0	
+libMGBeauty.so	人像美化 SDK	0	0	
+libMegviiDlmk.so	人像美化 SDK	0	0	
+libtxcopyrightedmedia.so	正版曲库直通车	0	0	
+libavif.so	libavif	0	0	
+libavif-jni.so	libavif	0	0	
+libpymodules.so	python-for-android	0	0	
+(libpython([1-9]\d*\.?\d*)|(0\.\d*[1-9]))(m)?\.so	python-for-android	0	1	regex_pfa
+libsdl.so	SDL	0	0	
+libsdl_(.*)\.so	SDL	0	1	regex_sdl
+libaudio360.so	AVPro Video	0	0	
+libaudio360-JNI.so	AVPro Video	0	0	
+libMSDK.so	MSDK	0	0	
+libMsdkAdapter.so	MSDK	0	0	
+libMSDKSystem.so	MSDK	0	0	
+libGCloudVoice.so	游戏语音 GVoice	0	0	
+libio-canary.so	Matrix	0	0	
+libmatrix_hprof_analyzer.so	Matrix	0	0	
+libmatrix_mem_util.so	Matrix	0	0	
+libczxing.so	CZXing	0	0	
+androidx.sharetarget.ChooserTargetServiceCompat	Jetpack ShareTarget	1	0	
+libapminsighta.so	APMInsight	0	0	
+libapminsightb.so	APMInsight	0	0	
+libjeffmony.so	PlayerSDK	0	0	
+libAliNNPython.so	AliNNPython	0	0	
+libmtc.so	JusTalk Cloud	0	0	
+libzmf.so	JusTalk Cloud	0	0	
+libqmp.so	Qimei SDK	0	0	
+libffmpegkit.so	FFmpegKit	0	0	
+libdict-parser.so	文字识别服务	0	0	
+libun7zip.so	Un7zip	0	0	
+libGXAnalyzeAndroid.so	GaiaX	0	0	
+libGXAnalyzeCore.so	GaiaX	0	0	
+libalitanx-lib.so	TanX	0	0	
+libfdk-aac.so	opencore-amr	0	0	
+libmediautil_v6.so	AnyChat	0	0	
+libmediautil_v7.so	AnyChat	0	0	
+libmediautil_v8.so	AnyChat	0	0	
+libanychatcore.so	AnyChat	0	0	
+libaudio_preprocessing.so	AnyChat	0	0	
+libmediacore.so	AnyChat	0	0	
+libmediashow.so	AnyChat	0	0	
+com.hihonor.push.sdk.PushReceiver	HONOR Push	3	0	
+com.hihonor.push.sdk.init.AutoInitProvider	HONOR Push	4	0	
+com.qq.e.tg.WebAdActivity	腾讯广告 SDK	2	0	
+com.qq.e.tg.PortraitADActivity	腾讯广告 SDK	2	0	
+libBugly-idasc.so	Bugly	0	0	
+libBugly_Native.so	Bugly	0	0	
+libsgmiddletierso(.*)\.so	阿里聚安全	0	1	regex_ali_security
+libsgmiscso(.*)\.so	阿里聚安全	0	1	regex_ali_security
+libbaiduprotect.so	百度应用加固	0	0	
+libbaiduprotect_x86.so	百度应用加固	0	0	
+libbaiduprotect_art.so	百度应用加固	0	0	
+libmpaas_crypto.so	mPaaS	0	0	
+libmpaascpu.so	mPaaS	0	0	
+libbdface_sdk.so	百度人脸识别	0	0	
+libbd_license.so	百度人脸识别	0	0	
+libbd_unifylicense.so	百度人脸识别	0	0	
+libliantian.so	百度人脸识别	0	0	
+libaikl_cluster_arm.so	百度人脸识别	0	0	
+libaikl_calc_arm.so	百度人脸识别	0	0	
+libyt_safe.so	屹通 SDK	0	0	
+libYTKeyboard.so	屹通 SDK	0	0	
+libpjsua2.so	PJSIP	0	0	
+com.tencent.android.hwpush.HWPushMessageReceiver	HUAWEI Push(TPNS Proxy)	3	0	
+com.umeng.message.component.UmengNotificationReceiver	友盟推送	3	0	
+libemulator_check.so	AntiFakerAndroidChecker	0	0	
+libproperty_get.so	AntiFakerAndroidChecker	0	0	
+libEasyAR.so	EasyAR	0	0	
+libEasyARPlayer.so	EasyAR	0	0	
+libhippy.so	Hippy	0	0	
+libeidjni.so	eID SDK	0	0	
+libksylive.so	金山云短视频编辑 SDK	0	0	
+libksyapm.so	金山云短视频编辑 SDK	0	0	
+libdu.so	数字联盟可信 ID SDK	0	0	
+libbeaconid.so	腾讯灯塔 SDK	0	0	
+libtxsoundtouch.so	腾讯云实时音视频 SDK	0	0	
+com.igexin.sdk.GService	个推	1	0	
+org.altbeacon.beacon.service.ScanJob	Android Beacon Library	1	0	
+org.altbeacon.beacon.BeaconIntentProcessor	Android Beacon Library	1	0	
+org.altbeacon.bluetooth.BluetoothTestJob	Android Beacon Library	1	0	
+org.altbeacon.beacon.service.BeaconService	Android Beacon Library	1	0	
+org.altbeacon.beacon.startup.StartupBroadcastReceiver	Android Beacon Library	3	0	
+com.bytedance.mira.MiraPluginListActivity	Mira	2	0	
+com.bytedance.mira.MiraErrorBackupActivity	Mira	2	0	
+com.bytedance.mira.stub.RedirectActivity	Mira	2	0	
+com.bytedance.mira.stub.PluginLoaderActivity	Mira	2	0	
+com.bytedance.mira.stub.p[0-9]*.StubTranslucentActivity	Mira	2	1	regex_mira
+com.bytedance.mira.stub.p[0-9]*.StubStandardActivity[0-9]*$	Mira	2	1	regex_mira
+com.bytedance.mira.stub.p[0-9]*.StubSingleTopActivity[0-9]*$	Mira	2	1	regex_mira
+com.bytedance.mira.stub.p[0-9]*.StubSingleTaskActivity[0-9]*$	Mira	2	1	regex_mira
+com.bytedance.mira.stub.p[0-9]*.StubSingleInstanceActivity[0-9]*$	Mira	2	1	regex_mira
+com.bytedance.mira.stub.RedirectService	Mira	1	0	
+com.bytedance.mira.am.KeepAlive	Mira	1	0	
+com.bytedance.mira.am.KeepAlive$InnerService	Mira	1	0	
+com.bytedance.mira.stub.p[0-9]*.StubService[0-9]*$	Mira	1	1	regex_mira
+com.bytedance.mira.pm.PluginPackageManagerProvider	Mira	4	0	
+com.bytedance.mira.am.PluginActivityManagerProvider	Mira	4	0	
+com.bytedance.mira.stub.p0.StubContentProvider	Mira	4	0	
+com.bytedance.mira.stub.p1.StubContentProvider	Mira	4	0	
+libtoyger.so	金融级实人认证 SDK	0	0	
+libmodpng.so	Pdfium	0	0	
+libsonic.so	Sonic	0	0	
+libsobot.so	智齿客服 SDK	0	0	
+libfabricjni.so	React Native	0	0	
+libjsi.so	React Native	0	0	
+libjsijniprofiler.so	React Native	0	0	
+liblogger.so	React Native	0	0	
+libmapbufferjni.so	React Native	0	0	
+libreact_codegen_rncore.so	React Native	0	0	
+libreact_codegen_reactandroidspec	React Native	0	0	
+libreact_config.so	React Native	0	0	
+libreact_debug.so	React Native	0	0	
+libreact_nativemodule_core.so	React Native	0	0	
+libreact_render_(.*)\.so	React Native	0	1	regex_react_native
+libreact_utils.so	React Native	0	0	
+libreactconfig.so	React Native	0	0	
+libreactnativeutilsjni.so	React Native App Utils	0	0	
+libreactperfloggerjni.so	React Native	0	0	
+libturbomodulejsijni.so	React Native	0	0	
+librrc_(.*)\.so	React Native	0	1	regex_react_native
+libMegviiIDCardQuality(.*)\.so	旷视 SDK	0	1	regex_megvii
+liblivenessdetection(.*)\.so	旷视 SDK	0	1	regex_megvii
+libbankcard(.*)\.so	旷视 SDK	0	1	regex_megvii
+libtrace-canary.so	Matrix	0	0	
+libhs.so	Sofire	0	0	
+libalicomphonenumberauthsdk_core.so	阿里云号码认证 SDK	0	0	
+libkwai-android-base.so	KOOM	0	0	
+com.igexin.download.DownloadService	个推	1	0	
+libtensorflowlite_flex_jni.so	LiteRT	0	0	
+libtensorflowLite.so	LiteRT	0	0	
+libbrotli.so	Brotli	0	0	
+libreanimated.so	React Native Reanimated	0	0	
+liblposix.so	ZAndrolua	0	0	
+librealmc.so	realm	0	0	
+libzxing.so	ZXing	0	0	
+libgtcore.so	极光认证 SDK	0	0	
+com.meiqia.core.MeiQiaService	美洽客服 SDK	1	0	
+libavif_android.so	LibAVIF	0	0	
+libYTPoseDetect.so	腾讯优图 SDK	0	0	
+libYTAGReflectLiveCheck.so	腾讯优图 SDK	0	0	
+libYTFaceAlignment.so	腾讯优图 SDK	0	0	
+libYTLipReader.so	腾讯优图 SDK	0	0	
+libYTFaceReflect.so	腾讯优图 SDK	0	0	
+libYTFaceTracker.so	腾讯优图 SDK	0	0	
+libYTFaceDetector.so	腾讯优图 SDK	0	0	
+libYTFaceTrackPro2.so	腾讯优图 SDK	0	0	
+com.mobile.auth.gatewayauth.LoginAuthActivity	一键登录 SDK	2	0	
+com.mobile.auth.gatewayauth.PrivacyDialogActivity	一键登录 SDK	2	0	
+com.mobile.auth.gatewayauth.activity.AuthWebVeiwActivity	一键登录 SDK	2	0	
+com.tencent.cloud.huiyansdkface.facelight.ui.FaceGuideActivity	人脸核身 SDK	2	0	
+com.tencent.cloud.huiyansdkface.facelight.ui.FaceProtocalActivity	人脸核身 SDK	2	0	
+com.tencent.cloud.huiyansdkface.facelight.ui.FaceVerifyActivity	人脸核身 SDK	2	0	
+com.google.android.gms.ads.OutOfContextTestingActivity	Google AdMob	2	0	
+com.kwai.koom.javaoom.monitor.analysis.HeapAnalysisService	KOOM	1	0	
+com.tencent.android.tpush.honor.HonorMessageService	HONOR Push(TPNS Proxy)	1	0	
+libsgmainso.version.so	阿里聚安全	0	0	
+libsgsecuritybodyso.version.so	阿里聚安全	0	0	
+com.baidu.liantian.LiantianActivity	百度人脸识别	2	0	
+com.igexin.sdk.GetuiActivity	个推	2	0	
+com.igexin.sdk.MActivity	个推	2	0	
+com.instabug.bug.view.reporting.ReportingContainerActivity	Instabug	2	0	
+com.instabug.chat.ui.ChatActivity	Instabug	2	0	
+com.instabug.featuresrequest.ui.FeaturesRequestActivity	Instabug	2	0	
+com.instabug.library.internal.video.RequestPermissionActivity	Instabug	2	0	
+com.instabug.library.invocation.invocationdialog.InstabugDialogActivity	Instabug	2	0	
+com.instabug.library.ui.onboarding.OnboardingActivity	Instabug	2	0	
+com.instabug.survey.announcements.ui.activity.AnnouncementActivity	Instabug	2	0	
+com.instabug.survey.ui.SurveyActivity	Instabug	2	0	
+io.rong.push.notification.RongBridgeActivity	融云 IM SDK	2	0	
+libAkSoundEngine.so	Wwise	0	0	
+libBugly-yaq.so	Bugly	0	0	
+libGVoice.so	游戏语音 GVoice	0	0	
+libai_fmk_dnnacl.so	HiAI Foundation	0	0	
+libbaiduprotect_sec_jni.so	百度应用加固	0	0	
+libcpucl.so	HiAI Foundation	0	0	
+libhiai.so	HiAI Foundation	0	0	
+libhiai_c_def.so	HiAI Foundation	0	0	
+libhiai_debugger.so	HiAI Foundation	0	0	
+libhiai_hcl_model_runtime.so	HiAI Foundation	0	0	
+libhiai_ir.so	HiAI Foundation	0	0	
+libhiai_ir_build.so	HiAI Foundation	0	0	
+libhiai_ir_build_aipp.so	HiAI Foundation	0	0	
+libhiai_ir_infershape.so	HiAI Foundation	0	0	
+libhiai_model_compatible.so	HiAI Foundation	0	0	
+libhyphenate_av.so	环信 IM	0	0	
+libibg-native.so	Instabug	0	0	
+libijm-emulator.so	爱加密	0	0	
+libijmDataEncryption.so	爱加密	0	0	
+libijmDataEncryption_arm64.so	爱加密	0	0	
+libijmDataEncryption_x86.so	爱加密	0	0	
+libijmDataEncryption_x86_64.so	爱加密	0	0	
+libjiagu_vip.so	360 加固	0	0	
+libjiagu_vip_x64.so	360 加固	0	0	
+libmodelcrypto.so	HiAI Foundation	0	0	
+libnesec_x86.so	网易易盾	0	0	
+libnss3.so	Mozilla NSS	0	0	
+librust.so	Rust	0	0	
+libtun2socks.so	Tun2Socks	0	0	
+com.baidu.liantian.LiantianProvider	百度人脸识别	4	0	
+com.instabug.apm.contentprovider.APMContentProvider	Instabug	4	0	
+com.instabug.crash.CrashContentProvider	Instabug	4	0	
+com.instabug.library.internal.contentprovider.InstabugContentProvider	Instabug	4	0	
+io.rong.imlib.chatroom.base.ChatRoomContentProvider	融云 IM SDK	4	0	
+io.rong.imlib.cs.base.CustomServiceContentProvider	融云 IM SDK	4	0	
+io.rong.imlib.discussion.base.DiscussionContentProvider	融云 IM SDK	4	0	
+io.rong.imlib.location.base.LocationContentProvider	融云 IM SDK	4	0	
+io.rong.imlib.publicservice.base.PublicServiceContentProvider	融云 IM SDK	4	0	
+com.baidu.liantian.LiantianReceiver	百度人脸识别	3	0	
+com.bytedance.mapplog.collector.Collector	DataFinder	3	0	
+io.rong.imlib.ConnectChangeReceiver	融云 IM SDK	3	0	
+io.rong.imlib.HeartbeatReceiver	融云 IM SDK	3	0	
+io.rong.push.rongpush.PushReceiver	融云 IM SDK	3	0	
+com.baidu.liantian.LiantianService	百度人脸识别	1	0	
+com.igexin.assist.control.stp.StpService	个推	1	0	
+com.igexin.sdk.GTIntentService	个推	1	0	
+com.igexin.sdk.HonorPushMessageService	个推	1	0	
+com.instabug.library.internal.video.ScreenRecordingService	Instabug	1	0	
+com.instabug.library.screenshot.ScreenshotCaptureService	Instabug	1	0	
+com.instabug.terminations.TerminationsDetectorService	Instabug	1	0	
+io.rong.imlib.ipc.RongService	融云 IM SDK	1	0	
+io.rong.push.rongpush.PushService	融云 IM SDK	1	0	
+com.bytedance.push.notification.PassThoughActivity	GMP Push SDK	2	0	
+com.bytedance.push.notification.PushActivity	GMP Push SDK	2	0	
+com.ss.android.message.sswo.SswoActivity	GMP Push SDK	2	0	
+com.umeng.message.component.UmengNotificationClickActivity	友盟推送	2	0	
+libbreakpad_client.so	Breakpad	0	0	
+libgio.so	Gio	0	0	
+libisar.so	Isar Database	0	0	
+libmindspore-lite.so	MindSpore Lite	0	0	
+libmpv.so	LibMpv	0	0	
+libnativeaudioe7.so	NativeAudio	0	0	
+libpaddle_lite_jni.so	Paddle Lite	0	0	
+librnskia.so	React Native Skia	0	0	
+libshadowhook.so	ShadowHook	0	0	
+libtag.so	TagLib	0	0	
+libzeus_direct_dex.so	Pangle SDK	0	0	
+com.bytedance.push.settings.storage.PushProvider	GMP Push SDK	4	0	
+com.bytedance.sdk.openadsdk.TTFileProvider	Pangle SDK	4	0	
+com.bytedance.sdk.openadsdk.multipro.TTMultiProvider	Pangle SDK	4	0	
+com.ss.android.push.PushFileProvider	GMP Push SDK	4	0	
+com.ss.android.pushmanager.setting.PushMultiProcessSharedProvider	GMP Push SDK	4	0	
+com.umeng.message.component.UmengMessageProvider	友盟推送	4	0	
+androidx.tracing.perfetto.TracingReceiver	Jetpack Tracing	3	0	
+com.facebook.AuthenticationTokenManager$CurrentAuthenticationTokenChangedBroadcastReceiver	Facebook SDK	3	0	
+com.meizu.message.MzMessageReceiver	Meizu Push(GMP Proxy)	3	0	
+com.ss.android.message.MessageReceiver	GMP Push SDK	3	0	
+com.ss.android.message.sswo.SswoReceiver	GMP Push SDK	3	0	
+com.ss.android.push.DefaultReceiver	GMP Push SDK	3	0	
+com.ss.android.push.daemon.PushReceiver	GMP Push SDK	3	0	
+com.vivo.VivoPushMessageReceiver	vivo Push(GMP Proxy)	3	0	
+com.xiaomi.push.service.receivers.MIPushMessageHandler	MiPush(GMP Proxy)	3	0	
+com.alibaba.sdk.android.push.CloudPushIntentService	阿里移动推送(GMP Proxy)	1	0	
+com.alibaba.sdk.android.push.PushIntentService	阿里移动推送(GMP Proxy)	1	0	
+com.bytedance.push.alive.ForegroundService	GMP Push SDK	1	0	
+com.huawei.MessageService	HUAWEI Push(GMP Proxy)	1	0	
+com.ss.android.message.NotifyIntentService	GMP Push SDK	1	0	
+com.ss.android.message.NotifyService	GMP Push SDK	1	0	
+com.ss.android.message.PushJobService	GMP Push SDK	1	0	
+com.ss.android.message.log.LogService	GMP Push SDK	1	0	
+com.ss.android.newmedia.redbadge.RedBadgePushProcessService	GMP Push SDK	1	0	
+com.ss.android.newmedia.redbadge.RedbadgeHandler	GMP Push SDK	1	0	
+com.ss.android.push.DefaultService	GMP Push SDK	1	0	
+com.ss.android.push.daemon.PushProcessService	GMP Push SDK	1	0	
+com.ss.android.push.daemon.PushService	GMP Push SDK	1	0	
+com.umeng.UmengMessageHandler	友盟推送(GMP Proxy)	1	0	
+com.umeng.message.component.UmengIntentService	友盟推送	1	0	
+com.umeng.message.component.UmengMessageHandlerService	友盟推送	1	0	
+com.umeng.message.component.UmengMessageReceiverService	友盟推送	1	0	
+libauth_number_product-(.*)\.so	阿里云号码认证 SDK	0	1	regex_ali_number_auth
+androidx.car.app.CarAppPermissionActivity	Jetpack Car	2	0	
+com.google.android.gms.oss.licenses.OssLicensesActivity	OSS Licenses Gradle Plugin	2	0	
+com.google.android.gms.oss.licenses.OssLicensesMenuActivity	OSS Licenses Gradle Plugin	2	0	
+com.taptap.sdk.TapTapActivity	TapTap 开发者服务	2	0	
+org.acra.dialog.CrashReportDialog	ACRA	2	0	
+org.acra.receiver.NotificationActivity	ACRA	2	0	
+libFirebaseCppMessaging.so	Firebase Cloud Messaging	0	0	
+libNvStreamingSdkCore.so	美摄 SDK	0	0	
+libPdfium.so	PDFium	0	0	
+libUniRapidJson.so	UniRapidJson	0	0	
+libacra.so	ACRA	0	0	
+libbarhopper_v3.so	BarHopper	0	0	
+libblur.so	StackBlur	0	0	
+libbugly_dumper.so	Bugly	0	0	
+libcyaml.so	libyaml	0	0	
+libdexkit.so	DexKit	0	0	
+libeffect.so	CV SDK	0	0	
+libeffect_proxy.so	CV SDK	0	0	
+libface_detector_v2_jni.so	ML Kit	0	0	
+libfolly_runtime.so	Folly	0	0	
+libimage_processing_util_jni.so	Jetpack Camera	0	0	
+liblight-sdk.so	腾讯特效 SDK	0	0	
+libmapscore.so	OpenMobileMaps	0	0	
+libnmmvm.so	nmmp	0	0	
+liboboe.so	Oboe	0	0	
+libsigner.so	Adjust SDK	0	0	
+libsoundtouch.so	SoundTouch	0	0	
+libsqlc-native-driver.so	react-native-sqlite-storage	0	0	
+libtcc.so	libtcc	0	0	
+libyaml.so	libyaml	0	0	
+libyunceng.so	阿里云游戏盾	0	0	
+libzipalign.so	zipalign	0	0	
+org.acra.attachment.AcraContentProvider	ACRA	4	0	
+androidx.car.app.notification.CarAppNotificationBroadcastReceiver	Jetpack Car	3	0	
+org.acra.receiver.NotificationBroadcastReceiver	ACRA	3	0	
+androidx.car.app.CarAppMetadataHolderService	Jetpack Car	1	0	
+androidx.work.multiprocess.RemoteWorkManagerService	Jetpack WorkManager	1	0	
+cn.jpush.android.service.JHonorService	极光推送	1	0	
+com.google.firebase.messaging.MessageForwardingService	Firebase Cloud Messaging	1	0	
+com.google.firebase.messaging.cpp.ListenerService	Firebase Cloud Messaging	1	0	
+com.google.firebase.messaging.cpp.RegistrationIntentService	Firebase Cloud Messaging	1	0	
+org.acra.scheduler.RestartingService	ACRA	1	0	
+org.acra.sender.JobSenderService	ACRA	1	0	
+org.acra.sender.LegacySenderService	ACRA	1	0	
+androidx.glance.appwidget.action.ActionTrampolineActivity	Jetpack Glance	2	0	
+androidx.glance.appwidget.action.InvisibleActionTrampolineActivity	Jetpack Glance	2	0	
+com.cmic.gen.sdk.view.GenLoginAuthActivity	移动号码认证	2	0	
+com.huawei.hms.hihealth.BridgeClientActivity	HUAWEI Health Kit	2	0	
+com.huawei.hms.hwid.activity.BridgeActivity	华为帐号服务	2	0	
+com.huawei.hms.videokit.player.UpdateActivity	HMS Video Kit	2	0	
+libSNPE.so	SNPE SDK	0	0	
+libTNN.so	TNN	0	0	
+libanddown.so	CWAC AndDown	0	0	
+libdevinfo.so	libdevinfo	0	0	
+libduiutils.so	思必驰	0	0	
+libflutter_pty.so	Flutter Pty	0	0	
+libfuse.so	libfuse	0	0	
+libfuse_jni.so	libfuse	0	0	
+libhdr_pro_engine.so	HMS Video Kit HDR Vivid	0	0	
+libhta.so	SNPE SDK	0	0	
+libjpgt.so	Leptonica	0	0	
+liblept.so	Leptonica	0	0	
+liblouis.so	Liblouis	0	0	
+liblouiswrap.so	Liblouis	0	0	
+libpngt.so	Leptonica	0	0	
+libqimei.so	Qimei SDK	0	0	
+librdk.so	Foxit PDF SDK	0	0	
+libreact_codegen_reactandroidspec.so	React Native	0	0	
+libreact_newarchdefaults.so	React Native	0	0	
+libsnpe_dsp_domains_v2.so	SNPE SDK	0	0	
+libsnpe_dsp_domains_v3.so	SNPE SDK	0	0	
+libsnpe_dsp_v65_domains_v2_skel.so	SNPE SDK	0	0	
+libsnpe_dsp_v66_domains_v2_skel.so	SNPE SDK	0	0	
+libsnpe_dsp_v68_domains_v3_skel.so	SNPE SDK	0	0	
+libstretch.so	Stretch	0	0	
+libsymphony-cpu.so	SNPE SDK	0	0	
+libvideokit_hdrvivid.so	HMS Video Kit HDR Vivid	0	0	
+libvosk.so	Vosk	0	0	
+libx264.so	x264	0	0	
+com.huawei.hms.hbm.sdk.HbmProvider	HMS Business Touch Kit	4	0	
+com.huawei.openalliance.ad.provider.PPSECProvider	HUAWEI Ads Kit	4	0	
+androidx.glance.appwidget.MyPackageReplacedReceiver	Jetpack Glance	3	0	
+androidx.glance.appwidget.action.ActionCallbackBroadcastReceiver	Jetpack Glance	3	0	
+androidx.mediarouter.media.MediaTransferReceiver	Jetpack MediaRouter	3	0	
+androidx.appcompat.app.AppLocalesMetadataHolderService	Jetpack AppCompat	1	0	
+androidx.core.widget.RemoteViewsCompatService	Jetpack Core	1	0	
+androidx.glance.appwidget.GlanceRemoteViewsService	Jetpack Glance	1	0	
+com.huawei.hms.audiokit.player.manager.service.MediaPlaybackSDKService	HMS Audio Kit	1	0	
+com.huawei.remoteplayer.LocalService	HMS Video Kit	1	0	
+com.huawei.remoteplayer.RemoteService	HMS Video Kit	1	0	
+com.huawei.openalliance.ad.activity.(.*)	HUAWEI Ads Kit	2	1	regex_huawei_ads_kit
+libjavet-v8-android(.*)\.so	Javet	0	1	regex_javet
+libffmpegkit_abidetect.so	FFmpegKit	0	0	
+libdidi_secure.so	滴滴 SDK	0	0	
+libion.so	ion	0	0	
+libjsenv.so	jsenv	0	0	
+libkoom-fast-dump.so	KOOM	0	0	
+libkoom-native.so	KOOM	0	0	
+libkoom-strip-dump.so	KOOM	0	0	
+libkoom-thread.so	KOOM	0	0	
+libkwai-unwind.so	KOOM	0	0	
+libvcap.so	VCAP	0	0	
+libvcap_core.so	VCAP	0	0	
+libvcap_npu.so	VCAP	0	0	
+libvcap_opencl.so	VCAP	0	0	
+libvcaplite_android.so	VCAP	0	0	
+com.unity3d.services.ads.adunit.AdUnitActivity	Unity Ads	2	0	
+com.unity3d.services.ads.adunit.AdUnitSoftwareActivity	Unity Ads	2	0	
+com.unity3d.services.ads.adunit.AdUnitTransparentActivity	Unity Ads	2	0	
+com.unity3d.services.ads.adunit.AdUnitTransparentSoftwareActivity	Unity Ads	2	0	
+libZegoExpressEngine.so	即构极速视频 SDK	0	0	
+libbarhopper.so	BarHopper	0	0	
+libbarhopper_v2.so	BarHopper	0	0	
+libopenvpn.so	OpenVPN	0	0	
+libopvpnutil.so	OpenVPN	0	0	
+libovpn3.so	OpenVPN	0	0	
+libovpncli.so	OpenVPN	0	0	
+libovpnexec.so	OpenVPN	0	0	
+libovpnutil.so	OpenVPN	0	0	
+libwg-go.so	WireGuard	0	0	
+libwg-quick.so	WireGuard	0	0	
+libwg.so	WireGuard	0	0	
+libMSDKCore.so	腾讯游戏 MSDK	0	0	
+libMinilzo.so	Minilzo	0	0	
+libSparkChain.so	星火认知大模型	0	0	
+libTDataMaster.so	腾讯游戏 MSDK	0	0	
+libcello_native.so	Cello	0	0	
+libliquidfun.so	LiquidFun	0	0	
+libliquidfun_jni.so	LiquidFun	0	0	
+liblog4a-lib.so	Log4a	0	0	
+libnrtc_sdk.so	网易云信	0	0	
+libreactjscexecutor.so	React Native	0	0	
+libreactjsexecutor.so	React Native	0	0	
+libruntimeexecutor.so	React Native	0	0	
+libsketchology_native.so	Google Ink 	0	0	
+libtoolChecker.so	RootBeer	0	0	
+libvpx.so	WebM VP8/VP9	0	0	
+libvpxV2JNI.so	WebM VP8/VP9	0	0	
+libwoff2_jni.so	Google WOFF2	0	0	
+cn.nubia.neopush.sdk.MessageHandleService	nubia Push	1	0	
+cn.nubia.neopush.sdk.PushMessageHandler	nubia Push	1	0	
+com.google.android.gms.metadata.ModuleDependencies	Legacy Photo Picker	1	0	
+com.tencent.map.geolocation.s	腾讯地图 SDK	1	0	
+com.baidu.mobads.sdk.api.AppActivity	移动应用推广 SDK	2	0	
+com.baidu.mobads.sdk.api.BdShellActivity	移动应用推广 SDK	2	0	
+com.baidu.mobads.sdk.api.MobCPUDramaActivity	移动应用推广 SDK	2	0	
+com.baidu.mobads.sdk.api.MobRewardVideoActivity	移动应用推广 SDK	2	0	
+com.ali.auth.third.ui.QrLoginActivity	百川电商 SDK - 授权	2	0	
+com.ali.auth.third.ui.QrLoginConfirmActivity	百川电商 SDK - 授权	2	0	
+com.alibaba.alibclinkpartner.smartlink.ALPEntranceActivity	百川电商 SDK - 唤醒手淘	2	0	
+com.alibaba.baichuan.android.trade.ui.AlibcWebViewActivity	百川电商 SDK - 授权	2	0	
+com.alibaba.baichuan.trade.biz.auth.AlibcAuthActivity	百川电商 SDK - 授权	2	0	
+com.bilibili.lib.accountoauth.OauthWebActivity	Bilibili Oauth SDK	2	0	
+com.dropbox.core.android.AuthActivity	Dropbox Core SDK for Java	2	0	
+cn.jpush.android.service.InitProvider	极光推送	4	0	
+com.bilibili.infra.base.provider.InfraInitProvider	Bilibili Oauth SDK	4	0	
+com.didi.drouter.store.LoadProvider	DRouter	4	0	
+androidx.tracing.perfetto.StartupTracingConfigStoreIsEnabledGate	Jetpack Tracing	3	0	
+com.alibaba.baichuan.trade.biz.login.LoginBroadcastReceiver	百川电商 SDK - 授权	3	0	
+com.tencent.mars.comm.Alarm	Mars	3	0	
+androidx.work.impl.background.gcm.WorkManagerGcmService	Jetpack WorkManager	1	0	
+com.google.firebase.sessions.SessionLifecycleService	Firebase	1	0	
+com.squareup.leakcanary.DisplayLeakService	LeakCanary	1	0	
+com.squareup.leakcanary.SaveLeakService	LeakCanary	1	0	
+com.squareup.leakcanary.internal.HeapAnalyzerService	LeakCanary	1	0	
+com.tencent.matrix.lifecycle.supervisor.SupervisorService	Matrix	1	0	
+com.tencent.matrix.openglleak.detector.OpenglIndexDetectorService	Matrix	1	0	
+org.android.agoo.honor.HonorPushMessageService	HONOR Push(Aliyun Proxy)	1	0	
+com.baidu.sofire.MyService	Sofire	1	0	
+libMNNOpenCV.so	MNN	0	0	
+libmnncore.so	MNN	0	0	
+libagora-chat-sdk.so	Agora RTC SDK	0	0	
+libagora_ai_echo_cancellation_extension.so	Agora RTC SDK	0	0	
+libagora_ai_noise_suppression_extension.so	Agora RTC SDK	0	0	
+libagora_audio_beauty_extension.so	Agora RTC SDK	0	0	
+libagora_clear_vision_extension.so	Agora RTC SDK	0	0	
+libagora_content_inspect_extension.so	Agora RTC SDK	0	0	
+libagora_drm_loader_extension.so	Agora RTC SDK	0	0	
+libagora_face_detection_extension.so	Agora RTC SDK	0	0	
+libagora_screen_capture_extension.so	Agora RTC SDK	0	0	
+libagora_udrm3_extension.so	Agora RTC SDK	0	0	
+libagora_video_decoder_extension.so	Agora RTC SDK	0	0	
+libagora_video_encoder_extension.so	Agora RTC SDK	0	0	
+libagora_video_quality_analyzer_extension.so	Agora RTC SDK	0	0	
+libcipherdb.so	Agora RTC SDK	0	0	
+libvideo_dec.so	Agora RTC SDK	0	0	
+libvideo_enc.so	Agora RTC SDK	0	0	
+libAVAPIs.so	TUTK SDK	0	0	
+libAVAPIsT.so	TUTK SDK	0	0	
+libIOTCAPIs.so	TUTK SDK	0	0	
+libIOTCAPIsT.so	TUTK SDK	0	0	
+libP2PTunnelAPIs.so	TUTK SDK	0	0	
+libP2PTunnelAPIsT.so	TUTK SDK	0	0	
+libRDTAPIs.so	TUTK SDK	0	0	
+libRDTAPIsT.so	TUTK SDK	0	0	
+libTUTKGlobalAPIs.so	TUTK SDK	0	0	
+com.baidu.sofire.MyActivity	Sofire	2	0	
+libP2PController.so	MobileIMSDK	0	0	
+libhsynz.so	hsynz	0	0	
+libmegface_faceid.so	旷视 SDK	0	0	
+com.megvii.lv5.sdk.screen.service.MediaProjectionService	旷视 SDK	1	0	
+com.megvii.livenesslib.LivenessActivity	旷视 SDK	2	0	
+com.megvii.livenesslib.LoginFaceLivenessActivity	旷视 SDK	2	0	
+com.megvii.lv5.nfc.guild.NFCDetectActivity	旷视 SDK	2	0	
+com.megvii.lv5.sdk.detect.action.ActionLivenessActivity	旷视 SDK	2	0	
+com.megvii.lv5.sdk.detect.actionflash.ActionFlashLivenessActivity	旷视 SDK	2	0	
+com.megvii.lv5.sdk.detect.color.FlashLivenessActivity	旷视 SDK	2	0	
+com.megvii.lv5.sdk.detect.distance.DistanceFlashDetectActivity	旷视 SDK	2	0	
+com.megvii.lv5.sdk.detect.guide.GrantActivity	旷视 SDK	2	0	
+com.megvii.lv5.sdk.detect.guide.UserAgreementActivity	旷视 SDK	2	0	
+libaliyunaf.so	金融级实人认证 SDK	0	0	
+libzkfv_tj.so	金融级实人认证 SDK	0	0	
+libsecuritydevice.so	金融级实人认证 SDK	0	0	
+libAPSE_(.*)\.so	金融级实人认证 SDK	0	1	regex_ali_id_verify
+libhermes_executor.so	Hermes	0	0	
+libmatrix-artmisc.so	Matrix	0	0	
+libmatrix-stack-tracer.so	Matrix	0	0	
+libmatrix-mallctl.so	Matrix	0	0	
+libYTCommon.so	腾讯优图 SDK	0	0	
+libYTCommonLiveness.so	腾讯优图 SDK	0	0	
+libYTLiveness.so	腾讯优图 SDK	0	0	
+libMuPDF.so	MuPDF	0	0	
+libjpeg.so	LibJPEG	0	0	
+libhiai_enhance.so	HiAI Foundation	0	0	
+libxhook.so	xHook	0	0	
+liblibusb.so	libusb	0	0	
+liblibrtlsdr.so	liblibrtlsdr.so	0	0	
+libhermesinstancejni.so	Hermes	0	0	
+librnscreens.so	React Native Screens	0	0	
+com.ss.android.downloadlib.addownload.compliance.AppPrivacyPolicyActivity	Pangle SDK	2	0	
+com.ss.android.downloadlib.addownload.compliance.AppDetailInfoActivity	Pangle SDK	2	0	
+com.ss.android.downloadlib.activity.TTDelegateActivity	Pangle SDK	2	0	
+com.ss.android.downloadlib.activity.JumpKllkActivity	Pangle SDK	2	0	
+com.ss.android.socialbase.appdownloader.DownloadHandlerService	Pangle SDK	1	0	
+com.ss.android.socialbase.appdownloader.view.DownloadTaskDeleteActivity	Pangle SDK	2	0	
+com.ss.android.socialbase.appdownloader.view.JumpUnknownSourceActivity	Pangle SDK	2	0	
+com.bytedance.android.openliveplugin.stub.activity.DouyinAuthorizeActivityProxy	Pangle SDK	2	0	
+com.bytedance.android.openliveplugin.stub.activity.DouyinAuthorizeActivityLiveProcessProxy	Pangle SDK	2	0	
+com.bytedance.dataplatform.ABExtraProvider	Pangle SDK	4	0	
+com.bytedance.android.openliveplugin.process.server.LiveServerManager	Pangle SDK	4	0	
+com.byted.live.lite.ServerManager_bytelive	Pangle SDK	4	0	
+com.byted.live.lite.ServerManager_push	Pangle SDK	4	0	
+com.bun.miitmdid.utilsforrequestpermission.PermissionTransparentActivity	MSA SDK	2	0	
+com.xingin.xhssharesdk.core.XhsShareActivity	小红书分享 SDK	2	0	
+com.yalantis.ucrop.custom.CustomCircleUCropActivity	uCrop	2	0	
+libAPMDump.so	APMInsight	0	0	
+libAPMUOCPLIB.so	APMInsight	0	0	
+libAPMlog.so	APMInsight	0	0	
+libASPEngineCore.so	APMInsight	0	0	
+libASPEngineN.so	APMInsight	0	0	
+libAliHALogEngine.so	日志服务 SLS	0	0	
+libAliNNPython_zip.so	AliNNPython	0	0	
+libAudioProc.so	FFmpeg	0	0	
+libEGL_angle.so	angle	0	0	
+libGLESv1_CM_angle.so	angle	0	0	
+libGLESv2_angle.so	angle	0	0	
+libOvenPlayerCore.so	OvenPlayer	0	0	
+libOvenPlayerMCVideo.so	OvenPlayer	0	0	
+libSnpeCpu.so	SNPE SDK	0	0	
+libSnpeGpu.so	SNPE SDK	0	0	
+libSnpeHtpPrepare.so	SNPE SDK	0	0	
+libUE4Bundle-Splittables.so	Unreal Engine	0	0	
+libagora_mpg123.so	Agora RTC SDK	0	0	
+libancbase_rt_bokeh.so	Arcsoft	0	0	
+libappsuit.so	APKiD	0	0	
+libarcsoft_beauty_ex.so	Arcsoft	0	0	
+libarcsoft_dualcam_refocus_gallery.so	Arcsoft	0	0	
+libarcsoft_lensstaindetection.so	Arcsoft	0	0	
+libarcsoft_panorama_burstcapture.so	Arcsoft	0	0	
+libarcsoft_pet_detection.so	Arcsoft	0	0	
+libarcsoft_pic_trace_video.so	Arcsoft	0	0	
+libarcsoft_videoautozoom.so	Arcsoft	0	0	
+libbaiduprotect_dump.so	百度应用加固	0	0	
+libbaiduprotect_sec_jni_facect.so	百度应用加固	0	0	
+libbarhopper_qr_only_jni.so	BarHopper	0	0	
+libbox.so	sing-box	0	0	
+libbrltty.so	brltty	0	0	
+libbrlttywrap.so	brltty	0	0	
+libbrotli_native.so	Brotli	0	0	
+libbspatch_utils	bspatch	0	0	
+libbuglybacktrace.so	Bugly	0	0	
+libbugsnag-root-detection.so	Bugsnag	0	0	
+libcalculator_domains_skel.so	SNPE SDK	0	0	
+libcalculator_skel.so	SNPE SDK	0	0	
+libchromium_android_linker.so	libchrome	0	0	
+libcom.baidu.zeus.so	Paddle Lite	0	0	
+libconscrypt_gmscore_jni.so	Conscrypt	0	0	
+libdart2cpp.so	dart2cpp	0	0	
+libdownloadproxy.so	腾讯云实时音视频 SDK	0	0	
+libffmpegJNI.so	FFmpeg	0	0	
+libfreetype-jni.so	FreeType	0	0	
+libj2v8.so	J2V8	0	0	
+libjscinstance.so	React Native	0	0	
+libjsengine-platform.so	LibJS	0	0	
+libjserrorhandler.so	React Native	0	0	
+libmarsstn.so	Mars	0	0	
+libmegface.ocr.identify.so	旷视 SDK	0	0	
+libmnnface.so	AliNNPython	0	0	
+libmpbase.so	Arcsoft	0	0	
+libnative-tianmu-common.so	Tianmu SDK	0	0	
+libnative-tianmu-lib.so	Tianmu SDK	0	0	
+libnavermap.so	Naver Map	0	0	
+libogg_opus_encoder.so	Opus	0	0	
+libonnxruntime.so	onnxruntime	0	0	
+libopencv_world.so	OpenCV	0	0	
+libopuscodec.so	Opus	0	0	
+libpatcher.so	AndroidUtils	0	0	
+libperf.so	perf	0	0	
+librealm_dart.so	Realm	0	0	
+librlottie-image-loader.so	rlottie	0	0	
+librlottie.so	rlottie	0	0	
+librongcloud_xcrash.so	融云 IM SDK	0	0	
+librongcloud_xcrash_dumper.so	融云 IM SDK	0	0	
+libsangforsdk.so	Sangfor	0	0	
+libsnpe-android.so	SNPE SDK	0	0	
+libsnpe_adsp.so	SNPE SDK	0	0	
+libsnpe_dsp_domains.so	SNPE SDK	0	0	
+libsnpe_dsp_domains_skel.so	SNPE SDK	0	0	
+libsnpe_dsp_domains_system.so	SNPE SDK	0	0	
+libsnpe_dsp_domains_v2_system.so	SNPE SDK	0	0	
+libsnpe_dsp_skel.so	SNPE SDK	0	0	
+libsnpe_loader.so	SNPE SDK	0	0	
+libsqlite3x.so	SQLite	0	0	
+libtbs.MANIFEST.so	腾讯浏览服务（TBS）	0	0	
+libtbs.libtbsqimei.so.so	Qimei SDK	0	0	
+libtbs.pb_dex.jar.so	腾讯浏览服务（TBS）	0	0	
+libtbs.renderer_dex.jar.so	腾讯浏览服务（TBS）	0	0	
+libtbs.resources.pak.so	腾讯浏览服务（TBS）	0	0	
+libtbs.tbs_sdk_extension_dex.jar.so	腾讯浏览服务（TBS）	0	0	
+libtbsqimei.so	Qimei SDK	0	0	
+libtbsqimei_v8a.so	Qimei SDK	0	0	
+libtensorflow_inference.so	LiteRT	0	0	
+libtensorflowlite_jni_gms_client.so	LiteRT	0	0	
+libtvm4j.so	TVM	0	0	
+libtvm4j_runtime.so	TVM	0	0	
+libtvm4j_runtime_packed.so	TVM	0	0	
+libuc_bhook_jni.so	BHook	0	0	
+libv8jni.so	V8	0	0	
+libweex_framework.so	Weex	0	0	
+libweexcoreqjs.so	Weex	0	0	
+libwlibandroid.so	Wlib	0	0	
+libxnn_zip.so	xnn	0	0	
+libxwebfullpack.so	腾讯浏览服务（TBS）	0	0	
+libzxingcpp_android.so	zxing-cpp	0	0	
+com.bytedance.frameworks.core.apm.contentprovider.MonitorContentProvider	APMInsight	4	0	
+com.bytedance.apm6.traffic.TrafficTransportService	APMInsight	1	0	
+com.volcengine.onekit.componet.ComponentDiscoveryService	APMInsight	1	0	
+org.hapjs.card.sdk.debug.SdkCardDebugReceiver	快应用	3	0	
+org.hapjs.features.channel.ChannelService	快应用	1	0	
+com.jakewharton.processphoenix.PhoenixService	Process Phoenix	1	0	
+com.luck.picture.lib.basic.PictureFileProvider	PictureSelector	4	0	
+com.ironsource.lifecycle.IronsourceLifecycleProvider	IronSource	4	0	
+libchttrans.so	Fcitx 5 中文插件	0	0	
+libandroid-phone-wallet-scanexport.so	mPaaS 社交分享	0	0	
+libIMETable.so	libIME	0	0	
+libquickphrase.so	Fcitx 5	0	0	
+libDnsChecker.so	DnsChecker	0	0	
+liblogging.so	logging	0	0	
+libscel2org5.so	Fcitx 5 中文插件	0	0	
+libclipboard.so	Fcitx 5	0	0	
+libdcblur.so	DCloud	0	0	
+libFcitx5Core.so	Fcitx 5	0	0	
+libpinyin.so	Fcitx 5 中文插件	0	0	
+libBARDumix.so	BARDUmix	0	0	
+libCrasheyeNDK.so	Crasheye	0	0	
+libdatastore_shared_counter.so	Jetpack DataStore	0	0	
+libyxbase.so	网易云信	0	0	
+libgocryptfs_jni.so	gocryptsfs	0	0	
+libandroid-tree-sitter.so	android-tree-sitter	0	0	
+libpunctuation.so	Fcitx 5 中文插件	0	0	
+lib_RongRTC_so.so	融云 IM SDK	0	0	
+libhwcpipe.so	HWCPipe	0	0	
+libtracepath.so	tracepath	0	0	
+libdexvmp.so	梆梆安全	0	0	
+libspell.so	Fcitx 5	0	0	
+libimselector.so	Fcitx 5	0	0	
+libXNet.so	XNet	0	0	
+libwukong_ua.so	Wukong	0	0	
+libprotobuf.so	protobuf	0	0	
+libFcitx5Utils.so	Fcitx 5	0	0	
+libyoume_voice_engine.so	游密	0	0	
+libtable.so	Fcitx 5 中文插件	0	0	
+libIMECore.so	libIME	0	0	
+libxnn.so	xnn	0	0	
+libxnnloader.so	xnn	0	0	
+libNetHTProtect.so	网易易盾智能反外挂	0	0	
+libtquic.so	TQUIC	0	0	
+libVisionCamera.so	React Native Vision Camera	0	0	
+libIMEPinyin.so	libIME	0	0	
+libvegamearm64-v8a.so	火山引擎云手机 SDK	0	0	
+libunicode.so	Fcitx 5	0	0	
+libluaaddonloader.so	Fcitx 5 Lua	0	0	
+libfullwidth.so	Fcitx 5 中文插件	0	0	
+libvideodec.so	videodec	0	0	
+libandroidnotification.so	Fcitx 5 for Android	0	0	
+libnesdk.so	网易云信	0	0	
+libTrustWalletCore.so	Trust Wallet Core	0	0	
+libTrustUtils.so	Trust Wallet Core	0	0	
+libtuanjie.so	团结引擎	0	0	
+libdeflate.so	libdeflate	0	0	
+librenderscript-toolkit.so	RIRT	0	0	
+libFcitx5Config.so	Fcitx 5	0	0	
+libandroidfrontend.so	Fcitx 5 for Android	0	0	
+libizuko.so	Izuko	0	0	
+libvad.so	vad	0	0	
+libzstd.so	Zstandard	0	0	
+libijkffext.so	IJKPlayer	0	0	
+libTencentSM.so	Kona 国密套件	0	0	
+libandroidx.graphics.path.so	Jetpack Graphics	0	0	
+libandroidkeyboard.so	Fcitx 5 for Android	0	0	
+libprotobuf-lite.so	protobuf	0	0	
+libpinyinhelper.so	Fcitx 5 中文插件	0	0	
+libopencv.so	OpenCV	0	0	
+org.hapjs.features.channel.transparentactivity.TransparentActivity	快应用	2	0	
+com.jakewharton.processphoenix.PhoenixActivity	Process Phoenix	2	0	
+com.ironsource.mediationsdk.testSuite.TestSuiteActivity	IronSource	2	0	
+com.ironsource.sdk.controller.ControllerActivity	IronSource	2	0	
+com.ironsource.sdk.controller.OpenUrlActivity	IronSource	2	0	
+com.ironsource.sdk.controller.InterstitialActivity	IronSource	2	0	
+com.tianmu.biz.activity.(.*)	Tianmu SDK	2	1	regex_tianmu_sdk
+com.tianmu.provider.(.*)	Tianmu SDK	4	1	regex_tianmu_sdk
+com.butu.scan.code.sdk.Activity.CaptureActivity	Butu QR SDK	2	0	
+com.butu.scan.code.sdk.Activity.SimpleCaptureActivity	Butu QR SDK	2	0	
+com.mikepenz.aboutlibraries.ui.LibsActivity	AboutLibraries	2	0	
+chaquopy.so	Chaquopy	0	0	
+chaquopy_android.so	Chaquopy	0	0	
+libBeaconDT.so	腾讯灯塔 DataTalk	0	0	
+libBifrost.so	Bifrost	0	0	
+libBugly_Native_idasc.so	Bugly	0	0	
+libFFmpeg_video.so	FFmpeg	0	0	
+libMNN290.so	MNN	0	0	
+libMSMNN.so	MNN	0	0	
+libUnityPlugin.so	Unity	0	0	
+libWAJ.so	WAJ	0	0	
+libXD.so	XD	0	0	
+libartc_engine.so	HashLips Art Engine	0	0	
+libauth.so	libauth	0	0	
+libbaiduprotect_sec_jni_v3_lite_face.so	百度应用加固	0	0	
+libbasec.so	CFCA 加固	0	0	
+libbasec_x86.so	CFCA 加固	0	0	
+libbluestar_jni_android.so	Bluestar	0	0	
+libbreakpad.so	Breakpad	0	0	
+libbreakpad_cpp_helper.so	Breakpad	0	0	
+libbrotlicommon.so	Brotli	0	0	
+libbrotlidec.so	Brotli	0	0	
+libbrotlienc.so	Brotli	0	0	
+libbutuqrcode.so	Butu QR SDK	0	0	
+libchaosvmp.so	娜迦加固	0	0	
+libchaquopy_java.so	Chaquopy	0	0	
+libcrashpad_client.so	crashpad	0	0	
+libcrashpad_handler.so	crashpad	0	0	
+libcrypto_chaquopy.so	Chaquopy	0	0	
+libdartcv.so	DartCV	0	0	
+libddog.so	娜迦加固	0	0	
+libdex2oat10.so	dex2oat optimizer	0	0	
+libdexpatch.so	DexPatch	0	0	
+libdexpatch_x86.so	DexPatch	0	0	
+libdrc.so	libdrc	0	0	
+libedog.so	娜迦加固	0	0	
+libencrypt.so	lib-encrypt	0	0	
+libfdog.so	娜迦加固	0	0	
+libffmpeg_resample.so	FFmpeg	0	0	
+libffmpegloader.so	FFmpeg	0	0	
+libgoogle-ocrclient-v3.so	Google’s Drive API v3	0	0	
+libhdog.so	娜迦加固	0	0	
+libheif.so	libheif	0	0	
+libhermes-compile.so	Hermes	0	0	
+libhiai_binary_model_runtime.so	HiAI Foundation	0	0	
+libhippycanvas.so	Hippy	0	0	
+libimagepipeline_x86.so	Fresco	0	0	
+libjlottie.so	jLottie	0	0	
+libjnidispatch.so	Java Native Access	0	0	
+libjsengine-api.so	LibJS	0	0	
+libjsengine-loadso.so	LibJS	0	0	
+libjsiutil.so	LibJS	0	0	
+libleptonica.so	Leptonica	0	0	
+libllm_inference_engine_jni.so	MediaPipe LLM Inference	0	0	
+libmaplibre.so	MapLibre Native	0	0	
+libmarsnative.so	Mars	0	0	
+libmlkit_google_ocr_pipeline.so	ML Kit	0	0	
+libobjectbox-jni.so	ObjectBox	0	0	
+liboctopus.so	liboctopus	0	0	
+liboctopus_classifier.so	liboctopus	0	0	
+libopentok.so	OpenTok	0	0	
+libpng.so	libpng	0	0	
+libpolyvffmpeg.so	Polyv HTML5 Player	0	0	
+libpolyvplayer.so	Polyv HTML5 Player	0	0	
+libpolyvsdl.so	Polyv HTML5 Player	0	0	
+libquickjs_jni.so	QuickJS	0	0	
+libreact-package-registry.so	React Native	0	0	
+libreact_codegen_ReactEntrySpec.so	React Native	0	0	
+libreact_codegen_ReactNativeLinerGradientSpec.so	React Native	0	0	
+libreact_codegen_ReactNativeSvgSpec.so	React Native	0	0	
+libreact_codegen_ReactNativeVideoSpec.so	React Native	0	0	
+libreact_codegen_ReactNativeWidgetSpec.so	React Native	0	0	
+libsecenh.so	CFCA 加固	0	0	
+libsecenh_a64.so	CFCA 加固	0	0	
+libsecenh_x86.so	CFCA 加固	0	0	
+libsense.so	libsense	0	0	
+libsentry-fd-monitor.so.so	Sentry	0	0	
+libsentry-gwp-asan.so	Sentry	0	0	
+libsentry-hook.so	Sentry	0	0	
+libsentry-record.so	Sentry	0	0	
+libsentry_dumper.so	Sentry	0	0	
+libsqlite3_chaquopy.so	Chaquopy	0	0	
+libssl_chaquopy.so	Chaquopy	0	0	
+libtdmqimei.so	Qimei SDK	0	0	
+libtensorflowlite_c.so	LiteRT	0	0	
+libtermux.so	Termux	0	0	
+libtesseract.so	Tesseract	0	0	
+libtoyger_doc.so	金融级实人认证 SDK	0	0	
+libtquic_jni.so	TQUIC	0	0	
+libvdog-x86.so	娜迦加固	0	0	
+libvdog.so	娜迦加固	0	0	
+libvo2.so	libmpeg2	0	0	
+libwz265.so	视频智能编码引擎	0	0	
+libx3g.so	顶象加固	0	0	
+libxloader.so	娜迦加固	0	0	
+libxmcore.so	xmCore	0	0	
+libzstd_jni.so	Zstandard	0	0	
+libzucchini.so	Zucchini	0	0	
+libzwrapper.so	ZWrapper	0	0	
+com.huxq17.download.DownloadProvider	Pump	4	0	
+androidx.browser.customtabs.PostMessageService	Jetpack Browser	1	0	
+androidx.credentials.playservices.CredentialProviderMetadataHolder	Jetpack Credentials	1	0	
+androidx.pdf.service.PdfDocumentService	Jetpack PDF	1	0	
+com.android.internal.gmscompat.client.GmsCompatClientService	GrapheneOS Sandboxed Google Play	1	0	
+com.vivo.push.sdk.service.CommandService	vivo Push	1	0	
+libMegviiLicenseManager-(.*)\.so	旷视 SDK	0	1	regex_megvii
+libbaiduprotect_sdk_(.*)\.so	百度应用加固	0	1	regex_baidu_jiagu
+androidx.credentials.playservices.HiddenActivity	Jetpack Credentials	2	0	
+com.android.billingclient.api.ProxyBillingActivityV2	Google Play Billing	2	0	
+com.google.android.libraries.onegoogle.accountmanagement.AddAccountActivity	Google Sign-In	2	0	
+com.google.android.libraries.surveys.internal.view.SurveyActivity	Google Play Core	2	0	
+lbtoyger-release-alijtca_plus.so	金融级实人认证 SDK	0	0	
+libAPMSignalOOM.so	APMInsight / 应用性能监控全链路版	0	0	
+libAkMatrixReverb.so	Matrix	0	0	
+libMNN_Vulkan.so	MNN	0	0	
+libMicrosoft.CognitiveServices.Speech.core.so	Cognitive Services Speech SDK	0	0	
+libMicrosoft.CognitiveServices.Speech.extension.audio.sys.so	Cognitive Services Speech SDK	0	0	
+libMicrosoft.CognitiveServices.Speech.extension.codec.so	Cognitive Services Speech SDK	0	0	
+libMicrosoft.CognitiveServices.Speech.extension.kws.ort.so	Cognitive Services Speech SDK	0	0	
+libMicrosoft.CognitiveServices.Speech.extension.kws.so	Cognitive Services Speech SDK	0	0	
+libMicrosoft.CognitiveServices.Speech.extension.lu.so	Cognitive Services Speech SDK	0	0	
+libMicrosoft.CognitiveServices.Speech.extension.silk_codec.so	Cognitive Services Speech SDK	0	0	
+libMicrosoft.CognitiveServices.Speech.java.bindings.so	Cognitive Services Speech SDK	0	0	
+libProtobufLite.so	protobuf	0	0	
+libapm_astrolabe.so	APMInsight / 应用性能监控全链路版	0	0	
+libarcore_c.so	ARCore	0	0	
+libarkui_android.so	ArkUI-X	0	0	
+libarmavlink.so	libARMavlink	0	0	
+libbd_facecollect_unifylicense.so	百度人脸识别	0	0	
+libbreakpad-core.so	Breakpad	0	0	
+libbspatch_utils.so	bspatch	0	0	
+libexec_x86.so	爱加密	0	0	
+libfacedevice.so	金融级实人认证 SDK	0	0	
+libfaceidlivenessv5.so	旷视 SDK	0	0	
+libfilament-texture-utils-jni.so	Filament	0	0	
+libfreetypejni.so	FreeType	0	0	
+libgmm-jni.so	Google Map SDK	0	0	
+libhcl.so	HCL2	0	0	
+libijiami_ijm.so	爱加密	0	0	
+libijm_linker.so	爱加密	0	0	
+liblamemp3.so	Lame-For-Unity	0	0	
+libliantiansec.so	百度人脸识别	0	0	
+liblinphone.so	Linphone	0	0	
+libmatrix-junwind.so	Matrix	0	0	
+libmediapipe_tasks_vision_jni.so	MediaPipe Tasks	0	0	
+libmegface_v5.so	旷视 SDK	0	0	
+libmpaas_teclability.so	mPaaS	0	0	
+libogg_opus_encoder_translate.so	Opus	0	0	
+libomp.so	LibOMP	0	0	
+libopenssl_smime.so	OpenSSL	0	0	
+libopusJNI.so	opus-jni	0	0	
+libopusV2JNI.so	ExoPlayer	0	0	
+libpcs_tensorflow_jni.so	LiteRT	0	0	
+libphonon.so	Steam Audio Core	0	0	
+libphonon_fmod.so	Steam Audio Core	0	0	
+libphotoprocessing.so	PhotoProcessing	0	0	
+libreact-native-mmkv.so	React Native MMKV	0	0	
+libreact_codegen_BCLimearGradientSpec.so	React Native	0	0	
+libreact_codegen_RNCViewPager.so	React Native	0	0	
+libreact_codegen_RNCWebViewSpec.so	React Native	0	0	
+libreact_codegen_ReactSlider.so	React Native	0	0	
+libreact_codegen_rnasyncstorage.so	React Native	0	0	
+libreact_codegen_rngesturehandler_codegen.so	React Native	0	0	
+libreact_codegen_rnscreens.so	React Native	0	0	
+libreact_codegen_safeareacontext.so	React Native	0	0	
+librive-android.so	Rive	0	0	
+librive_text.so	Rive	0	0	
+libsig_native.so	LibSig	0	0	
+libsqlite3requery.so	SQLite	0	0	
+libtencentsm-lite.so	Kona 国密套件	0	0	
+libtensorflowlite_jni_stable.so	LiteRT	0	0	
+libwcdb_legacy.so	WCDB	0	0	
+libwechatbacktrace.so	Matrix	0	0	
+libwechatcommon.so	Matrix	0	0	
+libwechatcrash.so	Matrix	0	0	
+libwechatns.so	Matrix	0	0	
+libwechatxlog.so	Matrix	0	0	
+libweex_xr_plugin.so	Weex	0	0	
+libx5linker.so	腾讯浏览服务（TBS）	0	0	
+libxluau.so	xLua	0	0	
+libxphttpclientex.so	腾讯浏览服务（TBS）	0	0	
+libxplatform.so	腾讯浏览服务（TBS）	0	0	
+libxweb_linker.so	腾讯浏览服务（TBS）	0	0	
+androidx.webkit.DropDataContentProvider	Jetpack WebKit	4	0	
+com.dcloud.android.permissioncontrol.CrossProcessSharedPreferencesProvider	H5P.Android	4	0	
+com.lzf.easyfloat.EasyFloatInitializer	EasyFloat	4	0	
+com.sina.weibo.sdk.content.FileProviderV2	微博 SDK	4	0	
+com.sina.weibo.sdk.content.WeiboSDKFileProvider	微博 SDK	4	0	
+io.dcloud.common.util.DCloud_FileProvider	H5P.Android	4	0	
+android.support.multidex.MultiDexPreloadReceiver	multidex	3	0	
+androidx.glance.appwidget.UnmanagedSessionReceiver	Jetpack Glance	3	0	
+androidx.media3.session.MediaButtonReceiver	Jetpack Media Session	3	0	
+androidx.work.impl.background.systemalarm.ConstraintProxy$NullReceiver	Jetpack WorkManager	3	0	
+androidx.work.impl.background.systemalarm.NullReceiver	Jetpack WorkManager	3	0	
+android.support.v7.app.AppLocalesMetadataHolderService	Jetpack AppCompat	1	0	
+androidx.pdf.service.PdfDocumentServiceImpl	Jetpack PDF	1	0	
+libWCDB.so	WCDB	0	0	
+com.huawei.hwarkuix.(.*)	ArkUI-X	2	1	regex_arkui_x
+libzstd-jni-(.*)\.so	Zstandard	0	1	regex_zstd
+com.alimm.tanx.core.ad.ad.template.rendering.reward.RewardPortraitActivity	TanX	2	0	
+com.alimm.tanx.core.ad.ad.template.rendering.reward.RewardVideoPortraitActivity	TanX	2	0	
+com.alimm.tanx.core.ad.ad.template.rendering.table.screen.TableScreenPortraitActivity	TanX	2	0	
+com.alimm.tanx.core.ad.browser.TanxBrowserActivity	TanX	2	0	
+com.baidu.android.pushservice.PushNotifyDispatchActivity	百度云推送	2	0	
+com.baidu.android.pushservice.honorproxy.HonorProxyActivity	Honor Push(Baidu Cloud Proxy)	2	0	
+com.baidu.android.pushservice.mzproxy.MzNotifyActivity	Meizu Push(Baidu Cloud Proxy)	2	0	
+com.baidu.android.pushservice.opproxy.OpNotifyActivity	OPPO Push(Baidu Cloud Proxy)	2	0	
+com.baidu.android.pushservice.viproxy.ViNotifyActivity	vivo Push(Baidu Cloud Proxy)	2	0	
+com.baidu.android.pushservice.viproxy.VsubscribeNotifyActivity	百度云推送	2	0	
+com.baidu.android.pushservice.xmproxy.XmNotifyActivity	MiPush(Baidu Cloud Proxy)	2	0	
+com.google.android.gms.ads.NotificationHandlerActivity	Google AdMob	2	0	
+com.google.mlkit.vision.codescanner.internal.GmsBarcodeScanningDelegateActivity	ML Kit	2	0	
+com.hpplay.sdk.sink.business.BusinessActivity	乐播 SDK	2	0	
+com.hpplay.sdk.sink.business.TipActivity	乐播 SDK	2	0	
+com.hpplay.sdk.sink.business.connect.ConnectPageActivity	乐播 SDK	2	0	
+com.huawei.android.hms.agent.pay.HMSPMSPayAgentActivity	HMS Core	2	0	
+com.igexin.sdk.PopupActivity	个推	2	0	
+libHiAI_dl.so	HiAI Foundation	0	0	
+libMNN_dl.so	MNN	0	0	
+libargon2-wrapper-0.5.so	Argon2	0	0	
+libaterm.so	aterminal	0	0	
+libbspatch-lib.so	bspatch	0	0	
+libcolorpen.so	即构极速视频 SDK	0	0	
+libffmpeg_mediametadataretriever_jni.so	FFmpeg	0	0	
+libfilterframework_jni.so	Jetpack Media	0	0	
+libgcanvas_runtime.so	GCanvas	0	0	
+libgcanvas_runtime_jsi.so	GCanvas	0	0	
+libgetuiext2.so	个推	0	0	
+libgraphics-core.so	Jetpack Graphics	0	0	
+libhandwriting.so	即构极速视频 SDK	0	0	
+libhdiffpatch.so	HDiffPatch	0	0	
+libhpplayvideo.so	乐播 SDK	0	0	
+libhpplayvideo19.so	乐播 SDK	0	0	
+libiconv16.so	iconv	0	0	
+liblbffmpeg.so	乐播 SDK	0	0	
+liblbplayer.so	乐播 SDK	0	0	
+liblbsdl.so	乐播 SDK	0	0	
+liblbtrtc.so	乐播 SDK	0	0	
+liblbwebpdec.so	乐播 SDK	0	0	
+libleboAudio.so	乐播 SDK	0	0	
+liblelink.so	乐播 SDK	0	0	
+liblynx.so	Lynx	0	0	
+liblynx_helium.so	Lynx	0	0	
+liblynx_krypton.so	Lynx	0	0	
+liblynx_v8_bridge.so	Lynx	0	0	
+liblynxdebugrouter.so	Lynx	0	0	
+liblynxdevtool.so	Lynx	0	0	
+liblynxtrace.so	Lynx	0	0	
+libmaesdk.so	1DS	0	0	
+libmlkitcommonpipeline.so	ML Kit	0	0	
+libmnn_jsi.so	MNN	0	0	
+libmnnqjs.so	MNN	0	0	
+libmnnruntime.so	MNN	0	0	
+libmpaas_common_teclabilities.so	mPaaS	0	0	
+libmpaas_network_kotlin_adapter.so	mPaaS	0	0	
+libmpaas_teclability_interface.so	mPaaS	0	0	
+libnmmp.so	nmmp	0	0	
+libonnxruntime4j_jni.so	onnxruntime	0	0	
+libopenssl_init.so	OpenSSL	0	0	
+libpanglearmor.so	Pangle SDK	0	0	
+libpcre2.so	pcre2	0	0	
+libpine.so	Pine	0	0	
+libreact_codegen_BVLinearGradientSpec.so	React Native	0	0	
+libreact_codegen_FileAccessSpec.so	React Native	0	0	
+libreact_codegen_KmReactEntrySpec.so	React Native	0	0	
+libreact_codegen_PagerView.so	React Native	0	0	
+libreact_codegen_PrnkitSpec.so	React Native	0	0	
+libreact_codegen_RNMmkvSpec.so	React Native	0	0	
+libreact_codegen_ReactNativeLinearGradientSpec.so	React Native	0	0	
+libreact_codegen_ReactNativeWebviewSpec.so	React Native	0	0	
+libreact_codegen_Spec.so	React Native	0	0	
+libreact_codegen_qrn_adr.so	React Native	0	0	
+libreact_codegen_yrncore.so	React Native	0	0	
+libroute-tracepath.so	tracepath	0	0	
+libsentry-fd-monitor.so	Sentry	0	0	
+libshadowhook_nothing.so	ShadowHook	0	0	
+libsqlite-jni.so	SQLite	0	0	
+libsscronet.so	Cronet	0	0	
+libsurface_util_jni.so	Jetpack Camera	0	0	
+libswan-arch.so	智能小程序	0	0	
+libswan-native-lib.so	智能小程序	0	0	
+libswanKV.so	智能小程序	0	0	
+libtanx.so	TanX	0	0	
+libunrar-jni.so	unrar-android	0	0	
+libxnn_core.so	xnn	0	0	
+libxnn_invoker.so	xnn	0	0	
+libxnn_media.so	xnn	0	0	
+libxweb_hpatchz.so	腾讯浏览服务（TBS）	0	0	
+libxwebpluginxfilesofficereader.so	腾讯浏览服务（TBS）	0	0	
+libxwebpluginxfilespdfreader.so	腾讯浏览服务（TBS）	0	0	
+libxwebpluginxfilestxtreader.so	腾讯浏览服务（TBS）	0	0	
+libyuv_android.so	libYUV	0	0	
+libyuvutil.so	libYUV	0	0	
+libyx_alog.so	网易云信	0	0	
+libzegoliveroom.so	即构极速视频 SDK	0	0	
+libzegoqueue.so	即构极速视频 SDK	0	0	
+dev.fluttercommunity.plus.share.ShareFileProvider	share_plus	4	0	
+com.google.android.play.core.assetpacks.SessionStateBroadcastReceiver	Play Asset Delivery	3	0	
+dev.fluttercommunity.plus.share.SharePlusPendingIntent	share_plus	3	0	
+android.net.http.MetadataHolder	Cronet	1	0	
+com.baidu.android.pushservice.honorproxy.MyHonorMsgService	Honor Push(Baidu Cloud Proxy)	1	0	
+com.hpplay.component.screencapture.ScreenCaptureService	乐播 SDK	1	0	
+com.hpplay.sdk.sink.business.DaemonService	乐播 SDK	1	0	
+com.igexin.assist.control.GTRgeisterTokenService	个推	1	0	
+org.eclipse.paho.android.service.MqttService	Eclipse Paho Android Service	1	0	

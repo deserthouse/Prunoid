@@ -1,0 +1,3940 @@
+{
+ "meta": "468条Thanox禁用规则全部条目, 用于与LibChecker-Rules v44比对; 统计: 全覆盖31/部分18/零覆盖419",
+ "entries": [
+  {
+   "name": "穿山甲广告SDK",
+   "company": "北京巨量引擎网络技术有限公司",
+   "safeToBlock": true,
+   "keywords": [
+    "com.ss.android.socialbase.",
+    "com.ss.android.downloadlib.",
+    "com.ss.android.ad.",
+    "com.bytedance.embedapplog.",
+    "com.bytedance.pangle.",
+    "com.bytedance.tea.crash.",
+    "com.bytedance.sdk.openadsdk.",
+    "com.bytedance.android.openliveplugin.",
+    "com.tt.miniapphost.ad.",
+    "com.bytedance.pangrowth.reward."
+   ]
+  },
+  {
+   "name": "SuperSonic游戏广告",
+   "company": "ironSource",
+   "safeToBlock": true,
+   "keywords": [
+    ".supersonicads."
+   ]
+  },
+  {
+   "name": "DataFinder分析",
+   "company": "火山引擎",
+   "safeToBlock": true,
+   "keywords": [
+    "com.bytedance.applog."
+   ]
+  },
+  {
+   "name": "神策分析",
+   "company": "神策数据",
+   "safeToBlock": true,
+   "keywords": [
+    "com.sensorsdata.analytics."
+   ]
+  },
+  {
+   "name": "阿里移动数据分析",
+   "company": "阿里巴巴",
+   "safeToBlock": true,
+   "keywords": [
+    "com.alibaba.analytics."
+   ]
+  },
+  {
+   "name": "阿里移动推送",
+   "company": "阿里巴巴",
+   "safeToBlock": true,
+   "keywords": [
+    "com.alibaba.sdk.android.push.",
+    "com.taobao.accs.",
+    "com.taobao.agoo.",
+    "org.android.agoo.accs."
+   ]
+  },
+  {
+   "name": "友盟消息推送平台",
+   "company": "友盟",
+   "safeToBlock": true,
+   "keywords": [
+    "com.umeng.message."
+   ]
+  },
+  {
+   "name": "腾讯广告",
+   "company": "腾讯",
+   "safeToBlock": true,
+   "keywords": [
+    "com.qq.e.",
+    "com.tencent.qqmini.ad.",
+    "com.tencent.klevin.ads."
+   ]
+  },
+  {
+   "name": "腾讯移动推送",
+   "company": "腾讯",
+   "safeToBlock": true,
+   "keywords": [
+    "com.tencent.android.tpush.",
+    "com.tencent.tpns."
+   ]
+  },
+  {
+   "name": "腾讯移动分析",
+   "company": "腾讯",
+   "safeToBlock": true,
+   "keywords": [
+    "com.tencent.mid.api.MidProvider."
+   ]
+  },
+  {
+   "name": "腾讯Bugly",
+   "company": "腾讯",
+   "safeToBlock": true,
+   "keywords": [
+    "com.tencent.bugly."
+   ]
+  },
+  {
+   "name": "腾讯Tinker热更新",
+   "company": "腾讯",
+   "safeToBlock": true,
+   "keywords": [
+    "com.tencent.tinker.",
+    "com.tencent.rfix."
+   ]
+  },
+  {
+   "name": "腾讯浏览服务(X5内核)",
+   "company": "腾讯",
+   "safeToBlock": true,
+   "keywords": [
+    "com.tencent.smtt."
+   ]
+  },
+  {
+   "name": "个推SDK",
+   "company": "每日互动股份有限公司",
+   "safeToBlock": true,
+   "keywords": [
+    "com.igexin.",
+    ".getui.",
+    ".gtpush"
+   ]
+  },
+  {
+   "name": "极光推送",
+   "company": "深圳市和讯华谷信息技术有限公司",
+   "safeToBlock": true,
+   "keywords": [
+    ".jpush.",
+    ".jiguang."
+   ]
+  },
+  {
+   "name": "快手广告联盟",
+   "company": "快手",
+   "safeToBlock": true,
+   "keywords": [
+    "com.kuaishou.commercial.downloader.",
+    "com.gifshow.ad.",
+    "com.kwad.",
+    "com.yxcrop.gifshow.ad.",
+    "com.yxcrop.gifshow.map.",
+    "com.kuaishou.commercial.corona.AdVideoDetailActivity",
+    "com.yxcorp.gifshow.message.subbiz.ad.user.AdUserDetailActivity"
+   ]
+  },
+  {
+   "name": "哔哩哔哩广告",
+   "company": "哔哩哔哩广告",
+   "safeToBlock": true,
+   "keywords": [
+    "com.bilibili.ad.",
+    "com.bilibili.adcommon.",
+    "tv.danmaku.bili.ui.webview.service.adv."
+   ]
+  },
+  {
+   "name": "京东CPS联盟SDK",
+   "company": "京东",
+   "safeToBlock": true,
+   "keywords": [
+    "com.jd.ad."
+   ]
+  },
+  {
+   "name": "百度移动应用推广",
+   "company": "百度",
+   "safeToBlock": true,
+   "keywords": [
+    "com.baidu.mobads."
+   ]
+  },
+  {
+   "name": "百度云推送",
+   "company": "百度",
+   "safeToBlock": true,
+   "keywords": [
+    "com.baidu.android.pushservice."
+   ]
+  },
+  {
+   "name": "百度广告",
+   "company": "百度",
+   "safeToBlock": true,
+   "keywords": [
+    "com.baidu.swan.game.ad."
+   ]
+  },
+  {
+   "name": "脸书广告",
+   "company": "Meta",
+   "safeToBlock": true,
+   "keywords": [
+    "com.facebook.ads."
+   ]
+  },
+  {
+   "name": "亚马逊广告",
+   "company": "Amazon",
+   "safeToBlock": true,
+   "keywords": [
+    ".amazon.device.ads."
+   ]
+  },
+  {
+   "name": "谷歌广告",
+   "company": "Alphabet",
+   "safeToBlock": true,
+   "keywords": [
+    "com.google.ads.",
+    "com.google.android.gms.ads.",
+    "com.google.android.ads.",
+    "com.google.unity.ads.",
+    "com.google.android.gms.admob",
+    "com.google.firebase.firebase_ads."
+   ]
+  },
+  {
+   "name": "Unity广告",
+   "company": "Unity",
+   "safeToBlock": true,
+   "keywords": [
+    "com.unity3d.services",
+    "com.unity3d.ads"
+   ]
+  },
+  {
+   "name": "qamob广告",
+   "company": "qamob",
+   "safeToBlock": true,
+   "keywords": [
+    "com.qamob.hads."
+   ]
+  },
+  {
+   "name": "MoPub广告",
+   "company": "MoPub (被AppLovin收购)",
+   "safeToBlock": true,
+   "keywords": [
+    "com.mopub."
+   ]
+  },
+  {
+   "name": "融云推送",
+   "company": "RongCloud",
+   "safeToBlock": true,
+   "keywords": [
+    "io.rong.push."
+   ]
+  },
+  {
+   "name": "小米推送",
+   "company": "小米科技",
+   "safeToBlock": true,
+   "keywords": [
+    ".xiaomi.push",
+    ".mipush.sdk."
+   ]
+  },
+  {
+   "name": "小米应用检查更新SDK",
+   "company": "小米科技",
+   "safeToBlock": true,
+   "keywords": [
+    "com.market.sdk."
+   ]
+  },
+  {
+   "name": "魅族消息推送服务",
+   "company": "Meizu Telecom Equipment Co., Ltd.",
+   "safeToBlock": true,
+   "keywords": [
+    ".meizu.cloud.pushsdk."
+   ]
+  },
+  {
+   "name": "vivo消息推送服务",
+   "company": "vivo COMMUNICATION TECHNOLOGY CO.LTD.",
+   "safeToBlock": true,
+   "keywords": [
+    "com.vivo.push.sdk."
+   ]
+  },
+  {
+   "name": "vivo广告联盟",
+   "company": "广东天宸网络科技有限公司",
+   "safeToBlock": true,
+   "keywords": [
+    "com.vivo.mobilead.",
+    "com.vivo.adsdk."
+   ]
+  },
+  {
+   "name": "Oppo推送服务",
+   "company": "广东欢太科技有限公司",
+   "safeToBlock": true,
+   "keywords": [
+    ".heytap.msp.push",
+    ".heytap.mcssdk.",
+    ".coloros.mcssdk."
+   ]
+  },
+  {
+   "name": "Oppo广告联盟",
+   "company": "广东欢太科技有限公司",
+   "safeToBlock": true,
+   "keywords": [
+    "com.oppo.mobad.",
+    "com.opos.mobad.",
+    "com.opos.cmn.",
+    ".OppoAdsAppActivity"
+   ]
+  },
+  {
+   "name": "Teemo",
+   "company": "teemo",
+   "safeToBlock": null,
+   "keywords": [
+    "com.databerries.",
+    "com.geolocstation."
+   ]
+  },
+  {
+   "name": "FidZup",
+   "company": "fidzup",
+   "safeToBlock": null,
+   "keywords": [
+    "com.fidzup."
+   ]
+  },
+  {
+   "name": "Audience Studio (Krux)",
+   "company": "salesforce",
+   "safeToBlock": null,
+   "keywords": [
+    "com.krux.androidsdk"
+   ]
+  },
+  {
+   "name": "Ad4Screen",
+   "company": "ad4screen",
+   "safeToBlock": null,
+   "keywords": [
+    "com.ad4screen.sdk"
+   ]
+  },
+  {
+   "name": "Google DoubleClick",
+   "company": "doubleclickbygoogle",
+   "safeToBlock": null,
+   "keywords": []
+  },
+  {
+   "name": "Weborama",
+   "company": "weborama",
+   "safeToBlock": null,
+   "keywords": [
+    "com.weborama."
+   ]
+  },
+  {
+   "name": "Smart",
+   "company": "smartadserver",
+   "safeToBlock": null,
+   "keywords": [
+    "com.smartadserver."
+   ]
+  },
+  {
+   "name": "JW Player",
+   "company": "jwplayer",
+   "safeToBlock": null,
+   "keywords": [
+    "com.longtailvideo.jwplayer."
+   ]
+  },
+  {
+   "name": "Loggly",
+   "company": "loggly",
+   "safeToBlock": null,
+   "keywords": [
+    "com.github.tony19.timber.loggly",
+    "com.github.tony19.loggly",
+    "com.visiware.sync2ad.logger.loggly."
+   ]
+  },
+  {
+   "name": "Xiti",
+   "company": "Xiti",
+   "safeToBlock": null,
+   "keywords": []
+  },
+  {
+   "name": "OutBrain",
+   "company": "outbrain",
+   "safeToBlock": null,
+   "keywords": [
+    "com.outbrain."
+   ]
+  },
+  {
+   "name": "AppsFlyer",
+   "company": "AppsFlyer",
+   "safeToBlock": null,
+   "keywords": [
+    "com.appsflyer."
+   ]
+  },
+  {
+   "name": "Ligatus",
+   "company": "ligatus",
+   "safeToBlock": null,
+   "keywords": [
+    ".LigatusManager",
+    ".LigatusViewClient",
+    "com.ligatus.android.adframework"
+   ]
+  },
+  {
+   "name": "Widespace",
+   "company": "widespace",
+   "safeToBlock": null,
+   "keywords": [
+    "com.widespace."
+   ]
+  },
+  {
+   "name": "AppNexus",
+   "company": "appnexus",
+   "safeToBlock": null,
+   "keywords": [
+    "com.appnexus.opensdk."
+   ]
+  },
+  {
+   "name": "Localytics",
+   "company": "localytics",
+   "safeToBlock": null,
+   "keywords": [
+    "com.localytics.android.",
+    "com.localytics.androidx",
+    "com.localytics.react."
+   ]
+  },
+  {
+   "name": "Braze (formerly Appboy)",
+   "company": "Braze",
+   "safeToBlock": null,
+   "keywords": [
+    "com.appboy"
+   ]
+  },
+  {
+   "name": "mParticle",
+   "company": "mParticle",
+   "safeToBlock": null,
+   "keywords": [
+    "com.mparticle"
+   ]
+  },
+  {
+   "name": "S4M",
+   "company": "s4m",
+   "safeToBlock": null,
+   "keywords": [
+    "com.sam4mobile.",
+    ".S4MAnalytic"
+   ]
+  },
+  {
+   "name": "Sizmek",
+   "company": "sizmek",
+   "safeToBlock": null,
+   "keywords": [
+    ".sizmek."
+   ]
+  },
+  {
+   "name": "Batch",
+   "company": "batch",
+   "safeToBlock": null,
+   "keywords": [
+    "com.batch.android."
+   ]
+  },
+  {
+   "name": "Sync2Ad",
+   "company": "sync2ad",
+   "safeToBlock": null,
+   "keywords": [
+    "com.visiware.sync2ad.dmp."
+   ]
+  },
+  {
+   "name": "Flurry",
+   "company": "flurry",
+   "safeToBlock": null,
+   "keywords": [
+    "com.flurry."
+   ]
+  },
+  {
+   "name": "HockeyApp",
+   "company": "hockeyapp",
+   "safeToBlock": null,
+   "keywords": [
+    "net.hockeyapp."
+   ]
+  },
+  {
+   "name": "Google Crashlytics",
+   "company": "Google",
+   "safeToBlock": null,
+   "keywords": [
+    "io.fabric.",
+    "com.crashlytics.",
+    "com.google.firebase.crashlytics",
+    "com.google.firebase.crash.",
+    "io.invertase.firebase.crashlytics."
+   ]
+  },
+  {
+   "name": "LeanPlum",
+   "company": "leanplum",
+   "safeToBlock": null,
+   "keywords": [
+    "com.leanplum."
+   ]
+  },
+  {
+   "name": "Tinder Analytics",
+   "company": "tinder",
+   "safeToBlock": null,
+   "keywords": [
+    "com.tinder.analytics",
+    "com.tinder.ads"
+   ]
+  },
+  {
+   "name": "Schibsted",
+   "company": "schibsted",
+   "safeToBlock": null,
+   "keywords": [
+    ".schibsted."
+   ]
+  },
+  {
+   "name": "ATInternet",
+   "company": "atinternet",
+   "safeToBlock": null,
+   "keywords": [
+    "com.atinternet."
+   ]
+  },
+  {
+   "name": "Tealium",
+   "company": "tealium",
+   "safeToBlock": null,
+   "keywords": [
+    ".tealium."
+   ]
+  },
+  {
+   "name": "Nexage",
+   "company": "nexage",
+   "safeToBlock": null,
+   "keywords": [
+    "com.nexage.android.",
+    "org.nexage."
+   ]
+  },
+  {
+   "name": "Ogury Presage",
+   "company": "presage",
+   "safeToBlock": null,
+   "keywords": [
+    "io.presage."
+   ]
+  },
+  {
+   "name": "Add Apt Tr",
+   "company": "addapptr",
+   "safeToBlock": null,
+   "keywords": [
+    "com.intentsoftware.addapptr."
+   ]
+  },
+  {
+   "name": "Vectaury",
+   "company": "vectaury",
+   "safeToBlock": null,
+   "keywords": [
+    "io.vectaury."
+   ]
+  },
+  {
+   "name": "Tune",
+   "company": "tune",
+   "safeToBlock": null,
+   "keywords": [
+    "com.tune",
+    "com.mobileapptracker"
+   ]
+  },
+  {
+   "name": "Pushwoosh",
+   "company": "pushwoosh",
+   "safeToBlock": null,
+   "keywords": [
+    "com.pushwoosh"
+   ]
+  },
+  {
+   "name": "Demdex",
+   "company": "adobe",
+   "safeToBlock": null,
+   "keywords": [
+    "com.adobe.mobile.Analytics",
+    "com.adobe.mobile.Config."
+   ]
+  },
+  {
+   "name": "AdsWizz",
+   "company": "adswizz",
+   "safeToBlock": null,
+   "keywords": [
+    ".adswizz."
+   ]
+  },
+  {
+   "name": "ExactTarget",
+   "company": "exacttarget",
+   "safeToBlock": null,
+   "keywords": [
+    "com.exacttarget."
+   ]
+  },
+  {
+   "name": "Omniture",
+   "company": "adobe",
+   "safeToBlock": null,
+   "keywords": [
+    "com.omniture.",
+    "com.adobe.adms.measurement."
+   ]
+  },
+  {
+   "name": "OpenLocate",
+   "company": "safegraph",
+   "safeToBlock": null,
+   "keywords": [
+    "com.safegraph.",
+    "com.openlocate"
+   ]
+  },
+  {
+   "name": "TagCommander (Commanders Act.)",
+   "company": "commandersact",
+   "safeToBlock": null,
+   "keywords": [
+    "com.tagcommander."
+   ]
+  },
+  {
+   "name": "CrowdTangle",
+   "company": "crowdtangle",
+   "safeToBlock": null,
+   "keywords": []
+  },
+  {
+   "name": "Facebook Audience",
+   "company": "Facebook",
+   "safeToBlock": null,
+   "keywords": [
+    "com.facebook.audiencenetwork"
+   ]
+  },
+  {
+   "name": "Google Analytics",
+   "company": "Google",
+   "safeToBlock": null,
+   "keywords": [
+    "com.google.android.apps.analytics.",
+    "com.google.android.gms.analytics.",
+    "com.google.analytics."
+   ]
+  },
+  {
+   "name": "Google Firebase Analytics",
+   "company": "Google",
+   "safeToBlock": null,
+   "keywords": [
+    "com.google.firebase.analytics.",
+    "com.google.android.gms.measurement.",
+    "com.google.firebase.firebase_analytics"
+   ]
+  },
+  {
+   "name": "Eulerian",
+   "company": "eulerian",
+   "safeToBlock": null,
+   "keywords": [
+    "com.eulerian.android.sdk"
+   ]
+  },
+  {
+   "name": "Adjust",
+   "company": "Adjust",
+   "safeToBlock": null,
+   "keywords": [
+    "com.adjust.sdk.",
+    "com.adjust.android.sdk."
+   ]
+  },
+  {
+   "name": "ChartBoost",
+   "company": "chartboost",
+   "safeToBlock": null,
+   "keywords": [
+    "com.chartboost.sdk."
+   ]
+  },
+  {
+   "name": "Backelite",
+   "company": "backelite",
+   "safeToBlock": null,
+   "keywords": [
+    "com.backelite.android.",
+    "com.backelite.bkdroid."
+   ]
+  },
+  {
+   "name": "Areametrics",
+   "company": "areametrics",
+   "safeToBlock": null,
+   "keywords": [
+    "com.areametrics.areametricssdk",
+    "com.areametrics.nosdkandroid"
+   ]
+  },
+  {
+   "name": "ComScore",
+   "company": "comscore",
+   "safeToBlock": null,
+   "keywords": [
+    "com.comscore."
+   ]
+  },
+  {
+   "name": "Cuebiq",
+   "company": "cuebiq",
+   "safeToBlock": null,
+   "keywords": [
+    "com.cuebiq.cuebiqsdk.model.Collector",
+    "com.cuebiq.cuebiqsdk.receiver.CoverageReceiver"
+   ]
+  },
+  {
+   "name": "HelpShift",
+   "company": "helpshift",
+   "safeToBlock": null,
+   "keywords": [
+    "com.helpshift"
+   ]
+  },
+  {
+   "name": "Kontakt",
+   "company": "kontakt",
+   "safeToBlock": null,
+   "keywords": [
+    "com.kontakt.sdk.android."
+   ]
+  },
+  {
+   "name": "Locuslabs",
+   "company": "locuslabs",
+   "safeToBlock": null,
+   "keywords": [
+    "com.locuslabs.sdk"
+   ]
+  },
+  {
+   "name": "Moat",
+   "company": "moat",
+   "safeToBlock": null,
+   "keywords": [
+    "com.moat.analytics.mobile."
+   ]
+  },
+  {
+   "name": "Segment",
+   "company": "segment",
+   "safeToBlock": null,
+   "keywords": [
+    "com.segment.analytics."
+   ]
+  },
+  {
+   "name": "Mobile Engagement",
+   "company": "microsoft",
+   "safeToBlock": null,
+   "keywords": [
+    "com.ubikod.capptain.",
+    "com.microsoft.azure.engagement."
+   ]
+  },
+  {
+   "name": "Colocator",
+   "company": "colocator",
+   "safeToBlock": null,
+   "keywords": [
+    "net.crowdconnected.androidcolocator"
+   ]
+  },
+  {
+   "name": "Facebook Analytics",
+   "company": "Facebook",
+   "safeToBlock": null,
+   "keywords": [
+    "com.facebook.appevents",
+    "com.facebook.marketing.",
+    "com.facebook.CampaignTrackingReceiver"
+   ]
+  },
+  {
+   "name": "Facebook Login",
+   "company": "Facebook",
+   "safeToBlock": null,
+   "keywords": [
+    "com.facebook.login"
+   ]
+  },
+  {
+   "name": "Facebook Notifications",
+   "company": "Facebook",
+   "safeToBlock": null,
+   "keywords": [
+    "com.facebook.notifications"
+   ]
+  },
+  {
+   "name": "Facebook Places",
+   "company": "Facebook",
+   "safeToBlock": null,
+   "keywords": [
+    "com.facebook.places"
+   ]
+  },
+  {
+   "name": "Facebook Share",
+   "company": "Facebook",
+   "safeToBlock": null,
+   "keywords": [
+    "com.facebook.share"
+   ]
+  },
+  {
+   "name": "Google Ads",
+   "company": "google",
+   "safeToBlock": null,
+   "keywords": []
+  },
+  {
+   "name": "AppLovin",
+   "company": "Applovin",
+   "safeToBlock": null,
+   "keywords": [
+    "com.applovin"
+   ]
+  },
+  {
+   "name": "Glispa Connect (Formerly Avocarrot)",
+   "company": "glispa",
+   "safeToBlock": null,
+   "keywords": [
+    "com.avocarrot.sdk"
+   ]
+  },
+  {
+   "name": "NativeX",
+   "company": "nativex",
+   "safeToBlock": null,
+   "keywords": [
+    "com.nativex"
+   ]
+  },
+  {
+   "name": "百度地图",
+   "company": "Baidu",
+   "safeToBlock": null,
+   "keywords": [
+    "com.baidu.BaiduMap"
+   ]
+  },
+  {
+   "name": "微信位置",
+   "company": "Wechat",
+   "safeToBlock": null,
+   "keywords": [
+    "com.tencent.map.geolocation",
+    "com.tencent.mm.plugin.location.",
+    "com.tencent.mm.plugin.location_soso.",
+    "com.tencent.mm.plugin.location_google"
+   ]
+  },
+  {
+   "name": "HyperTrack",
+   "company": "hypertrack",
+   "safeToBlock": null,
+   "keywords": [
+    "com.hypertrack",
+    "com.hypertracklive.",
+    "io.hypertrack"
+   ]
+  },
+  {
+   "name": "Uber Analytics",
+   "company": "uber",
+   "safeToBlock": null,
+   "keywords": [
+    "com.ubercab.analytics.",
+    "com.ubercab.library.metrics.analytics.",
+    "com.ubercab.client.core.analytics."
+   ]
+  },
+  {
+   "name": "Lisnr",
+   "company": "lisnr",
+   "safeToBlock": null,
+   "keywords": [
+    "com.lisnr."
+   ]
+  },
+  {
+   "name": "SilverPush",
+   "company": "silverpush",
+   "safeToBlock": null,
+   "keywords": [
+    "com.silverpush."
+   ]
+  },
+  {
+   "name": "Shopkick",
+   "company": "shopkick",
+   "safeToBlock": null,
+   "keywords": [
+    "com.shopkick.sdk.api.",
+    "com.shopkick.fetchers."
+   ]
+  },
+  {
+   "name": "Alphonso",
+   "company": "alphonso",
+   "safeToBlock": null,
+   "keywords": [
+    "tv.alphonso.service"
+   ]
+  },
+  {
+   "name": "Smaato",
+   "company": "smaato",
+   "safeToBlock": null,
+   "keywords": [
+    "com.smaato."
+   ]
+  },
+  {
+   "name": "Scandit",
+   "company": "scandit",
+   "safeToBlock": null,
+   "keywords": [
+    "com.scandit."
+   ]
+  },
+  {
+   "name": "Inrix",
+   "company": "inrix",
+   "safeToBlock": null,
+   "keywords": [
+    "com.inrix.sdk"
+   ]
+  },
+  {
+   "name": "Signal360",
+   "company": "signal360",
+   "safeToBlock": null,
+   "keywords": [
+    "com.signal360.sdk.core.",
+    "com.sonicnotify.sdk.core.",
+    "com.rnsignal360"
+   ]
+  },
+  {
+   "name": "TeleQuid",
+   "company": "telequid",
+   "safeToBlock": null,
+   "keywords": [
+    "com.telequid."
+   ]
+  },
+  {
+   "name": "Retency",
+   "company": "retency",
+   "safeToBlock": null,
+   "keywords": [
+    "com.retency.sdk.android"
+   ]
+  },
+  {
+   "name": "MAdvertise",
+   "company": "madvertise",
+   "safeToBlock": null,
+   "keywords": [
+    "com.mngads.sdk",
+    "com.mngads.views",
+    "com.mngads."
+   ]
+  },
+  {
+   "name": "AdColony",
+   "company": "adcolony",
+   "safeToBlock": null,
+   "keywords": [
+    "com.adcolony.",
+    "com.jirbo.adcolony."
+   ]
+  },
+  {
+   "name": "AccountKit",
+   "company": "Facebook",
+   "safeToBlock": null,
+   "keywords": [
+    "com.facebook.accountkit"
+   ]
+  },
+  {
+   "name": "Amazon Mobile Associates",
+   "company": "amazon",
+   "safeToBlock": null,
+   "keywords": [
+    "com.amazon.device.associates"
+   ]
+  },
+  {
+   "name": "Radius Networks",
+   "company": "radiusnetworks",
+   "safeToBlock": null,
+   "keywords": [
+    "com.radiusnetworks"
+   ]
+  },
+  {
+   "name": "Amazon Analytics (Amazon insights)",
+   "company": "amazon",
+   "safeToBlock": null,
+   "keywords": [
+    "com.amazon.insights",
+    "com.amazonaws.mobileconnectors.pinpoint.analytics.",
+    "com.amazonaws.mobileconnectors.amazonmobileanalytics"
+   ]
+  },
+  {
+   "name": "Baidu APPX",
+   "company": "baidu",
+   "safeToBlock": null,
+   "keywords": [
+    "com.baidu.appx"
+   ]
+  },
+  {
+   "name": "Baidu Location",
+   "company": "baidu",
+   "safeToBlock": null,
+   "keywords": [
+    "com.baidu.location"
+   ]
+  },
+  {
+   "name": "Baidu Map",
+   "company": "baidu",
+   "safeToBlock": null,
+   "keywords": [
+    "com.baidu.mapapi"
+   ]
+  },
+  {
+   "name": "Baidu Mobile Stat",
+   "company": "baidu",
+   "safeToBlock": null,
+   "keywords": [
+    "com.baidu.mobstat"
+   ]
+  },
+  {
+   "name": "Estimote",
+   "company": "estimote",
+   "safeToBlock": null,
+   "keywords": [
+    "com.estimote."
+   ]
+  },
+  {
+   "name": "Baidu Navigation",
+   "company": "baidu",
+   "safeToBlock": null,
+   "keywords": [
+    "com.baidu.navi"
+   ]
+  },
+  {
+   "name": "Fyber",
+   "company": "fyber",
+   "safeToBlock": null,
+   "keywords": [
+    "com.fyber."
+   ]
+  },
+  {
+   "name": "Google Tag Manager",
+   "company": "Google",
+   "safeToBlock": null,
+   "keywords": [
+    "com.google.tagmanager",
+    "com.google.android.gms.tagmanager"
+   ]
+  },
+  {
+   "name": "Inmobi",
+   "company": "inmobi",
+   "safeToBlock": null,
+   "keywords": [
+    "com.inmobi",
+    "in.inmobi."
+   ]
+  },
+  {
+   "name": "Millennial Media",
+   "company": "millennialmedia",
+   "safeToBlock": null,
+   "keywords": [
+    "com.millennialmedia."
+   ]
+  },
+  {
+   "name": "Snowplow",
+   "company": "snowplowanalytics",
+   "safeToBlock": null,
+   "keywords": [
+    "com.snowplowanalytics."
+   ]
+  },
+  {
+   "name": "Fyber SponsorPay",
+   "company": "sponsorpay",
+   "safeToBlock": null,
+   "keywords": [
+    "com.sponsorpay"
+   ]
+  },
+  {
+   "name": "Carnival",
+   "company": "carnival",
+   "safeToBlock": null,
+   "keywords": [
+    "com.carnival.sdk",
+    "com.carnivalmobile"
+   ]
+  },
+  {
+   "name": "Tencent Map LBS",
+   "company": "qq",
+   "safeToBlock": null,
+   "keywords": [
+    "com.tencent.lbs"
+   ]
+  },
+  {
+   "name": "Tencent MobWin",
+   "company": "tencent",
+   "safeToBlock": null,
+   "keywords": [
+    "com.tencent.mobwin"
+   ]
+  },
+  {
+   "name": "Tencent MTA",
+   "company": "qq",
+   "safeToBlock": null,
+   "keywords": [
+    "com.tencent.mta"
+   ]
+  },
+  {
+   "name": "Apptentive",
+   "company": "apptentive",
+   "safeToBlock": null,
+   "keywords": [
+    "com.apptentive."
+   ]
+  },
+  {
+   "name": "Tencent Stats",
+   "company": "qq",
+   "safeToBlock": null,
+   "keywords": [
+    "com.tencent.stat",
+    "com.tencent.wxop.stat"
+   ]
+  },
+  {
+   "name": "Tencent Weiyun",
+   "company": "weiyun",
+   "safeToBlock": null,
+   "keywords": [
+    "com.tencent.weiyun"
+   ]
+  },
+  {
+   "name": "MixPanel",
+   "company": "mixpanel",
+   "safeToBlock": null,
+   "keywords": [
+    "com.mixpanel."
+   ]
+  },
+  {
+   "name": "Umeng Analytics",
+   "company": "umeng",
+   "safeToBlock": null,
+   "keywords": [
+    "com.umeng.analytics"
+   ]
+  },
+  {
+   "name": "Umeng Feedback",
+   "company": "umeng",
+   "safeToBlock": null,
+   "keywords": [
+    "com.umeng.fb"
+   ]
+  },
+  {
+   "name": "Countly",
+   "company": "count",
+   "safeToBlock": null,
+   "keywords": [
+    "ly.count.android."
+   ]
+  },
+  {
+   "name": "Urbanairship",
+   "company": "urbanairship",
+   "safeToBlock": null,
+   "keywords": [
+    "com.urbanairship"
+   ]
+  },
+  {
+   "name": "Yandex Ad",
+   "company": "yandex",
+   "safeToBlock": null,
+   "keywords": [
+    "com.yandex.mobile.ads"
+   ]
+  },
+  {
+   "name": "Amplitude",
+   "company": "amplitude",
+   "safeToBlock": null,
+   "keywords": [
+    "com.amplitude."
+   ]
+  },
+  {
+   "name": "AppSee",
+   "company": "appsee",
+   "safeToBlock": null,
+   "keywords": [
+    "com.appsee."
+   ]
+  },
+  {
+   "name": "Kochava",
+   "company": "kochava",
+   "safeToBlock": null,
+   "keywords": [
+    "com.kochava.base.",
+    "com.kochava.android.tracker.",
+    ".kochavaccpa."
+   ]
+  },
+  {
+   "name": "Webtrends",
+   "company": "webtrends",
+   "safeToBlock": null,
+   "keywords": [
+    "com.webtrends.mobile.analytics.",
+    "com.webtrends.mobile.android"
+   ]
+  },
+  {
+   "name": "New Relic",
+   "company": "newrelic",
+   "safeToBlock": null,
+   "keywords": [
+    "com.newrelic.agent.",
+    "com.newrelic.mobile."
+   ]
+  },
+  {
+   "name": "AppAnalytics",
+   "company": "appanalytics",
+   "safeToBlock": null,
+   "keywords": [
+    "io.appanalytics.sdk"
+   ]
+  },
+  {
+   "name": "Applause",
+   "company": "applause",
+   "safeToBlock": null,
+   "keywords": [
+    "com.applause.android."
+   ]
+  },
+  {
+   "name": "Quantcast",
+   "company": "quantcast",
+   "safeToBlock": null,
+   "keywords": [
+    "com.quantcast.measurement.service."
+   ]
+  },
+  {
+   "name": "Apptimize",
+   "company": "apptimize",
+   "safeToBlock": null,
+   "keywords": [
+    "com.apptimize."
+   ]
+  },
+  {
+   "name": "AppBrain",
+   "company": "appbrain",
+   "safeToBlock": null,
+   "keywords": [
+    "com.appbrain."
+   ]
+  },
+  {
+   "name": "Dynatrace",
+   "company": "dynatrace",
+   "safeToBlock": null,
+   "keywords": [
+    "com.dynatrace.android.app",
+    "com.dynatrace.agent",
+    "com.dynatrace.tools"
+   ]
+  },
+  {
+   "name": "Matomo (Piwik)",
+   "company": "matomo",
+   "safeToBlock": null,
+   "keywords": [
+    "org.piwik",
+    "org.piwik.mobile",
+    "org.matomo"
+   ]
+  },
+  {
+   "name": "AppMetrica",
+   "company": "yandex",
+   "safeToBlock": null,
+   "keywords": [
+    "com.yandex.metrica."
+   ]
+  },
+  {
+   "name": "Singlespot",
+   "company": "singlespot",
+   "safeToBlock": null,
+   "keywords": [
+    "com.sptproximitykit."
+   ]
+  },
+  {
+   "name": "Sensoro",
+   "company": "sensoro",
+   "safeToBlock": null,
+   "keywords": [
+    "com.sensoro.beacon.kit.",
+    "com.sensoro.cloud"
+   ]
+  },
+  {
+   "name": "Sense360",
+   "company": "sense360",
+   "safeToBlock": null,
+   "keywords": [
+    "com.sense360.android."
+   ]
+  },
+  {
+   "name": "Rubicon Project",
+   "company": "rubiconproject",
+   "safeToBlock": null,
+   "keywords": [
+    "com.rfm.sdk"
+   ]
+  },
+  {
+   "name": "ironSource",
+   "company": "ironsrc",
+   "safeToBlock": null,
+   "keywords": [
+    "com.ironsource."
+   ]
+  },
+  {
+   "name": "Heyzap (bought by Fyber)",
+   "company": "heyzap",
+   "safeToBlock": null,
+   "keywords": [
+    "com.heyzap.sdk.ads.",
+    "com.heyzap.mediation."
+   ]
+  },
+  {
+   "name": "Gigya",
+   "company": "gigya",
+   "safeToBlock": null,
+   "keywords": [
+    "com.gigya."
+   ]
+  },
+  {
+   "name": "Foresee",
+   "company": "foresee",
+   "safeToBlock": null,
+   "keywords": [
+    "com.foresee.sdk.ForeSee"
+   ]
+  },
+  {
+   "name": "Fiksu",
+   "company": "fiksu",
+   "safeToBlock": null,
+   "keywords": [
+    "com.fiksu.asotracking"
+   ]
+  },
+  {
+   "name": "Ensighten",
+   "company": "ensighten",
+   "safeToBlock": null,
+   "keywords": [
+    "com.ensighten."
+   ]
+  },
+  {
+   "name": "Dynamic Yield",
+   "company": "dynamicyield",
+   "safeToBlock": null,
+   "keywords": [
+    "com.dynamicyield."
+   ]
+  },
+  {
+   "name": "BlueKai (acquired by Oracle)",
+   "company": "bluekai",
+   "safeToBlock": null,
+   "keywords": [
+    "com.bluekai.sdk."
+   ]
+  },
+  {
+   "name": "BlueConic",
+   "company": "blueconic",
+   "safeToBlock": null,
+   "keywords": [
+    "com.blueconic"
+   ]
+  },
+  {
+   "name": "Apteligent by VMWare (formerly Crittercism)",
+   "company": "apteligent",
+   "safeToBlock": null,
+   "keywords": [
+    "com.crittercism.app.Crittercism"
+   ]
+  },
+  {
+   "name": "AdFit (Daum)",
+   "company": "daum",
+   "safeToBlock": null,
+   "keywords": [
+    "com.kakao.adfit."
+   ]
+  },
+  {
+   "name": "Adform",
+   "company": "adform",
+   "safeToBlock": null,
+   "keywords": [
+    "com.adform.sdk."
+   ]
+  },
+  {
+   "name": "Adfurikun",
+   "company": "adfurikun",
+   "safeToBlock": null,
+   "keywords": [
+    "jp.tjkapp.adfurikunsdk.",
+    "com.glossomads.sdk."
+   ]
+  },
+  {
+   "name": "Mobvista",
+   "company": "mobvista",
+   "safeToBlock": null,
+   "keywords": [
+    "com.mobvista."
+   ]
+  },
+  {
+   "name": "Placed",
+   "company": "placed",
+   "safeToBlock": null,
+   "keywords": [
+    "com.placed.client"
+   ]
+  },
+  {
+   "name": "Adot",
+   "company": "we-are-adot",
+   "safeToBlock": null,
+   "keywords": [
+    "com.adotmob"
+   ]
+  },
+  {
+   "name": "Appodeal",
+   "company": "appodeal",
+   "safeToBlock": null,
+   "keywords": [
+    "com.appodeal.ads.",
+    "com.appodealx."
+   ]
+  },
+  {
+   "name": "AppMonet",
+   "company": "appmonet",
+   "safeToBlock": null,
+   "keywords": [
+    "com.monet."
+   ]
+  },
+  {
+   "name": "Soomla",
+   "company": "soomla",
+   "safeToBlock": null,
+   "keywords": [
+    "com.soomla."
+   ]
+  },
+  {
+   "name": "Adincube",
+   "company": "adincube",
+   "safeToBlock": null,
+   "keywords": [
+    "com.adincube.sdk."
+   ]
+  },
+  {
+   "name": "Persona.ly",
+   "company": "persona",
+   "safeToBlock": null,
+   "keywords": [
+    "ly.persona.sdk"
+   ]
+  },
+  {
+   "name": "Branch",
+   "company": "branch",
+   "safeToBlock": null,
+   "keywords": [
+    "io.branch."
+   ]
+  },
+  {
+   "name": "Cheetah Ads",
+   "company": "cmcm",
+   "safeToBlock": null,
+   "keywords": [
+    "com.cmcm."
+   ]
+  },
+  {
+   "name": "Vungle",
+   "company": "vungle",
+   "safeToBlock": null,
+   "keywords": [
+    "com.vungle.publisher.",
+    "com.vungle.warren."
+   ]
+  },
+  {
+   "name": "Criteo",
+   "company": "criteo",
+   "safeToBlock": null,
+   "keywords": [
+    "com.criteo."
+   ]
+  },
+  {
+   "name": "Mapbox",
+   "company": "mapbox",
+   "safeToBlock": null,
+   "keywords": [
+    "com.mapbox.mapboxsdk.module.telemetry",
+    "com.mapbox.mapboxsdk.maps.TelemetryDefinition",
+    "com.mapbox.android.telemetry."
+   ]
+  },
+  {
+   "name": "Optimizely",
+   "company": "optimizely",
+   "safeToBlock": null,
+   "keywords": [
+    "com.optimizely."
+   ]
+  },
+  {
+   "name": "Taboola",
+   "company": "taboola",
+   "safeToBlock": null,
+   "keywords": [
+    "com.taboola."
+   ]
+  },
+  {
+   "name": "CleverTap",
+   "company": "clevertap",
+   "safeToBlock": null,
+   "keywords": [
+    "com.clevertap."
+   ]
+  },
+  {
+   "name": "myTracker",
+   "company": "my",
+   "safeToBlock": null,
+   "keywords": [
+    "com.my.tracker."
+   ]
+  },
+  {
+   "name": "Cloudmobi",
+   "company": "cloudmobi",
+   "safeToBlock": null,
+   "keywords": [
+    "com.cloudtech."
+   ]
+  },
+  {
+   "name": "ADLIB",
+   "company": "adlibr",
+   "safeToBlock": null,
+   "keywords": [
+    "com.mocoplex.adlib."
+   ]
+  },
+  {
+   "name": "Brightcove",
+   "company": "brightcove",
+   "safeToBlock": null,
+   "keywords": [
+    "com.brightcove"
+   ]
+  },
+  {
+   "name": "DOV-E",
+   "company": "dov-e",
+   "safeToBlock": null,
+   "keywords": [
+    "com.dv.DVSDK"
+   ]
+  },
+  {
+   "name": "InMarket",
+   "company": "inmarket",
+   "safeToBlock": null,
+   "keywords": [
+    "com.inmarket"
+   ]
+  },
+  {
+   "name": "Pilgrim by Foursquare",
+   "company": "foursquare",
+   "safeToBlock": null,
+   "keywords": [
+    "com.foursquare.pilgrim",
+    "com.foursquare.pilgrimsdk.android"
+   ]
+  },
+  {
+   "name": "OtherLevels",
+   "company": "otherlevels",
+   "safeToBlock": null,
+   "keywords": [
+    "com.otherlevels."
+   ]
+  },
+  {
+   "name": "PubNative",
+   "company": "pubnative",
+   "safeToBlock": null,
+   "keywords": [
+    "net.pubnative"
+   ]
+  },
+  {
+   "name": "Appnext",
+   "company": "appnext",
+   "safeToBlock": null,
+   "keywords": [
+    "com.appnext.sdk"
+   ]
+  },
+  {
+   "name": "MobFox",
+   "company": "mobfox",
+   "safeToBlock": null,
+   "keywords": [
+    "com.mobfox.",
+    "com.adsdk.sdk."
+   ]
+  },
+  {
+   "name": "ShallWeAD",
+   "company": "shallwead",
+   "safeToBlock": null,
+   "keywords": [
+    "com.jm.co.shallwead.sdk.",
+    "com.co.shallwead.sdk."
+   ]
+  },
+  {
+   "name": "deltaDNA",
+   "company": "deltadna",
+   "safeToBlock": null,
+   "keywords": [
+    "com.deltadna"
+   ]
+  },
+  {
+   "name": "Display",
+   "company": "display",
+   "safeToBlock": null,
+   "keywords": [
+    "io.display."
+   ]
+  },
+  {
+   "name": "HyprMX",
+   "company": "hyprmx",
+   "safeToBlock": null,
+   "keywords": [
+    "com.hyprmx.android.sdk."
+   ]
+  },
+  {
+   "name": "Duapps",
+   "company": "duapps",
+   "safeToBlock": null,
+   "keywords": [
+    "com.duapps."
+   ]
+  },
+  {
+   "name": "Swrve",
+   "company": "swrve",
+   "safeToBlock": null,
+   "keywords": [
+    "com.swrve.sdk"
+   ]
+  },
+  {
+   "name": "OneSignal",
+   "company": "onesignal",
+   "safeToBlock": null,
+   "keywords": [
+    "com.onesignal."
+   ]
+  },
+  {
+   "name": "Appdynamics",
+   "company": "appdynamics",
+   "safeToBlock": null,
+   "keywords": [
+    "com.appdynamics."
+   ]
+  },
+  {
+   "name": "Startapp",
+   "company": "startapp",
+   "safeToBlock": null,
+   "keywords": [
+    "com.startapp."
+   ]
+  },
+  {
+   "name": "AerServ",
+   "company": "aerserv",
+   "safeToBlock": null,
+   "keywords": [
+    "com.aerserv.sdk."
+   ]
+  },
+  {
+   "name": "INFOnline",
+   "company": "infonline",
+   "safeToBlock": null,
+   "keywords": [
+    "de.infonline."
+   ]
+  },
+  {
+   "name": "myTarget",
+   "company": "my",
+   "safeToBlock": null,
+   "keywords": [
+    "com.my.target."
+   ]
+  },
+  {
+   "name": "Tapjoy",
+   "company": "tapjoy",
+   "safeToBlock": null,
+   "keywords": [
+    "com.tapjoy."
+   ]
+  },
+  {
+   "name": "Mintegral",
+   "company": "mintegral",
+   "safeToBlock": null,
+   "keywords": [
+    "com.mintegral.",
+    "com.mbridge.msdk."
+   ]
+  },
+  {
+   "name": "Gimbal",
+   "company": "gimbal",
+   "safeToBlock": null,
+   "keywords": [
+    "com.gimbal.android"
+   ]
+  },
+  {
+   "name": "Conviva",
+   "company": "conviva",
+   "safeToBlock": null,
+   "keywords": [
+    "com.conviva."
+   ]
+  },
+  {
+   "name": "Auditude",
+   "company": "adobe",
+   "safeToBlock": null,
+   "keywords": [
+    "com.auditude.ads"
+   ]
+  },
+  {
+   "name": "Instreamatic (Adman)",
+   "company": "instreamatic",
+   "safeToBlock": null,
+   "keywords": [
+    "com.instreamatic"
+   ]
+  },
+  {
+   "name": "GameAnalytics",
+   "company": "gameanalytics",
+   "safeToBlock": null,
+   "keywords": [
+    "com.gameanalytics.sdk"
+   ]
+  },
+  {
+   "name": "Instabug",
+   "company": "instabug",
+   "safeToBlock": null,
+   "keywords": [
+    "com.instabug."
+   ]
+  },
+  {
+   "name": "Bugsnag",
+   "company": "bugsnag",
+   "safeToBlock": null,
+   "keywords": [
+    "com.bugsnag."
+   ]
+  },
+  {
+   "name": "Moodmedia",
+   "company": "moodmedia",
+   "safeToBlock": null,
+   "keywords": [
+    "com.moodmedia"
+   ]
+  },
+  {
+   "name": "Houndify",
+   "company": "houndify",
+   "safeToBlock": null,
+   "keywords": [
+    "com.hound"
+   ]
+  },
+  {
+   "name": "OpenX",
+   "company": "openx",
+   "safeToBlock": null,
+   "keywords": [
+    "com.openx.view.plugplay",
+    "com.openx.android_sdk_openx"
+   ]
+  },
+  {
+   "name": "Taplytics",
+   "company": "taplytics",
+   "safeToBlock": null,
+   "keywords": [
+    "com.taplytics.sdk"
+   ]
+  },
+  {
+   "name": "Yinzcam Sobek",
+   "company": "yinzcam",
+   "safeToBlock": null,
+   "keywords": [
+    "com.yinzcam.sobek"
+   ]
+  },
+  {
+   "name": "Ooyala",
+   "company": "ooyala",
+   "safeToBlock": null,
+   "keywords": [
+    "com.ooyala"
+   ]
+  },
+  {
+   "name": "Kiip",
+   "company": "ninthdecimal",
+   "safeToBlock": null,
+   "keywords": [
+    "me.kiip.sdk"
+   ]
+  },
+  {
+   "name": "MobPower",
+   "company": "mobpowertech",
+   "safeToBlock": null,
+   "keywords": [
+    "com.mobpower."
+   ]
+  },
+  {
+   "name": "AdBuddiz",
+   "company": "adbuddiz",
+   "safeToBlock": null,
+   "keywords": [
+    "com.purplebrain.adbuddiz.sdk."
+   ]
+  },
+  {
+   "name": "Integral Ad Science",
+   "company": "integralads",
+   "safeToBlock": null,
+   "keywords": [
+    "com.integralads.avid.library"
+   ]
+  },
+  {
+   "name": "AltBeacon",
+   "company": "altbeacon",
+   "safeToBlock": null,
+   "keywords": [
+    "org.altbeacon.beacon.",
+    "com.altbeacon.beacon.",
+    "org.altbeacon.bluetooth."
+   ]
+  },
+  {
+   "name": "Salesforce Marketing Cloud",
+   "company": "salesforce",
+   "safeToBlock": null,
+   "keywords": [
+    "com.salesforce.marketingcloud"
+   ]
+  },
+  {
+   "name": "Mozilla Telemetry",
+   "company": "mozilla",
+   "safeToBlock": null,
+   "keywords": [
+    "org.mozilla.telemetry",
+    "org.mozilla.gecko.telemetry",
+    "mozilla.telemetry.glean.",
+    "org.mozilla.fenix.GleanMetrics",
+    "org.mozilla.fenix.components.metrics"
+   ]
+  },
+  {
+   "name": "nend",
+   "company": "nend",
+   "safeToBlock": null,
+   "keywords": [
+    "net.nend.android",
+    "net.nend.unity."
+   ]
+  },
+  {
+   "name": "Pusher",
+   "company": "pusher",
+   "safeToBlock": null,
+   "keywords": [
+    "com.pusher.client."
+   ]
+  },
+  {
+   "name": "FreeWheel",
+   "company": "freewheel",
+   "safeToBlock": null,
+   "keywords": [
+    "tv.freewheel.ad."
+   ]
+  },
+  {
+   "name": "TNK Factory",
+   "company": "tnkfactory",
+   "safeToBlock": null,
+   "keywords": [
+    "com.tnkfactory.ad"
+   ]
+  },
+  {
+   "name": "Axonix",
+   "company": "axonix",
+   "safeToBlock": null,
+   "keywords": [
+    "com.axonix.android.sdk",
+    "com.mobclix.android.sdk"
+   ]
+  },
+  {
+   "name": "Gemius HeatMap",
+   "company": "gemius",
+   "safeToBlock": null,
+   "keywords": [
+    "com.gemius.sdk"
+   ]
+  },
+  {
+   "name": "YouAppi",
+   "company": "youappi",
+   "safeToBlock": null,
+   "keywords": [
+    "com.youappi.sdk."
+   ]
+  },
+  {
+   "name": "Adobe Experience Cloud",
+   "company": "Adobe",
+   "safeToBlock": null,
+   "keywords": [
+    "com.adobe.marketing.mobile"
+   ]
+  },
+  {
+   "name": "Teads",
+   "company": "teads",
+   "safeToBlock": null,
+   "keywords": [
+    "tv.teads.",
+    "teads.tv."
+   ]
+  },
+  {
+   "name": "In Loco",
+   "company": "com",
+   "safeToBlock": null,
+   "keywords": [
+    "com.inlocomedia.android"
+   ]
+  },
+  {
+   "name": "IQzone",
+   "company": "iqzone",
+   "safeToBlock": null,
+   "keywords": [
+    "com.iqzone"
+   ]
+  },
+  {
+   "name": "Bugfender",
+   "company": "bugfender",
+   "safeToBlock": null,
+   "keywords": [
+    "com.bugfender.sdk."
+   ]
+  },
+  {
+   "name": "Wootric",
+   "company": "wootric",
+   "safeToBlock": null,
+   "keywords": [
+    "com.wootric.androidsdk."
+   ]
+  },
+  {
+   "name": "KIDOZ",
+   "company": "kidoz",
+   "safeToBlock": null,
+   "keywords": [
+    "com.kidoz.sdk"
+   ]
+  },
+  {
+   "name": "PubMatic",
+   "company": "pubmatic",
+   "safeToBlock": null,
+   "keywords": [
+    "com.pubmatic.sdk"
+   ]
+  },
+  {
+   "name": "Kissmetrics",
+   "company": "kissmetricshq",
+   "safeToBlock": null,
+   "keywords": [
+    "com.kissmetrics"
+   ]
+  },
+  {
+   "name": "Microsoft Visual Studio App Center Crashes",
+   "company": "appcenter",
+   "safeToBlock": null,
+   "keywords": [
+    "com.microsoft.appcenter.crashes"
+   ]
+  },
+  {
+   "name": "Webtrekk",
+   "company": "webtrekk",
+   "safeToBlock": null,
+   "keywords": [
+    "com.webtrekk.webtrekksdk"
+   ]
+  },
+  {
+   "name": "Google Analytics Plugin (Cordova)",
+   "company": "withgoogle",
+   "safeToBlock": null,
+   "keywords": [
+    "com.danielcwilson.plugins.analytics"
+   ]
+  },
+  {
+   "name": "Bugsee",
+   "company": "bugsee",
+   "safeToBlock": null,
+   "keywords": [
+    "com.bugsee.library.Bugsee"
+   ]
+  },
+  {
+   "name": "Splunk MINT",
+   "company": "splunk",
+   "safeToBlock": null,
+   "keywords": [
+    "com.splunk.mint"
+   ]
+  },
+  {
+   "name": "Microsoft Visual Studio App Center Analytics",
+   "company": "appcenter",
+   "safeToBlock": null,
+   "keywords": [
+    "com.microsoft.appcenter.analytics",
+    "com.microsoft.azure.mobile.analytics"
+   ]
+  },
+  {
+   "name": "Nielsen",
+   "company": "nielsen",
+   "safeToBlock": null,
+   "keywords": [
+    "com.nielsen.app"
+   ]
+  },
+  {
+   "name": "Reveal Mobile",
+   "company": "revealmobile",
+   "safeToBlock": null,
+   "keywords": [
+    "com.stepleaderdigital.reveal"
+   ]
+  },
+  {
+   "name": "Metrics",
+   "company": "dropwizard",
+   "safeToBlock": null,
+   "keywords": [
+    "com.codahale.metrics"
+   ]
+  },
+  {
+   "name": "Repro",
+   "company": "repro",
+   "safeToBlock": null,
+   "keywords": [
+    "io.repro.android."
+   ]
+  },
+  {
+   "name": "Tenjin",
+   "company": "tenjin",
+   "safeToBlock": null,
+   "keywords": [
+    "com.tenjin.android."
+   ]
+  },
+  {
+   "name": "Tapstream",
+   "company": "tapstream",
+   "safeToBlock": null,
+   "keywords": [
+    "com.tapstream.sdk"
+   ]
+  },
+  {
+   "name": "Singular",
+   "company": "singular",
+   "safeToBlock": null,
+   "keywords": [
+    "com.singular.sdk"
+   ]
+  },
+  {
+   "name": "CallDorado",
+   "company": "calldorado",
+   "safeToBlock": null,
+   "keywords": [
+    "com.calldorado.android"
+   ]
+  },
+  {
+   "name": "UXCam",
+   "company": "uxcam",
+   "safeToBlock": null,
+   "keywords": [
+    "com.uxcam."
+   ]
+  },
+  {
+   "name": "Upsight",
+   "company": "upsight",
+   "safeToBlock": null,
+   "keywords": [
+    "com.upsight.android"
+   ]
+  },
+  {
+   "name": "Appcelerator Analytics",
+   "company": "appcelerator",
+   "safeToBlock": null,
+   "keywords": [
+    "com.appcelerator.aps.",
+    "org.appcelerator.titanium.analytics"
+   ]
+  },
+  {
+   "name": "Adbrix",
+   "company": "ad-brix",
+   "safeToBlock": null,
+   "keywords": [
+    "com.igaworks.adbrix"
+   ]
+  },
+  {
+   "name": "Cauly",
+   "company": "cauly",
+   "safeToBlock": null,
+   "keywords": [
+    "com.fsn.cauly",
+    "com.trid.tridad",
+    "com.cauly.android.ad."
+   ]
+  },
+  {
+   "name": "Tapdaq",
+   "company": "tapdaq",
+   "safeToBlock": null,
+   "keywords": [
+    "com.tapdaq.sdk.",
+    "com.tapdaq.adapters."
+   ]
+  },
+  {
+   "name": "Verve",
+   "company": "verve",
+   "safeToBlock": null,
+   "keywords": [
+    "com.vervewireless.advert."
+   ]
+  },
+  {
+   "name": "Apsalar",
+   "company": "singular",
+   "safeToBlock": null,
+   "keywords": [
+    "com.apsalar.sdk."
+   ]
+  },
+  {
+   "name": "PingStart",
+   "company": "pingstart",
+   "safeToBlock": null,
+   "keywords": [
+    "com.pingstart.adsdk."
+   ]
+  },
+  {
+   "name": "Keen",
+   "company": "keen",
+   "safeToBlock": null,
+   "keywords": [
+    "io.keen.client."
+   ]
+  },
+  {
+   "name": "Revmob",
+   "company": "crunchbase",
+   "safeToBlock": null,
+   "keywords": [
+    "com.revmob.ads."
+   ]
+  },
+  {
+   "name": "Emarsys Predict",
+   "company": "emarsys",
+   "safeToBlock": null,
+   "keywords": [
+    "com.emarsys.predict"
+   ]
+  },
+  {
+   "name": "Lotame",
+   "company": "lotame",
+   "safeToBlock": null,
+   "keywords": [
+    "com.lotame.android"
+   ]
+  },
+  {
+   "name": "FollowAnalytics",
+   "company": "followanalytics",
+   "safeToBlock": null,
+   "keywords": [
+    "com.followanalytics."
+   ]
+  },
+  {
+   "name": "Chartbeat",
+   "company": "chartbeat",
+   "safeToBlock": null,
+   "keywords": [
+    "com.chartbeat.androidsdk"
+   ]
+  },
+  {
+   "name": "MoEngage",
+   "company": "moengage",
+   "safeToBlock": null,
+   "keywords": [
+    "com.moengage."
+   ]
+  },
+  {
+   "name": "Altamob",
+   "company": "altamob",
+   "safeToBlock": null,
+   "keywords": [
+    "com.altamob.sdk"
+   ]
+  },
+  {
+   "name": "Tealeaf",
+   "company": "acoustic",
+   "safeToBlock": null,
+   "keywords": [
+    "com.tl.uic.Tealeaf"
+   ]
+  },
+  {
+   "name": "AMoAd",
+   "company": "amoad",
+   "safeToBlock": null,
+   "keywords": [
+    "com.amoad."
+   ]
+  },
+  {
+   "name": "AdAdapted",
+   "company": "adadapted",
+   "safeToBlock": null,
+   "keywords": [
+    "com.adadapted.android.sdk."
+   ]
+  },
+  {
+   "name": "AdMuing",
+   "company": "github",
+   "safeToBlock": null,
+   "keywords": [
+    "com.admuing.danmaku."
+   ]
+  },
+  {
+   "name": "Adcash",
+   "company": "adcash",
+   "safeToBlock": null,
+   "keywords": [
+    "com.adcash.mobileads."
+   ]
+  },
+  {
+   "name": "Admixer",
+   "company": "co",
+   "safeToBlock": null,
+   "keywords": [
+    "com.admixer",
+    "net.admixer.sdk"
+   ]
+  },
+  {
+   "name": "Admost",
+   "company": "admost",
+   "safeToBlock": null,
+   "keywords": [
+    "admost.sdk.",
+    "admost.adserver."
+   ]
+  },
+  {
+   "name": "Alohalytics",
+   "company": "github",
+   "safeToBlock": null,
+   "keywords": [
+    "org.alohalytics."
+   ]
+  },
+  {
+   "name": "Amobee",
+   "company": "amobee",
+   "safeToBlock": null,
+   "keywords": [
+    "com.amobee."
+   ]
+  },
+  {
+   "name": "Anagog",
+   "company": "anagog",
+   "safeToBlock": null,
+   "keywords": [
+    "com.anagog.jedai"
+   ]
+  },
+  {
+   "name": "Bazaarvoice",
+   "company": "bazaarvoice",
+   "safeToBlock": null,
+   "keywords": [
+    "com.bazaarvoice.bvandroidsdk"
+   ]
+  },
+  {
+   "name": "BeaconsInSpace (Fysical)",
+   "company": "beaconsinspace",
+   "safeToBlock": null,
+   "keywords": [
+    "com.beaconsinspace.android.beacon.detector."
+   ]
+  },
+  {
+   "name": "Conversant",
+   "company": "conversantmedia",
+   "safeToBlock": null,
+   "keywords": [
+    "com.conversantmedia",
+    "com.greystripe.android."
+   ]
+  },
+  {
+   "name": "Glympse",
+   "company": "glympse",
+   "safeToBlock": null,
+   "keywords": [
+    "com.glympse.android."
+   ]
+  },
+  {
+   "name": "Herow",
+   "company": "herow",
+   "safeToBlock": null,
+   "keywords": [
+    "com.connecthings.herow"
+   ]
+  },
+  {
+   "name": "Placer",
+   "company": "placer",
+   "safeToBlock": null,
+   "keywords": [
+    "com.placer.client.Placer"
+   ]
+  },
+  {
+   "name": "PushSpring",
+   "company": "pushspring",
+   "safeToBlock": null,
+   "keywords": [
+    "com.pushspring.sdk.PushSpring"
+   ]
+  },
+  {
+   "name": "Pyze",
+   "company": "pyze",
+   "safeToBlock": null,
+   "keywords": [
+    "com.pyze."
+   ]
+  },
+  {
+   "name": "Radar",
+   "company": "radar",
+   "safeToBlock": null,
+   "keywords": [
+    "io.radar.sdk.Radar"
+   ]
+  },
+  {
+   "name": "Roximity",
+   "company": "roximity",
+   "safeToBlock": null,
+   "keywords": [
+    "com.roximity.sdk."
+   ]
+  },
+  {
+   "name": "Sentiance",
+   "company": "sentiance",
+   "safeToBlock": null,
+   "keywords": [
+    "com.sentiance.sdk."
+   ]
+  },
+  {
+   "name": "SmartLook",
+   "company": "smartlook",
+   "safeToBlock": null,
+   "keywords": [
+    "com.smartlook.sdk.smartlook."
+   ]
+  },
+  {
+   "name": "Square Metrics",
+   "company": "squaremetrics",
+   "safeToBlock": null,
+   "keywords": [
+    "com.beaconinside.proximitysdk.ProximityService"
+   ]
+  },
+  {
+   "name": "TalkingData",
+   "company": "talkingdata",
+   "safeToBlock": null,
+   "keywords": [
+    "com.talkingdata.sdk.",
+    "com.tendcloud.tenddata.",
+    "com.talkingdata.appanalytics.",
+    "com.talkingdata.adtracking.",
+    "com.tendcloud.appcpa.",
+    "com.apptalkingdata.push.",
+    "com.gametalkingdata.push."
+   ]
+  },
+  {
+   "name": "flymob",
+   "company": "flymob",
+   "safeToBlock": null,
+   "keywords": [
+    "com.flymob.sdk."
+   ]
+  },
+  {
+   "name": "AdFalcon",
+   "company": "adfalcon",
+   "safeToBlock": null,
+   "keywords": [
+    "com.noqoush.adfalcon.android.sdk"
+   ]
+  },
+  {
+   "name": "Bitly",
+   "company": "bitly",
+   "safeToBlock": null,
+   "keywords": [
+    "com.bitly.Bitly"
+   ]
+  },
+  {
+   "name": "Enhance",
+   "company": "enhance",
+   "safeToBlock": null,
+   "keywords": [
+    "co.enhance.Enhance"
+   ]
+  },
+  {
+   "name": "Esri ArcGIS",
+   "company": "arcgis",
+   "safeToBlock": null,
+   "keywords": [
+    "com.esri.arcgisruntime."
+   ]
+  },
+  {
+   "name": "GIPHY Analytics",
+   "company": "giphy",
+   "safeToBlock": null,
+   "keywords": [
+    "com.giphy.sdk.analytics",
+    "com.giphy.sdk.tracking"
+   ]
+  },
+  {
+   "name": "Heap",
+   "company": "heap",
+   "safeToBlock": null,
+   "keywords": [
+    "com.heapanalytics"
+   ]
+  },
+  {
+   "name": "Inneractive",
+   "company": "crunchbase",
+   "safeToBlock": null,
+   "keywords": [
+    "com.inneractive.api.ads"
+   ]
+  },
+  {
+   "name": "MDOTM",
+   "company": "mdotm",
+   "safeToBlock": null,
+   "keywords": [
+    "com.mdotm.android"
+   ]
+  },
+  {
+   "name": "Metaps",
+   "company": "metaps",
+   "safeToBlock": null,
+   "keywords": [
+    "com.metaps"
+   ]
+  },
+  {
+   "name": "Parse.ly",
+   "company": "parse",
+   "safeToBlock": null,
+   "keywords": [
+    "com.parsely.parselyandroid"
+   ]
+  },
+  {
+   "name": "Pollfish",
+   "company": "pollfish",
+   "safeToBlock": null,
+   "keywords": [
+    "com.pollfish"
+   ]
+  },
+  {
+   "name": "Qualtrics",
+   "company": "Qualtrics",
+   "safeToBlock": null,
+   "keywords": [
+    "com.qualtrics.digital."
+   ]
+  },
+  {
+   "name": "Tamoco",
+   "company": "tamoco",
+   "safeToBlock": null,
+   "keywords": [
+    "com.tamoco.sdk"
+   ]
+  },
+  {
+   "name": "Vpon",
+   "company": "vpon",
+   "safeToBlock": null,
+   "keywords": [
+    "com.vpon.ads",
+    "com.vpadn.analytics",
+    "com.vpadn.ads.",
+    "com.vpadn.widget."
+   ]
+  },
+  {
+   "name": "YuMe",
+   "company": "appbrain",
+   "safeToBlock": null,
+   "keywords": [
+    "com.yume.android"
+   ]
+  },
+  {
+   "name": "Zapr",
+   "company": "zapr",
+   "safeToBlock": null,
+   "keywords": [
+    "com.redbricklane.zapr"
+   ]
+  },
+  {
+   "name": "mediba",
+   "company": "mediba",
+   "safeToBlock": null,
+   "keywords": [
+    "com.mediba.jp",
+    "mediba.ad.sdk.android.openx"
+   ]
+  },
+  {
+   "name": "Unacast Pure",
+   "company": "unacast",
+   "safeToBlock": null,
+   "keywords": [
+    "com.pure.internal.",
+    "com.pure.sdk."
+   ]
+  },
+  {
+   "name": "Factual",
+   "company": "factual",
+   "safeToBlock": null,
+   "keywords": [
+    "com.factual.engine",
+    "com.factual.Factual"
+   ]
+  },
+  {
+   "name": "Footmarks",
+   "company": "footmarks",
+   "safeToBlock": null,
+   "keywords": [
+    "com.footmarks.footmarkssdkm2"
+   ]
+  },
+  {
+   "name": "OzTAM",
+   "company": "com",
+   "safeToBlock": null,
+   "keywords": [
+    "au.com.oztam."
+   ]
+  },
+  {
+   "name": "Receptiv (formerly Mediabrix)",
+   "company": "receptiv",
+   "safeToBlock": null,
+   "keywords": [
+    "com.mediabrix.android"
+   ]
+  },
+  {
+   "name": "Tutela",
+   "company": "tutela",
+   "safeToBlock": null,
+   "keywords": [
+    "com.tutelatechnologies.sdk"
+   ]
+  },
+  {
+   "name": "Twine Data",
+   "company": "truedata",
+   "safeToBlock": null,
+   "keywords": [
+    "com.twine.sdk"
+   ]
+  },
+  {
+   "name": "Verizon Ads",
+   "company": "verizonmedia",
+   "safeToBlock": null,
+   "keywords": [
+    "com.verizon.ads",
+    "com.verizondigitalmedia.mobile.",
+    "com.oath.mobile."
+   ]
+  },
+  {
+   "name": "adPOPcorn",
+   "company": "adpopcorn",
+   "safeToBlock": null,
+   "keywords": [
+    "com.igaworks.adpopcorn",
+    "com.igaworks.ssp."
+   ]
+  },
+  {
+   "name": "maio by i-mobile",
+   "company": "co",
+   "safeToBlock": null,
+   "keywords": [
+    "jp.maio.sdk."
+   ]
+  },
+  {
+   "name": "360Dialog",
+   "company": "360dialog",
+   "safeToBlock": null,
+   "keywords": [
+    "com.threesixtydialog.sdk."
+   ]
+  },
+  {
+   "name": "ABTasty",
+   "company": "abtasty",
+   "safeToBlock": null,
+   "keywords": [
+    "com.abtasty"
+   ]
+  },
+  {
+   "name": "ACRCloud",
+   "company": "acrcloud",
+   "safeToBlock": null,
+   "keywords": [
+    "com.acrcloud"
+   ]
+  },
+  {
+   "name": "Aarki",
+   "company": "aarki",
+   "safeToBlock": null,
+   "keywords": [
+    "com.aarki"
+   ]
+  },
+  {
+   "name": "Actv8me",
+   "company": "actv8me",
+   "safeToBlock": null,
+   "keywords": [
+    "me.actv8"
+   ]
+  },
+  {
+   "name": "IAB Open Measurement",
+   "company": "iabtechlab",
+   "safeToBlock": null,
+   "keywords": [
+    "com.iab.omid.library",
+    "com.prime31.util.IabHelperImpl",
+    "com.prime31.IAB."
+   ]
+  },
+  {
+   "name": "华为终端云服务(HMS)核心库",
+   "company": "华为",
+   "safeToBlock": null,
+   "keywords": [
+    "com.huawei.hms.analytics",
+    "com.huawei.hms.location",
+    "com.huawei.hms.plugin.analytics",
+    "com.huawei.hms.plugin.ads",
+    "com.huawei.updatesdk.",
+    "com.huawei.agconnect.",
+    "com.huawei.hms.support.api.push.",
+    "com.huawei.hms.flutter.analytics."
+   ]
+  },
+  {
+   "name": "Akamai MAP",
+   "company": "akamai",
+   "safeToBlock": null,
+   "keywords": [
+    "com.akamai.android.sdk.AkaMap"
+   ]
+  },
+  {
+   "name": "Mail.ru",
+   "company": "mail",
+   "safeToBlock": null,
+   "keywords": [
+    "ru.mail.mrgservice.advertising",
+    "ru.mail.mrgservice.analytics"
+   ]
+  },
+  {
+   "name": "Airpush",
+   "company": "airpush",
+   "safeToBlock": null,
+   "keywords": [
+    "com.airpush."
+   ]
+  },
+  {
+   "name": "Alimama (formerly AdsMogo)",
+   "company": "alimama",
+   "safeToBlock": null,
+   "keywords": [
+    "com.adsmogo.",
+    "com.alimama."
+   ]
+  },
+  {
+   "name": "AnySDK",
+   "company": "anysdk",
+   "safeToBlock": null,
+   "keywords": [
+    "com.anysdk.framework.AnalyticsWrapper",
+    "com.anysdk.framework.AdsWrapper"
+   ]
+  },
+  {
+   "name": "Button",
+   "company": "usebutton",
+   "safeToBlock": null,
+   "keywords": [
+    "com.usebutton.sdk."
+   ]
+  },
+  {
+   "name": "Carto (formerly Nutiteq)",
+   "company": "carto",
+   "safeToBlock": null,
+   "keywords": [
+    "com.nutiteq",
+    "com.carto"
+   ]
+  },
+  {
+   "name": "Didomi",
+   "company": "didomi",
+   "safeToBlock": null,
+   "keywords": [
+    "io.didomi.sdk."
+   ]
+  },
+  {
+   "name": "Jumio",
+   "company": "jumio",
+   "safeToBlock": null,
+   "keywords": [
+    "com.jumio.MobileSDK"
+   ]
+  },
+  {
+   "name": "Lenddo",
+   "company": "lenddo",
+   "safeToBlock": null,
+   "keywords": [
+    "com.lenddo.mobile"
+   ]
+  },
+  {
+   "name": "POKKT",
+   "company": "pokkt",
+   "safeToBlock": null,
+   "keywords": [
+    "com.pokkt.sdk."
+   ]
+  },
+  {
+   "name": "Prebid Mobile",
+   "company": "prebid",
+   "safeToBlock": null,
+   "keywords": [
+    "org.prebid.mobile"
+   ]
+  },
+  {
+   "name": "SK planet Tad",
+   "company": "skplanet",
+   "safeToBlock": null,
+   "keywords": [
+    "com.skplanet.tad"
+   ]
+  },
+  {
+   "name": "Split",
+   "company": "split",
+   "safeToBlock": null,
+   "keywords": [
+    "io.split.android."
+   ]
+  },
+  {
+   "name": "Exponea",
+   "company": "exponea",
+   "safeToBlock": null,
+   "keywords": [
+    "com.infinario.android.infinariosdk.",
+    "com.exponea.sdk",
+    "com.sygic.aura."
+   ]
+  },
+  {
+   "name": "IPQualityScore",
+   "company": "ipqualityscore",
+   "safeToBlock": null,
+   "keywords": [
+    "com.ipqualityscore."
+   ]
+  },
+  {
+   "name": "Opensignal",
+   "company": "opensignal",
+   "safeToBlock": null,
+   "keywords": [
+    "com.opensignal.datacollection."
+   ]
+  },
+  {
+   "name": "SignalFrame",
+   "company": "signalframe",
+   "safeToBlock": null,
+   "keywords": [
+    "com.wirelessregistry.observersdk."
+   ]
+  },
+  {
+   "name": "X-Mode",
+   "company": "xmode",
+   "safeToBlock": null,
+   "keywords": [
+    "io.xmode.BcnConfig",
+    "io.xmode.locationsdk",
+    "io.mysdk."
+   ]
+  },
+  {
+   "name": "OneAudience",
+   "company": "oneaudience",
+   "safeToBlock": null,
+   "keywords": [
+    "com.oneaudience.sdk."
+   ]
+  },
+  {
+   "name": "OpenBack",
+   "company": "openback",
+   "safeToBlock": null,
+   "keywords": [
+    "com.openback"
+   ]
+  },
+  {
+   "name": "PredicIO",
+   "company": "predic",
+   "safeToBlock": null,
+   "keywords": [
+    "com.telescope.android",
+    "io.predic.tracker"
+   ]
+  },
+  {
+   "name": "AdLocus",
+   "company": "adlocus",
+   "safeToBlock": null,
+   "keywords": [
+    "com.adlocus."
+   ]
+  },
+  {
+   "name": "Adcenix",
+   "company": "adcenix",
+   "safeToBlock": null,
+   "keywords": [
+    "com.adcenix."
+   ]
+  },
+  {
+   "name": "Admitad",
+   "company": "admitad",
+   "safeToBlock": null,
+   "keywords": [
+    "ru.tachos.admitadstatisticsdk"
+   ]
+  },
+  {
+   "name": "AutoNavi / Amap",
+   "company": "amap",
+   "safeToBlock": null,
+   "keywords": [
+    "com.amap.api"
+   ]
+  },
+  {
+   "name": "IBM Digital Analytics",
+   "company": "ibm",
+   "safeToBlock": null,
+   "keywords": [
+    "com.digitalanalytics."
+   ]
+  },
+  {
+   "name": "YOC VIS.X",
+   "company": "yoc",
+   "safeToBlock": null,
+   "keywords": [
+    "com.yoc.visx"
+   ]
+  },
+  {
+   "name": "Ad Generation",
+   "company": "supership",
+   "safeToBlock": null,
+   "keywords": [
+    "com.socdm.d.adgeneration."
+   ]
+  },
+  {
+   "name": "Adjoe",
+   "company": "adjoe",
+   "safeToBlock": null,
+   "keywords": [
+    "io.adjoe.sdk.",
+    "io.adjoe.protection."
+   ]
+  },
+  {
+   "name": "AppVador",
+   "company": "appvador",
+   "safeToBlock": null,
+   "keywords": [
+    "com.appvador.ads."
+   ]
+  },
+  {
+   "name": "Appodeal Stack",
+   "company": "appodealstack",
+   "safeToBlock": null,
+   "keywords": [
+    "com.explorestack."
+   ]
+  },
+  {
+   "name": "AppsGeyser",
+   "company": "appsgeyser",
+   "safeToBlock": null,
+   "keywords": [
+    "com.appsgeyser.sdk",
+    "com.appsgeyser.multiTabApp.VideoPlayerActivity"
+   ]
+  },
+  {
+   "name": "BidMachine",
+   "company": "bidmachine",
+   "safeToBlock": null,
+   "keywords": [
+    "io.bidmachine."
+   ]
+  },
+  {
+   "name": "BugSense",
+   "company": "bugsense",
+   "safeToBlock": null,
+   "keywords": [
+    "com.bugsense.trace."
+   ]
+  },
+  {
+   "name": "BuzzAd Benefit",
+   "company": "atlassian",
+   "safeToBlock": null,
+   "keywords": [
+    "com.buzzvil."
+   ]
+  },
+  {
+   "name": "GOM Factory AdPie",
+   "company": "gomfactory",
+   "safeToBlock": null,
+   "keywords": [
+    "com.gomfactory.adpie."
+   ]
+  },
+  {
+   "name": "JumpTap",
+   "company": "millennialmedia",
+   "safeToBlock": null,
+   "keywords": [
+    "com.jumptap.adtag."
+   ]
+  },
+  {
+   "name": "LoopMe",
+   "company": "loopme",
+   "safeToBlock": null,
+   "keywords": [
+    "com.loopme."
+   ]
+  },
+  {
+   "name": "Raygun",
+   "company": "raygun",
+   "safeToBlock": null,
+   "keywords": [
+    "com.mindscapehq.android.raygun4android"
+   ]
+  },
+  {
+   "name": "RjFun",
+   "company": "github",
+   "safeToBlock": null,
+   "keywords": [
+    "com.rjfun.cordova.ad",
+    "com.rjfun.cordova.admob"
+   ]
+  },
+  {
+   "name": "SuperAwesome",
+   "company": "superawesome",
+   "safeToBlock": null,
+   "keywords": [
+    "tv.superawesome.sdk",
+    "tv.superawesome.lib."
+   ]
+  },
+  {
+   "name": "TapResearch",
+   "company": "tapresearch",
+   "safeToBlock": null,
+   "keywords": [
+    "com.tapr.sdk.",
+    "com.tapr.internal.",
+    "com.tapr.helpers."
+   ]
+  },
+  {
+   "name": "Tappx",
+   "company": "tappx",
+   "safeToBlock": null,
+   "keywords": [
+    "com.tappx.sdk.android"
+   ]
+  },
+  {
+   "name": "ThinkingData Analytics",
+   "company": "thinkingdata",
+   "safeToBlock": null,
+   "keywords": [
+    "cn.thinkingdata."
+   ]
+  },
+  {
+   "name": "VKontakte SDK",
+   "company": "github",
+   "safeToBlock": null,
+   "keywords": [
+    "com.vk.sdk.",
+    "com.vk.api.sdk."
+   ]
+  },
+  {
+   "name": "Virgo Mobile",
+   "company": "virgomobile",
+   "safeToBlock": null,
+   "keywords": [
+    "com.virgo.ads."
+   ]
+  },
+  {
+   "name": "Zoho Analytics",
+   "company": "zoho",
+   "safeToBlock": null,
+   "keywords": [
+    "com.zoho.zanalytics."
+   ]
+  },
+  {
+   "name": "fineboost",
+   "company": "yifants",
+   "safeToBlock": null,
+   "keywords": [
+    "com.fineboost."
+   ]
+  },
+  {
+   "name": "Acuant",
+   "company": "acuantcorp",
+   "safeToBlock": null,
+   "keywords": [
+    "com.acuant.acuantcamera"
+   ]
+  },
+  {
+   "name": "Anvato (A Google Company)",
+   "company": "google",
+   "safeToBlock": null,
+   "keywords": [
+    "com.anvato.androidsdk."
+   ]
+  },
+  {
+   "name": "Blesh",
+   "company": "blesh",
+   "safeToBlock": null,
+   "keywords": [
+    "com.blesh.sdk."
+   ]
+  },
+  {
+   "name": "Bluecats",
+   "company": "bluecats",
+   "safeToBlock": null,
+   "keywords": [
+    "com.bluecats.sdk"
+   ]
+  },
+  {
+   "name": "CoolaData",
+   "company": "cooladata",
+   "safeToBlock": null,
+   "keywords": [
+    "com.cooladata.android."
+   ]
+  },
+  {
+   "name": "FLUZO",
+   "company": "fluzo",
+   "safeToBlock": null,
+   "keywords": [
+    "com.fluzo.sdk."
+   ]
+  },
+  {
+   "name": "Facebook Flipper",
+   "company": "Facebook",
+   "safeToBlock": null,
+   "keywords": [
+    "com.facebook.flipper"
+   ]
+  },
+  {
+   "name": "GPShopper",
+   "company": "crunchbase",
+   "safeToBlock": null,
+   "keywords": [
+    "com.gpshopper"
+   ]
+  },
+  {
+   "name": "IndoorAtlas",
+   "company": "indooratlas",
+   "safeToBlock": null,
+   "keywords": [
+    "com.indooratlas.android.sdk"
+   ]
+  },
+  {
+   "name": "Janrain",
+   "company": "wikipedia",
+   "safeToBlock": null,
+   "keywords": [
+    "com.janrain.android",
+    "com.janrain.android.engage",
+    "com.janrain.android.capture"
+   ]
+  },
+  {
+   "name": "MOCA",
+   "company": "mocaplatform",
+   "safeToBlock": null,
+   "keywords": [
+    "com.innoquant.moca"
+   ]
+  },
+  {
+   "name": "Point Inside",
+   "company": "pointinside",
+   "safeToBlock": null,
+   "keywords": [
+    "com.pointinside"
+   ]
+  },
+  {
+   "name": "Proximi.io",
+   "company": "proximi",
+   "safeToBlock": null,
+   "keywords": [
+    "io.proximi.proximiiolibrary"
+   ]
+  },
+  {
+   "name": "ScoreLoop",
+   "company": "scoreloop",
+   "safeToBlock": null,
+   "keywords": [
+    "com.scoreloop.client.android"
+   ]
+  },
+  {
+   "name": "Alooma",
+   "company": "alooma",
+   "safeToBlock": null,
+   "keywords": [
+    "com.github.aloomaio.androidsdk"
+   ]
+  },
+  {
+   "name": "Analytics by NPAW (Youbora Suite)",
+   "company": "nicepeopleatwork",
+   "safeToBlock": null,
+   "keywords": [
+    "com.npaw.youbora."
+   ]
+  },
+  {
+   "name": "Beintoo",
+   "company": "beintoo",
+   "safeToBlock": null,
+   "keywords": [
+    "com.beintoo.nucleon"
+   ]
+  },
+  {
+   "name": "Bolts",
+   "company": "github",
+   "safeToBlock": null,
+   "keywords": [
+    "com.parse.bolts"
+   ]
+  },
+  {
+   "name": "Cedexis Radar",
+   "company": "cedexis",
+   "safeToBlock": null,
+   "keywords": [
+    "com.cedexis"
+   ]
+  },
+  {
+   "name": "Cifrasoft",
+   "company": "cifrasoft",
+   "safeToBlock": null,
+   "keywords": [
+    "com.cifrasoft."
+   ]
+  },
+  {
+   "name": "Flowsense",
+   "company": "com",
+   "safeToBlock": null,
+   "keywords": [
+    "com.flowsense.flowsensesdk."
+   ]
+  },
+  {
+   "name": "Geniee",
+   "company": "co",
+   "safeToBlock": null,
+   "keywords": [
+    "jp.co.geniee.gnadsdk."
+   ]
+  },
+  {
+   "name": "Huq Sourcekit",
+   "company": "huq",
+   "safeToBlock": null,
+   "keywords": [
+    "io.huq.sourcekit."
+   ]
+  },
+  {
+   "name": "Insider",
+   "company": "useinsider",
+   "safeToBlock": null,
+   "keywords": [
+    "com.useinsider.insider"
+   ]
+  },
+  {
+   "name": "Mopinion",
+   "company": "mopinion",
+   "safeToBlock": null,
+   "keywords": [
+    "com.mopinion.mopinionsdk"
+   ]
+  },
+  {
+   "name": "OfferToro",
+   "company": "offertoro",
+   "safeToBlock": null,
+   "keywords": [
+    "com.offertoro.sdk."
+   ]
+  },
+  {
+   "name": "OpenTelemetry (OpenCensus, OpenTracing)",
+   "company": "opentelemetry",
+   "safeToBlock": null,
+   "keywords": [
+    "io.opencensus",
+    "io.opentelemetry"
+   ]
+  },
+  {
+   "name": "Snapchat Login Kit",
+   "company": "snapchat",
+   "safeToBlock": null,
+   "keywords": [
+    "com.snapchat.kit.sdk.SnapLogin"
+   ]
+  },
+  {
+   "name": "Zendrive",
+   "company": "zendrive",
+   "safeToBlock": null,
+   "keywords": [
+    "com.zendrive.sdk."
+   ]
+  },
+  {
+   "name": "fullstory",
+   "company": "fullstory",
+   "safeToBlock": null,
+   "keywords": [
+    "com.fullstory.instrumentation.",
+    "com.fullstory.util.",
+    "com.fullstory.jni.",
+    "com.fullstory.FS",
+    "com.fullstory.rust.",
+    "com.fullstory.FSSessionData"
+   ]
+  },
+  {
+   "name": "Pendo",
+   "company": "pendo",
+   "safeToBlock": null,
+   "keywords": [
+    "sdk.insert.io.",
+    "sdk.pendo.io."
+   ]
+  },
+  {
+   "name": "Plexure",
+   "company": "plexure",
+   "safeToBlock": null,
+   "keywords": [
+    "co.vmob.sdk"
+   ]
+  },
+  {
+   "name": "Swirl",
+   "company": "swirl",
+   "safeToBlock": null,
+   "keywords": [
+    "com.swirl"
+   ]
+  },
+  {
+   "name": "Treasure Data",
+   "company": "treasuredata",
+   "safeToBlock": null,
+   "keywords": [
+    "com.treasuredata"
+   ]
+  },
+  {
+   "name": "IBM Mobile Marketing (Acoustic)",
+   "company": "acoustic",
+   "safeToBlock": null,
+   "keywords": [
+    "com.ibm.mce.sdk.",
+    "co.acoustic.mobile.push.sdk.",
+    "com.xtify.mce.sdk.",
+    "com.xtify.android.sdk."
+   ]
+  },
+  {
+   "name": "Solar2D (Corona)",
+   "company": "solar2d",
+   "safeToBlock": null,
+   "keywords": [
+    "com.ansca.corona"
+   ]
+  },
+  {
+   "name": "Amazon Mobile Analytics (Amplify)",
+   "company": "amazon",
+   "safeToBlock": null,
+   "keywords": [
+    "com.amplifyframework.analytics."
+   ]
+  },
+  {
+   "name": "AD(X)",
+   "company": "adxcorp",
+   "safeToBlock": null,
+   "keywords": [
+    "com.adxcorp.ads",
+    "com.adxcorp.nativead"
+   ]
+  },
+  {
+   "name": "AdGateMedia",
+   "company": "adgatemedia",
+   "safeToBlock": null,
+   "keywords": [
+    "com.adgatemedia."
+   ]
+  },
+  {
+   "name": "AdMarvel",
+   "company": "crunchbase",
+   "safeToBlock": null,
+   "keywords": [
+    "com.admarvel."
+   ]
+  },
+  {
+   "name": "AdTiming",
+   "company": "adtiming",
+   "safeToBlock": null,
+   "keywords": [
+    "com.aiming.mdt.",
+    "com.adtiming."
+   ]
+  },
+  {
+   "name": "Adjust Unbotify",
+   "company": "adjust",
+   "safeToBlock": null,
+   "keywords": [
+    "com.unbotify.mobile.sdk."
+   ]
+  },
+  {
+   "name": "LotaData",
+   "company": "lotadata",
+   "safeToBlock": null,
+   "keywords": [
+    "com.lotadata.moments."
+   ]
+  },
+  {
+   "name": "Marketo (an Adobe Company)",
+   "company": "marketo",
+   "safeToBlock": null,
+   "keywords": [
+    "com.marketo."
+   ]
+  },
+  {
+   "name": "PlaytestCloud Event Tracking",
+   "company": "playtestcloud",
+   "safeToBlock": null,
+   "keywords": [
+    "com.playtestcloud.Analytics"
+   ]
+  },
+  {
+   "name": "Rollbar",
+   "company": "rollbar",
+   "safeToBlock": null,
+   "keywords": [
+    "com.rollbar.android."
+   ]
+  },
+  {
+   "name": "Snap Ad Kit",
+   "company": "snapchat",
+   "safeToBlock": null,
+   "keywords": [
+    "com.snap.adkit",
+    "com.snap.appadskit"
+   ]
+  },
+  {
+   "name": "Synerise",
+   "company": "synerise",
+   "safeToBlock": null,
+   "keywords": [
+    "com.synerise.sdk"
+   ]
+  },
+  {
+   "name": "UserExperior",
+   "company": "userexperior",
+   "safeToBlock": null,
+   "keywords": [
+    "com.userexperior"
+   ]
+  },
+  {
+   "name": "Vdopia",
+   "company": "chocolateplatform",
+   "safeToBlock": null,
+   "keywords": [
+    "com.vdopia.client.android.",
+    "com.vdopia.ads."
+   ]
+  },
+  {
+   "name": "AdGem",
+   "company": "adgem",
+   "safeToBlock": null,
+   "keywords": [
+    "com.adgem.android."
+   ]
+  },
+  {
+   "name": "AdTrial",
+   "company": "adtrial",
+   "safeToBlock": null,
+   "keywords": [
+    "com.adtrial.sdk."
+   ]
+  },
+  {
+   "name": "Pincrux",
+   "company": "pincrux",
+   "safeToBlock": null,
+   "keywords": [
+    "com.pincrux."
+   ]
+  },
+  {
+   "name": "Tutucloud",
+   "company": "tutucloud",
+   "safeToBlock": null,
+   "keywords": [
+    "org.lasque.tusdk.core",
+    "org.lasque.tusdkpulse.core"
+   ]
+  },
+  {
+   "name": "Veloxity",
+   "company": "veloxity",
+   "safeToBlock": null,
+   "keywords": [
+    "net.veloxity."
+   ]
+  },
+  {
+   "name": "Yoadx",
+   "company": "yoadx",
+   "safeToBlock": null,
+   "keywords": [
+    "com.yoadx.yoadx."
+   ]
+  },
+  {
+   "name": "Coulus Coelib",
+   "company": "measurementsys",
+   "safeToBlock": null,
+   "keywords": [
+    "coelib.c.couluslibrary"
+   ]
+  },
+  {
+   "name": "微信广告",
+   "company": "Tencent Inc.",
+   "safeToBlock": null,
+   "keywords": [
+    "com.tencent.mm.plugin.sns.ui.SnsAdLBSAuthManagerUI",
+    "com.tencent.mm.plugin.sns.ui.VideoAdPlayerUI",
+    "com.tencent.mm.plugin.appbrand.ad.ui.",
+    "com.tencent.mm.plugin.sns.ui.SnsAd",
+    "com.tencent.mm.plugin.sns.ad."
+   ]
+  },
+  {
+   "name": "魅族广告组件",
+   "company": "Meizu Telecom Equipment Co., Ltd.",
+   "safeToBlock": true,
+   "keywords": [
+    "com.meizu.advertise.admediation.",
+    "com.meizu.adplatform.",
+    "com.meizu.customizecenter.AdWebActivity",
+    "com.meizu.customizecenter.frame.activity.AdWebActivity",
+    "com.meizu.customizecenter.frame.activity.StartAppAdActivity",
+    "com.meizu.customizecenter.frame.activity.CustomizeCenterActivity"
+   ]
+  },
+  {
+   "name": "阿里百川广告",
+   "company": "阿里巴巴",
+   "safeToBlock": true,
+   "keywords": [
+    "com.alibaba.baichuan."
+   ]
+  },
+  {
+   "name": "番茄免费小说广告组件",
+   "company": "字节跳动",
+   "safeToBlock": true,
+   "keywords": [
+    "com.dragon.read.ad.",
+    "com.dragon.read.pages.splash.ad.",
+    "com.bytedance.novel.ad.",
+    "com.minigame.",
+    "com.bytedance.minigame.",
+    "com.dragon.read.component.biz.impl.gamecenter.",
+    "com.bytedance.bdp.app.interactgame.",
+    "com.dragon.read.component.biz.impl.gamedetail.MiniGameDetailActivity"
+   ]
+  },
+  {
+   "name": "微信NFC组件",
+   "company": "腾讯公司",
+   "safeToBlock": null,
+   "keywords": [
+    "com.tencent.mm.plugin.nfc_open.ui.NfcWebViewUI"
+   ]
+  },
+  {
+   "name": "HMS Core Ads SDK（鲸鸿动能广告服务）",
+   "company": "华为开发者联盟",
+   "safeToBlock": null,
+   "keywords": [
+    "com.huawei.openalliance.ad."
+   ]
+  },
+  {
+   "name": "BeiZi SDK",
+   "company": "上海倍孜网络技术有限公司",
+   "safeToBlock": null,
+   "keywords": [
+    "com.beizi.ad."
+   ]
+  },
+  {
+   "name": "Sigmob",
+   "company": "北京创智汇聚科技有限公司",
+   "safeToBlock": null,
+   "keywords": [
+    "com.sigmob.sdk."
+   ]
+  },
+  {
+   "name": "TopOn SDK",
+   "company": "广州塔酷信息科技有限公司",
+   "safeToBlock": true,
+   "keywords": [
+    "com.anythink."
+   ]
+  },
+  {
+   "name": "ADSuyi SDK",
+   "company": "杭州艾狄墨搏信息服务有限公司",
+   "safeToBlock": null,
+   "keywords": [
+    "cn.admobiletop.adsuyi."
+   ]
+  },
+  {
+   "name": "小米移动广告联盟",
+   "company": "小米科技有限责任公司",
+   "safeToBlock": null,
+   "keywords": [
+    "com.miui.zeus.mimo.sdk."
+   ]
+  },
+  {
+   "name": "掌酷SDK",
+   "company": "深圳掌酷软件有限公司",
+   "safeToBlock": null,
+   "keywords": [
+    "com.zookingsoft.wrapper.ad."
+   ]
+  },
+  {
+   "name": "拼多多视频激励广告",
+   "company": "拼多多",
+   "safeToBlock": null,
+   "keywords": [
+    "com.xunmeng.amiibo.rewardvideo."
+   ]
+  },
+  {
+   "name": "搜狐广告",
+   "company": "搜狐",
+   "safeToBlock": null,
+   "keywords": [
+    "com.sohu.app.ads."
+   ]
+  },
+  {
+   "name": "荣耀广告联盟",
+   "company": "荣耀",
+   "safeToBlock": null,
+   "keywords": [
+    "com.hihonor.adsdk."
+   ]
+  },
+  {
+   "name": "AppLovin (MAX and SparkLabs)",
+   "company": "applovin",
+   "safeToBlock": null,
+   "keywords": [
+    "com.applovin"
+   ]
+  }
+ ]
+}
