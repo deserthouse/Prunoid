@@ -11,7 +11,23 @@ data class ScannedApp(
     val packageName: String,
     val label: String,
     val isSystem: Boolean,
-    val matchedSdks: List<SdkHit>
+    val matchedSdks: List<SdkHit>,
+    // 未被任何规则识别的组件：按 Java 包前缀聚类（LibChecker "Unmarked library" 语义），
+    // suspicious = 前缀/类名含广告统计类特征词（仅提示，永不参与自动禁用）
+    val unmatched: List<UnmatchedGroup> = emptyList()
+)
+
+data class UnmatchedGroup(
+    val prefix: String,
+    val count: Int,
+    val suspicious: Boolean
+)
+
+// 启发式特征词（小写匹配）：只用于"疑似"标注，来源 oF2pks/AdClose 拆解经验
+private val SUSPICIOUS_KEYWORDS = listOf(
+    "ads", ".ad.", "admob", "adview", "adv.", "tracker", "track", "analytics",
+    "applog", "umeng", "getui", "jpush", "jad", "gdt", "pangle", "sigmob",
+    "mintegral", "applovin", "vungle", "ironsource", "unity3d.ads", "kwai", "adnet"
 )
 
 data class SdkHit(
@@ -85,16 +101,36 @@ class Scanner(
         // ① app 包名前缀匹配（app 本身就是 SDK 附属包的罕见场景）
         for (r in rules.match(app.packageName)) addHit(r.id, null, null)
 
+        val matchedCns = mutableSetOf<String>()
         for ((cn, manifestType) in components) {
             // ② 精确锚点（LCR 组件规则；anchor 携带上游标注类型）
             val anchor = componentIndex[cn]
             if (anchor != null) {
+                matchedCns.add(cn)
                 addHit(anchor.first, cn, anchor.second)
                 continue
             }
             // ③ 前缀匹配（blocker/oF2pks searchKeyword 语义，类型取 manifest 实际值）
-            for (rid in prefixMatcher.match(cn)) addHit(rid, cn, manifestType)
+            val prefixRids = prefixMatcher.match(cn)
+            if (prefixRids.isNotEmpty()) {
+                matchedCns.add(cn)
+                for (rid in prefixRids) addHit(rid, cn, manifestType)
+            }
         }
+
+        // 未识别组件：按 Java 包前缀聚类 + 启发式疑似标注（只展示，不参与禁用）
+        val unmatched = components.asSequence()
+            .filterNot { (cn, _) -> cn in matchedCns }
+            .groupBy({ it.first.substringBeforeLast('.') }, { it.second })
+            .map { (prefix, types) ->
+                UnmatchedGroup(
+                    prefix = prefix,
+                    count = types.size,
+                    suspicious = SUSPICIOUS_KEYWORDS.any { kw -> prefix.lowercase().contains(kw) }
+                )
+            }
+            .sortedByDescending { it.count }
+            .take(20)
 
         return ScannedApp(
             packageName = app.packageName,
@@ -102,7 +138,8 @@ class Scanner(
             isSystem = (app.flags and ApplicationInfo.FLAG_SYSTEM) != 0,
             matchedSdks = hits.values.sortedWith(
                 compareBy<SdkHit> { it.safety.ordinal }.thenByDescending { it.matchedComponents.size }
-            )
+            ),
+            unmatched = unmatched
         )
     }
 }

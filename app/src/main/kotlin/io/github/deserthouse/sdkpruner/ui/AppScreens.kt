@@ -75,6 +75,38 @@ fun categoryLabel(c: String): String = when (c) {
     else -> "其他"
 }
 
+/** SDK monogram 头像（LibChecker tonal avatar 语义）：规则 id 哈希取色，公司名/SDK 名首字母 */
+private val MONOGRAM_COLORS = listOf(
+    Color(0xFFB3E5FC) to Color(0xFF01579B),
+    Color(0xFFFFCDD2) to Color(0xFF880E4F),
+    Color(0xFFC8E6C9) to Color(0xFF1B5E20),
+    Color(0xFFFFE0B2) to Color(0xFF7A4100),
+    Color(0xFFD1C4E9) to Color(0xFF4527A0),
+    Color(0xFFB2DFDB) to Color(0xFF004D40),
+    Color(0xFFF8BBD0) to Color(0xFF880E4F),
+    Color(0xFFCFD8DC) to Color(0xFF37474F)
+)
+
+@Composable
+fun SdkMonogram(ruleId: String, name: String, modifier: Modifier = Modifier) {
+    val dark = isSystemInDarkTheme()
+    val (bg, fg) = MONOGRAM_COLORS[ruleId.hashCode().let { if (it < 0) -it else it } % MONOGRAM_COLORS.size]
+    val bgC = if (dark) fg.copy(alpha = 0.25f) else bg
+    val fgC = if (dark) MaterialTheme.colorScheme.onSurface else fg
+    Box(
+        modifier
+            .size(32.dp)
+            .background(bgC, RoundedCornerShape(50)),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            name.firstOrNull()?.uppercase() ?: "?",
+            style = MaterialTheme.typography.labelMedium,
+            color = fgC
+        )
+    }
+}
+
 /** 四级安全徽标：图标 + 文字（色不单独表意） */
 @Composable
 fun SafetyBadge(s: Safety, modifier: Modifier = Modifier) {
@@ -776,6 +808,7 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                     selected = if (on) selected + hit.ruleId else selected - hit.ruleId
                                 }
                             )
+                            SdkMonogram(hit.ruleId, hit.name, Modifier.padding(end = 8.dp))
                             Column(Modifier.weight(1f)) {
                                 Text(hit.name, style = MaterialTheme.typography.titleSmall)
                                 Text(
@@ -797,6 +830,34 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                             Spacer(Modifier.height(8.dp))
                             HorizontalDivider()
                             Spacer(Modifier.height(8.dp))
+                            // 规则元信息：开发者 / 置信度 / 来源数（说明文本）
+                            val info = remember(hit.ruleId) { vm.ruleInfo(hit.ruleId) }
+                            if (info != null) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    if (info.company.isNotBlank()) {
+                                        Text(
+                                            "开发者：${info.company}",
+                                            style = MaterialTheme.typography.labelMedium
+                                        )
+                                    }
+                                    Text(
+                                        "置信度：${confidenceLabel(info.confidence)}",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    if (info.sources.isNotEmpty()) {
+                                        Text(
+                                            "来源 ×${info.sources.size}",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                                Spacer(Modifier.height(6.dp))
+                            }
                             // 命中组件按类型分组（数据源 componentTypes，缺失时按类名后缀兜底）
                             val groups = remember(hit.ruleId) {
                                 hit.matchedComponents.groupBy { cn ->
@@ -860,6 +921,83 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                     }
                 }
             }
+            // 未识别组件（LibChecker "Unmarked library" 语义）：只读展示，供人审与规则仓 PR
+            if (app.unmatched.isNotEmpty()) {
+                item {
+                    var unmatchedOpen by remember { mutableStateOf(false) }
+                    val total = app.unmatched.sumOf { it.count }
+                    Card(
+                        onClick = { unmatchedOpen = !unmatchedOpen },
+                        Modifier
+                            .fillMaxWidth()
+                            .animateContentSize()
+                    ) {
+                        Column(Modifier.padding(14.dp)) {
+                            Row(
+                                Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(Modifier.weight(1f)) {
+                                    Text("未识别组件 $total", style = MaterialTheme.typography.titleSmall)
+                                    Text(
+                                        "不在规则库中，暂无法禁用；可提交至规则仓库",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                Icon(
+                                    Icons.Outlined.ExpandMore,
+                                    contentDescription = if (unmatchedOpen) "收起" else "展开",
+                                    modifier = Modifier
+                                        .padding(start = 6.dp)
+                                        .rotate(if (unmatchedOpen) 180f else 0f)
+                                )
+                            }
+                            if (unmatchedOpen) {
+                                Spacer(Modifier.height(8.dp))
+                                HorizontalDivider()
+                                Spacer(Modifier.height(8.dp))
+                                app.unmatched.forEach { g ->
+                                    Row(
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 2.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            g.prefix,
+                                            fontFamily = FontFamily.Monospace,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        if (g.suspicious) {
+                                                Surface(
+                                                    color = safetyColors(Safety.CAUTION, isSystemInDarkTheme()).container,
+                                                    contentColor = safetyColors(Safety.CAUTION, isSystemInDarkTheme()).onContainer,
+                                                    shape = RoundedCornerShape(50)
+                                                ) {
+                                                Text(
+                                                    "疑似广告/统计",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.dp)
+                                                )
+                                            }
+                                        }
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(
+                                            "${g.count}",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -916,6 +1054,13 @@ fun typeLabel(t: String) = when (t) {
     "receiver" -> "广播 receiver"
     "provider" -> "provider"
     else -> "其他组件"
+}
+
+fun confidenceLabel(c: String) = when (c) {
+    "high" -> "高"
+    "medium" -> "中"
+    "low" -> "低"
+    else -> c
 }
 
 fun safetyLabel(s: Safety) = when (s) {
