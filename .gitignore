@@ -25,3 +25,7 @@ research/screen_check.png
 
 # 独立发布的规则仓库（单独推送到 deserthouse/sdk-pruner-rules）
 rules-repo/
+
+# 内部工作文档（不公开）
+records/
+HANDOVER.md
