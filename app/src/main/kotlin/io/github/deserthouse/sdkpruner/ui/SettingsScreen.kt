@@ -61,6 +61,36 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // ── 禁用引擎原理与区别 ───────────────────────────────
+            Card(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(16.dp)) {
+                    Text("两种禁用引擎的区别", style = MaterialTheme.typography.titleSmall)
+                    Spacer(Modifier.height(8.dp))
+                    Text("IFW（意图防火墙，无感知）", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        "向 /data/system/ifw/ 写入拦截规则，在系统框架层拦下组件的启动请求。" +
+                            "应用完全感知不到，也无法自行恢复；规则文件独立于 APK，应用更新后依然生效。推荐日常使用。",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text("pm disable（组件停用，跨更新）", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        "把组件置为系统级“已停用”状态。兼容性好、状态可查，但应用能检测到组件被禁并可能自行恢复；" +
+                            "停用状态同样跨应用更新保留。适合排查 IFW 行为异常的兼容性场景。",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "两种引擎都只针对第三方应用组件，操作前自动备份；恢复入口在列表页应急菜单。",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
             // ── 默认引擎 ─────────────────────────────────────────
             Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp)) {

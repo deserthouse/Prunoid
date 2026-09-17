@@ -4,6 +4,8 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -38,6 +40,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.deserthouse.sdkpruner.core.engine.AppliedRulesStore
+import io.github.deserthouse.sdkpruner.core.engine.DisableEngine
 import io.github.deserthouse.sdkpruner.core.engine.Engine
 import io.github.deserthouse.sdkpruner.core.rules.Safety
 import io.github.deserthouse.sdkpruner.core.scanner.ScannedApp
@@ -283,12 +286,20 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
                                     Text(app.label.ifEmpty { app.packageName }, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                     if (app.isSystem) {
                                         Spacer(Modifier.width(6.dp))
+                                        // 白名单命中 = 框架/核心层（硬拦截），其余系统 app = 普通系统层
+                                        val framework = DisableEngine.isForbidden(app.packageName)
                                         Surface(
-                                            color = MaterialTheme.colorScheme.surfaceVariant,
-                                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            color = if (framework) MaterialTheme.colorScheme.errorContainer
+                                            else MaterialTheme.colorScheme.surfaceVariant,
+                                            contentColor = if (framework) MaterialTheme.colorScheme.onErrorContainer
+                                            else MaterialTheme.colorScheme.onSurfaceVariant,
                                             shape = RoundedCornerShape(50)
                                         ) {
-                                            Text("系统", style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.dp))
+                                            Text(
+                                                if (framework) "框架" else "系统",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.dp)
+                                            )
                                         }
                                     }
                                     if (appliedEntry != null) {
@@ -504,7 +515,12 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
             .map { it.ruleId }.toSet()
     }
     var selected by remember(app.packageName) { mutableStateOf(defaultSelected) }
+    // 分类筛选：null = 全部
+    var catFilter by remember(app.packageName) { mutableStateOf<String?>(null) }
     val appliedEntry = st.applied[app.packageName]
+    // 安全分层：白名单命中（框架/核心）= 硬拦截；其余系统 app = 警告后可操作
+    val framework = DisableEngine.isForbidden(app.packageName)
+    val systemWarn = app.isSystem && !framework
 
     val versionName = remember(app.packageName) {
         runCatching {
@@ -513,6 +529,15 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
     }.let { if (it.isNullOrBlank()) "无版本号" else it }
 
     SnackbarEffect(snackbar, msg)
+
+    // 分类筛选后的可见 SDK 与勾选摘要
+    val visibleSdks = remember(app.matchedSdks, catFilter) {
+        if (catFilter == null) app.matchedSdks
+        else app.matchedSdks.filter { it.category == catFilter }
+    }
+    val categories = remember(app.matchedSdks) {
+        app.matchedSdks.map { it.category }.distinct()
+    }
 
     // 量化确认摘要（以当前勾选与引擎为准）
     val selHits = app.matchedSdks.filter { it.ruleId in selected }
@@ -536,12 +561,21 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
         bottomBar = {
             Surface(tonalElevation = 2.dp) {
                 Column(Modifier.fillMaxWidth()) {
-                    if (app.isSystem) {
-                        // 系统 app：预防式禁用操作区（白名单硬拦截前先解释）
+                    if (framework) {
+                        // 框架/核心层：安全层硬拦截，永不可操作
                         Text(
-                            "系统 app 为只读：组件由系统框架管理，禁用操作已拦截",
+                            "框架/系统核心组件：安全层白名单硬拦截，不可修改（防 bootloop 设计）",
                             style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                        )
+                    } else if (systemWarn) {
+                        Text(
+                            "系统应用：修改可能影响系统功能，操作将被要求二次风险确认",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = if (isSystemInDarkTheme()) WarnContainerLight else WarnOnContainerLight,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 16.dp, vertical = 8.dp)
@@ -555,7 +589,7 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                     ) {
                         Button(
                             onClick = { showApplyConfirm = true },
-                            enabled = !app.isSystem && !st.busy && selected.isNotEmpty(),
+                            enabled = !framework && !st.busy && selected.isNotEmpty(),
                             modifier = Modifier.weight(1f)
                         ) {
                             if (st.busy) {
@@ -566,7 +600,7 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                         }
                         OutlinedButton(
                             onClick = { vm.restoreApp(app) { msg = it } },
-                            enabled = !app.isSystem && !st.busy,
+                            enabled = !framework && !st.busy,
                             modifier = Modifier.weight(1f)
                         ) { Text("恢复") }
                     }
@@ -674,12 +708,59 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                     )
                 }
             }
-            items(app.matchedSdks, key = { it.ruleId }) { hit ->
+            // 分类筛选：按 category 过滤 + 批量勾选操作
+            if (categories.isNotEmpty()) {
+                item {
+                    Column {
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            FilterChip(
+                                selected = catFilter == null,
+                                onClick = { catFilter = null },
+                                label = { Text("全部") }
+                            )
+                            categories.forEach { c ->
+                                FilterChip(
+                                    selected = catFilter == c,
+                                    onClick = { catFilter = if (catFilter == c) null else c },
+                                    label = { Text(categoryLabel(c)) }
+                                )
+                            }
+                        }
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                "当前显示 ${visibleSdks.size} 个 SDK",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.weight(1f)
+                            )
+                            TextButton(
+                                onClick = { selected = selected + visibleSdks.map { it.ruleId }.toSet() },
+                                enabled = visibleSdks.isNotEmpty()
+                            ) { Text("全选筛选结果") }
+                            TextButton(
+                                onClick = { selected = selected - visibleSdks.map { it.ruleId }.toSet() },
+                                enabled = visibleSdks.isNotEmpty()
+                            ) { Text("全不选") }
+                        }
+                    }
+                }
+            }
+            items(visibleSdks, key = { it.ruleId }) { hit ->
                 var expanded by remember(hit.ruleId) { mutableStateOf(false) }
                 val sideEffect = remember(hit.ruleId) { vm.ruleSideEffect(hit.ruleId) }
                 val checked = hit.ruleId in selected
                 val rot by animateFloatAsState(if (expanded) 180f else 0f, label = "chevron")
+                // 整卡 = 展开/折叠按钮；仅左侧复选框独立点选
                 Card(
+                    onClick = { expanded = !expanded },
                     Modifier
                         .fillMaxWidth()
                         .animateContentSize()
@@ -693,12 +774,9 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                 checked = checked,
                                 onCheckedChange = { on ->
                                     selected = if (on) selected + hit.ruleId else selected - hit.ruleId
-                                },
-                                modifier = Modifier.padding(end = 4.dp)
+                                }
                             )
-                            Column(Modifier.weight(1f).clickable {
-                                selected = if (checked) selected - hit.ruleId else selected + hit.ruleId
-                            }) {
+                            Column(Modifier.weight(1f)) {
                                 Text(hit.name, style = MaterialTheme.typography.titleSmall)
                                 Text(
                                     categoryLabel(hit.category),
@@ -707,29 +785,57 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                 )
                             }
                             SafetyBadge(hit.safety)
-                            IconButton(onClick = { expanded = !expanded }, modifier = Modifier.size(32.dp)) {
-                                Icon(
-                                    Icons.Outlined.ExpandMore,
-                                    contentDescription = if (expanded) "收起" else "展开",
-                                    modifier = Modifier.rotate(rot)
-                                )
-                            }
+                            Icon(
+                                Icons.Outlined.ExpandMore,
+                                contentDescription = if (expanded) "收起" else "展开",
+                                modifier = Modifier
+                                    .padding(start = 6.dp)
+                                    .rotate(rot)
+                            )
                         }
                         if (expanded) {
                             Spacer(Modifier.height(8.dp))
                             HorizontalDivider()
                             Spacer(Modifier.height(8.dp))
+                            // 命中组件按类型分组（数据源 componentTypes，缺失时按类名后缀兜底）
+                            val groups = remember(hit.ruleId) {
+                                hit.matchedComponents.groupBy { cn ->
+                                    hit.componentTypes[cn] ?: when {
+                                        cn.endsWith("Activity") -> "activity"
+                                        cn.endsWith("Service") -> "service"
+                                        cn.endsWith("Receiver") -> "receiver"
+                                        cn.endsWith("Provider") -> "provider"
+                                        else -> "other"
+                                    }
+                                }
+                            }
+                            val typeOrder = listOf("activity", "service", "receiver", "provider", "other")
                             Text(
                                 "命中组件 ${hit.matchedComponents.size}",
                                 style = MaterialTheme.typography.labelMedium
                             )
-                            hit.matchedComponents.forEach { c ->
-                                Text(
-                                    c,
-                                    fontFamily = FontFamily.Monospace,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                            typeOrder.forEach { t ->
+                                val comps = groups[t] ?: return@forEach
+                                Spacer(Modifier.height(6.dp))
+                                Surface(
+                                    color = MaterialTheme.colorScheme.secondaryContainer,
+                                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                                    shape = RoundedCornerShape(50)
+                                ) {
+                                    Text(
+                                        "${typeLabel(t)} × ${comps.size}",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                    )
+                                }
+                                comps.forEach { c ->
+                                    Text(
+                                        c,
+                                        fontFamily = FontFamily.Monospace,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
                             }
                         }
                         sideEffect
@@ -760,25 +866,56 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
     if (showApplyConfirm) {
         AlertDialog(
             onDismissRequest = { showApplyConfirm = false },
-            title = { Text("应用规则") },
-            text = {
-                Text(
-                    "将禁用 ${selHits.size} 个 SDK 的 ${selComponents.size} 个组件" +
-                        (if (excludedRisky > 0) "（已排除 $excludedRisky 个风险项）" else "") +
-                        "，引擎 ${st.engine.name}。操作前自动创建备份。"
+            icon = {
+                if (systemWarn) Icon(
+                    Icons.Outlined.WarningAmber,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error
                 )
+            },
+            title = { Text(if (systemWarn) "警告：正在修改系统应用" else "应用规则") },
+            text = {
+                Column {
+                    if (systemWarn) {
+                        Text(
+                            "「${app.label}」是系统应用。禁用其组件可能导致该应用甚至系统功能异常。" +
+                                "如出现问题，可在本应用内恢复，或通过备份/应急通道回滚。",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Spacer(Modifier.height(8.dp))
+                    }
+                    Text(
+                        "将禁用 ${selHits.size} 个 SDK 的 ${selComponents.size} 个组件" +
+                            (if (excludedRisky > 0) "（已排除 $excludedRisky 个风险项）" else "") +
+                            "，引擎 ${st.engine.name}。操作前自动创建备份。"
+                    )
+                }
             },
             confirmButton = {
                 TextButton(onClick = {
                     showApplyConfirm = false
                     vm.applyRules(app, selected) { msg = it }
-                }) { Text("应用") }
+                }) {
+                    Text(
+                        if (systemWarn) "我已了解风险，继续" else "应用",
+                        color = if (systemWarn) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                    )
+                }
             },
             dismissButton = {
                 TextButton(onClick = { showApplyConfirm = false }) { Text("取消") }
             }
         )
     }
+}
+
+fun typeLabel(t: String) = when (t) {
+    "activity" -> "界面 activity"
+    "service" -> "后台 service"
+    "receiver" -> "广播 receiver"
+    "provider" -> "provider"
+    else -> "其他组件"
 }
 
 fun safetyLabel(s: Safety) = when (s) {
