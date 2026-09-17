@@ -22,3 +22,6 @@ research/screen_check.png
 # 密钥（双保险：签名 keystore 走仓库外 gradle.properties 覆盖）
 *.jks
 *.keystore
+
+# 独立发布的规则仓库（单独推送到 deserthouse/sdk-pruner-rules）
+rules-repo/
