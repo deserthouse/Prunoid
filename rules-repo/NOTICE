@@ -1,0 +1,17 @@
+SDK-Pruner Rules
+Copyright 2026 SDK-Pruner contributors
+
+本产品包含从以下项目继承/衍生的数据：
+
+1. LibChecker-Rules (https://github.com/LibChecker/LibChecker-Rules)
+   License: Apache-2.0
+   用法：组件识别锚点（activities/services/receivers/providers 目录下的
+   组件类名与标注，含 native 库锚点）。
+
+2. blocker-general-rules (https://github.com/lihenggui/blocker-general-rules)
+   License: Apache-2.0
+   用法：SDK 级禁用规则 468 条（含 safeToBlock/sideEffect/contributors，
+   en+zh-CN）。
+
+上述数据依 Apache-2.0 授权继承，本仓库整体亦以 Apache-2.0 分发。
+各条规则的 data 出处见快照内 `sources` 字段；社区贡献者见 `contributors` 字段。
