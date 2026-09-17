@@ -1,4 +1,4 @@
-package io.github.deserthouse.sdkpruner.core.engine
+package io.github.deserthouse.prunoid.core.engine
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -7,10 +7,10 @@ import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import io.github.deserthouse.sdkpruner.core.rules.RuleRepository
+import io.github.deserthouse.prunoid.core.rules.RuleRepository
 
 // 轻量恢复入口（路线图 M3）：UI 无法启动时的救砖通道
-// 用法：adb shell am broadcast -a io.github.deserthouse.sdkpruner.action.CLEAR_IFW --ez confirm true
+// 用法：adb shell am broadcast -a io.github.deserthouse.prunoid.action.CLEAR_IFW --ez confirm true
 // --ez confirm true 为强制确认位，防止第三方应用随手广播清除用户规则
 class RecoveryReceiver : BroadcastReceiver() {
 
@@ -33,7 +33,7 @@ class RecoveryReceiver : BroadcastReceiver() {
     }
 
     companion object {
-        const val ACTION = "io.github.deserthouse.sdkpruner.action.CLEAR_IFW"
+        const val ACTION = "io.github.deserthouse.prunoid.action.CLEAR_IFW"
         const val EXTRA_CONFIRM = "confirm"
     }
 }

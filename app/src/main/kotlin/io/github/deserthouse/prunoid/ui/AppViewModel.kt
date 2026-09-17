@@ -1,16 +1,16 @@
-package io.github.deserthouse.sdkpruner.ui
+package io.github.deserthouse.prunoid.ui
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import io.github.deserthouse.sdkpruner.core.engine.AppliedRulesStore
-import io.github.deserthouse.sdkpruner.core.engine.DisableEngine
-import io.github.deserthouse.sdkpruner.core.engine.Engine
-import io.github.deserthouse.sdkpruner.core.rules.RuleRepository
-import io.github.deserthouse.sdkpruner.core.rules.Safety
-import io.github.deserthouse.sdkpruner.core.rules.SettingsRepository
-import io.github.deserthouse.sdkpruner.core.scanner.ScannedApp
-import io.github.deserthouse.sdkpruner.core.scanner.Scanner
+import io.github.deserthouse.prunoid.core.engine.AppliedRulesStore
+import io.github.deserthouse.prunoid.core.engine.DisableEngine
+import io.github.deserthouse.prunoid.core.engine.Engine
+import io.github.deserthouse.prunoid.core.rules.RuleRepository
+import io.github.deserthouse.prunoid.core.rules.Safety
+import io.github.deserthouse.prunoid.core.rules.SettingsRepository
+import io.github.deserthouse.prunoid.core.scanner.ScannedApp
+import io.github.deserthouse.prunoid.core.scanner.Scanner
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

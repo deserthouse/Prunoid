@@ -1,4 +1,4 @@
-// SDK-Pruner App Module — Root SDK Component Auditor
+// Prunoid App Module — Root SDK Component Auditor
 // Kotlin DSL | libsu root shell | Material 3 Expressive | single :app module, no DI
 
 import java.text.SimpleDateFormat
@@ -23,11 +23,11 @@ kotlin {
 val APP_VERSION_NAME = "0.2.0-alpha"
 
 android {
-    namespace = "io.github.deserthouse.sdkpruner"
+    namespace = "io.github.deserthouse.prunoid"
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "io.github.deserthouse.sdkpruner"
+        applicationId = "io.github.deserthouse.prunoid"
         minSdk = 31  // Android 12 minimum — full Material You generation, aligned with OptIcon
         targetSdk = 37
         versionCode = 2
@@ -84,12 +84,12 @@ android {
     }
 }
 
-// ━━━ APK Output Naming: SDK-Pruner-vX.Y.Z-YYYYMMDD-HHMMSS.apk ━━━
+// ━━━ APK Output Naming: Prunoid-vX.Y.Z-YYYYMMDD-HHMMSS.apk ━━━
 androidComponents {
     onVariants(selector().all()) { variant ->
         variant.outputs.forEach { output ->
             val buildTime = SimpleDateFormat("yyyyMMdd-HHmmss").format(Date())
-            output.outputFileName.set("SDK-Pruner-v$APP_VERSION_NAME-$buildTime.apk")
+            output.outputFileName.set("Prunoid-v$APP_VERSION_NAME-$buildTime.apk")
         }
     }
 }

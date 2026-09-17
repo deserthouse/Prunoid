@@ -1,11 +1,11 @@
-package io.github.deserthouse.sdkpruner.core.engine
+package io.github.deserthouse.prunoid.core.engine
 
 import android.content.Context
 import android.content.pm.PackageManager
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
-import io.github.deserthouse.sdkpruner.core.rules.Safety
+import io.github.deserthouse.prunoid.core.rules.Safety
 
 // M3-R8：安装/更新自动重应用核心逻辑（Receiver 与前台服务共用）
 // 增量语义 = 重扫该包最新 manifest → 按当前规则重算 CAUTION+/SAFE 目标 → 与已应用旧目标并集
@@ -26,8 +26,8 @@ object AutoReapply {
                 return@runBlocking
             }
             Log.d("SdkPruner", "auto-reapply: reapplying ${entry.engine} rules for $pkg")
-            val rules = io.github.deserthouse.sdkpruner.core.rules.RuleRepository(context)
-            val scanner = io.github.deserthouse.sdkpruner.core.scanner.Scanner(context, rules)
+            val rules = io.github.deserthouse.prunoid.core.rules.RuleRepository(context)
+            val scanner = io.github.deserthouse.prunoid.core.scanner.Scanner(context, rules)
             val appInfo = context.packageManager.getApplicationInfo(pkg, 0)
             val comps = enumerateComponents(context, pkg)
             val compNames = comps.map { it.first }.toSet()

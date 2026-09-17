@@ -1,8 +1,8 @@
-package io.github.deserthouse.sdkpruner.core.engine
+package io.github.deserthouse.prunoid.core.engine
 
 import android.content.Context
 import com.topjohnwu.superuser.Shell
-import io.github.deserthouse.sdkpruner.core.rules.RuleRepository
+import io.github.deserthouse.prunoid.core.rules.RuleRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat

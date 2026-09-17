@@ -1,6 +1,6 @@
-package io.github.deserthouse.sdkpruner.core.scanner
+package io.github.deserthouse.prunoid.core.scanner
 
-import io.github.deserthouse.sdkpruner.core.rules.SdkRule
+import io.github.deserthouse.prunoid.core.rules.SdkRule
 
 // 组件前缀匹配器：把只有 packPrefixes 的规则（blocker-general-rules 468 条 /
 // oF2pks 619 条）变成可禁用目标——组件全类名以前缀开头即命中

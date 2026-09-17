@@ -1,4 +1,4 @@
-package io.github.deserthouse.sdkpruner.core.rules
+package io.github.deserthouse.prunoid.core.rules
 
 // 规则合并纯函数：订阅源同 id 覆盖内置，新 id 追加（保持内置顺序在前）。
 // 展示类富字段（description/devTeam/sourceLink）例外：订阅副本为空时保留内置值，

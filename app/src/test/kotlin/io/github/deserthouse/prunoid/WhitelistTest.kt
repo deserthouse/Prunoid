@@ -1,6 +1,6 @@
-package io.github.deserthouse.sdkpruner
+package io.github.deserthouse.prunoid
 
-import io.github.deserthouse.sdkpruner.core.engine.DisableEngine
+import io.github.deserthouse.prunoid.core.engine.DisableEngine
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test

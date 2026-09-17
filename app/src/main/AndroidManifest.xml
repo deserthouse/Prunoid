@@ -11,7 +11,7 @@
         tools:ignore="QueryAllPackagesPermission" />
 
     <application
-        android:label="SDK-Pruner"
+        android:label="Prunoid"
         android:icon="@mipmap/ic_launcher"
         android:supportsRtl="true"
         android:usesCleartextTraffic="true"
@@ -41,7 +41,7 @@
             android:exported="true"
             tools:ignore="ExportedReceiver">
             <intent-filter>
-                <action android:name="io.github.deserthouse.sdkpruner.action.CLEAR_IFW" />
+                <action android:name="io.github.deserthouse.prunoid.action.CLEAR_IFW" />
             </intent-filter>
         </receiver>
 

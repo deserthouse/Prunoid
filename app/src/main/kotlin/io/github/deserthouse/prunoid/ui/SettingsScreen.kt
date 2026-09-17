@@ -1,4 +1,4 @@
-package io.github.deserthouse.sdkpruner.ui
+package io.github.deserthouse.prunoid.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -16,8 +16,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
-import io.github.deserthouse.sdkpruner.core.engine.Engine
-import io.github.deserthouse.sdkpruner.BuildConfig
+import io.github.deserthouse.prunoid.core.engine.Engine
+import io.github.deserthouse.prunoid.BuildConfig
 
 // 设置页（2026-09-17 审查后新增）：默认引擎 / 备份保留份数 / 订阅源详情与管理 / 应急通道 / 关于。
 // 键值事实源在 SettingsRepository（DataStore），此处只做读写呈现。
@@ -194,7 +194,7 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Text(
-                            "adb shell am broadcast -a io.github.deserthouse.sdkpruner.action.CLEAR_IFW --ez confirm true",
+                            "adb shell am broadcast -a io.github.deserthouse.prunoid.action.CLEAR_IFW --ez confirm true",
                             fontFamily = FontFamily.Monospace,
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier
@@ -210,7 +210,7 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
                     Text("关于", style = MaterialTheme.typography.titleSmall)
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        "SDK-Pruner v${BuildConfig.VERSION_NAME}",
+                        "Prunoid v${BuildConfig.VERSION_NAME}",
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Text(
@@ -219,7 +219,7 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        "github.com/deserthouse/sdk-pruner",
+                        "github.com/deserthouse/prunoid",
                         fontFamily = FontFamily.Monospace,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant

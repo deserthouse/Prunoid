@@ -1,4 +1,4 @@
-package io.github.deserthouse.sdkpruner.core.engine
+package io.github.deserthouse.prunoid.core.engine
 
 import android.content.Context
 import kotlinx.serialization.Serializable

@@ -1,4 +1,4 @@
-package io.github.deserthouse.sdkpruner.core.engine
+package io.github.deserthouse.prunoid.core.engine
 
 import android.app.Notification
 import android.app.Service
@@ -45,7 +45,7 @@ class RuleGuardService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        engine = DisableEngine(this, io.github.deserthouse.sdkpruner.core.rules.RuleRepository(this))
+        engine = DisableEngine(this, io.github.deserthouse.prunoid.core.rules.RuleRepository(this))
         // 系统 受保护广播 → NOT_EXPORTED；应急清除需外部 adb 触发 → RECEIVER_EXPORTED
         registerReceiver(
             packageReceiver,
@@ -66,12 +66,12 @@ class RuleGuardService : Service() {
 
     private fun buildNotification(): Notification {
         val pi = android.app.PendingIntent.getActivity(
-            this, 0, Intent(this, io.github.deserthouse.sdkpruner.MainActivity::class.java),
+            this, 0, Intent(this, io.github.deserthouse.prunoid.MainActivity::class.java),
             android.app.PendingIntent.FLAG_IMMUTABLE
         )
         return Notification.Builder(this, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_menu_manage)
-            .setContentTitle("SDK-Pruner")
+            .setContentTitle("Prunoid")
             .setContentText("规则守护运行中：应用更新后自动重应用已选规则")
             .setOngoing(true)
             .setContentIntent(pi)

@@ -1,7 +1,7 @@
-package io.github.deserthouse.sdkpruner
+package io.github.deserthouse.prunoid
 
-import io.github.deserthouse.sdkpruner.core.rules.RuleMerger
-import io.github.deserthouse.sdkpruner.core.rules.SdkRule
+import io.github.deserthouse.prunoid.core.rules.RuleMerger
+import io.github.deserthouse.prunoid.core.rules.SdkRule
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

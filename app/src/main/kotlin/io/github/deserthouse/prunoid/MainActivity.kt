@@ -1,4 +1,4 @@
-package io.github.deserthouse.sdkpruner
+package io.github.deserthouse.prunoid
 
 import android.content.Intent
 import android.os.Bundle
@@ -12,13 +12,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
-import io.github.deserthouse.sdkpruner.core.engine.RuleGuardService
-import io.github.deserthouse.sdkpruner.core.scanner.ScannedApp
-import io.github.deserthouse.sdkpruner.ui.AppDetailScreen
-import io.github.deserthouse.sdkpruner.ui.AppListScreen
-import io.github.deserthouse.sdkpruner.ui.AppViewModel
-import io.github.deserthouse.sdkpruner.ui.SdkPrunerTheme
-import io.github.deserthouse.sdkpruner.ui.SettingsScreen
+import io.github.deserthouse.prunoid.core.engine.RuleGuardService
+import io.github.deserthouse.prunoid.core.scanner.ScannedApp
+import io.github.deserthouse.prunoid.ui.AppDetailScreen
+import io.github.deserthouse.prunoid.ui.AppListScreen
+import io.github.deserthouse.prunoid.ui.AppViewModel
+import io.github.deserthouse.prunoid.ui.SdkPrunerTheme
+import io.github.deserthouse.prunoid.ui.SettingsScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

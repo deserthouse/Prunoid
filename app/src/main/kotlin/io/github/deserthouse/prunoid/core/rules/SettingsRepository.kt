@@ -1,4 +1,4 @@
-package io.github.deserthouse.sdkpruner.core.rules
+package io.github.deserthouse.prunoid.core.rules
 
 import android.content.Context
 import androidx.datastore.preferences.core.edit

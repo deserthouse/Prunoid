@@ -1,11 +1,11 @@
-package io.github.deserthouse.sdkpruner.core.scanner
+package io.github.deserthouse.prunoid.core.scanner
 
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
-import io.github.deserthouse.sdkpruner.core.rules.RuleRepository
-import io.github.deserthouse.sdkpruner.core.rules.Safety
-import io.github.deserthouse.sdkpruner.core.rules.safety
+import io.github.deserthouse.prunoid.core.rules.RuleRepository
+import io.github.deserthouse.prunoid.core.rules.Safety
+import io.github.deserthouse.prunoid.core.rules.safety
 
 data class ScannedApp(
     val packageName: String,
@@ -64,7 +64,7 @@ class Scanner(
         val flags = PackageManager.GET_ACTIVITIES or PackageManager.GET_SERVICES or
             PackageManager.GET_RECEIVERS or PackageManager.GET_PROVIDERS
         for (app in pm.getInstalledApplications(PackageManager.GET_META_DATA)) {
-            if (app.packageName == "io.github.deserthouse.sdkpruner") continue
+            if (app.packageName == "io.github.deserthouse.prunoid") continue
             val comps: List<Pair<String, String>> = try {
                 val pkg = pm.getPackageInfo(app.packageName, flags)
                 val pairs = mutableListOf<Pair<String, String>>()

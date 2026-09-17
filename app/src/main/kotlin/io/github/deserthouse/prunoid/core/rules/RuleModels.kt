@@ -1,4 +1,4 @@
-package io.github.deserthouse.sdkpruner.core.rules
+package io.github.deserthouse.prunoid.core.rules
 
 import kotlinx.serialization.Serializable
 

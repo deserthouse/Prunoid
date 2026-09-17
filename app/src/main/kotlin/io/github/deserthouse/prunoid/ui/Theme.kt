@@ -1,4 +1,4 @@
-package io.github.deserthouse.sdkpruner.ui
+package io.github.deserthouse.prunoid.ui
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -11,7 +11,7 @@ import androidx.compose.material3.expressiveLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import io.github.deserthouse.sdkpruner.core.rules.Safety
+import io.github.deserthouse.prunoid.core.rules.Safety
 
 // 安全四级语义色：固定色相、container/onContainer 成对、暗色降 tone 不换色相。
 // 不随动态取色漂移——它们承载含义；色不单独表意，徽标必须带图标+文字。

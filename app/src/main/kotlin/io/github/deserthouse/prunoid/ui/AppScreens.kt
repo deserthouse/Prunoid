@@ -1,4 +1,4 @@
-package io.github.deserthouse.sdkpruner.ui
+package io.github.deserthouse.prunoid.ui
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
@@ -40,11 +40,11 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import io.github.deserthouse.sdkpruner.core.engine.AppliedRulesStore
-import io.github.deserthouse.sdkpruner.core.engine.DisableEngine
-import io.github.deserthouse.sdkpruner.core.engine.Engine
-import io.github.deserthouse.sdkpruner.core.rules.Safety
-import io.github.deserthouse.sdkpruner.core.scanner.ScannedApp
+import io.github.deserthouse.prunoid.core.engine.AppliedRulesStore
+import io.github.deserthouse.prunoid.core.engine.DisableEngine
+import io.github.deserthouse.prunoid.core.engine.Engine
+import io.github.deserthouse.prunoid.core.rules.Safety
+import io.github.deserthouse.prunoid.core.scanner.ScannedApp
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -197,7 +197,7 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
             TopAppBar(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("SDK-Pruner", style = MaterialTheme.typography.titleLarge)
+                        Text("Prunoid", style = MaterialTheme.typography.titleLarge)
                         Spacer(Modifier.width(8.dp))
                         // 订阅状态点：实心=已订阅，描边=内置快照
                         Box(
@@ -459,7 +459,7 @@ fun SubscribeDialog(initial: String, onDismiss: () -> Unit, onConfirm: (String) 
                 Spacer(Modifier.height(4.dp))
                 TextButton(
                     onClick = {
-                        url = "https://raw.githubusercontent.com/deserthouse/sdk-pruner-rules/main/rules/snapshot.json"
+                        url = "https://raw.githubusercontent.com/deserthouse/prunoid-rules/main/rules/snapshot.json"
                     }
                 ) { Text("填入官方源") }
             }
@@ -524,7 +524,7 @@ fun RecoveryDialog(vm: AppViewModel, onMessage: (String) -> Unit, onDismiss: () 
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
-                        "adb shell am broadcast -a io.github.deserthouse.sdkpruner.action.CLEAR_IFW --ez confirm true",
+                        "adb shell am broadcast -a io.github.deserthouse.prunoid.action.CLEAR_IFW --ez confirm true",
                         fontFamily = FontFamily.Monospace,
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier

@@ -1,6 +1,6 @@
-package io.github.deserthouse.sdkpruner
+package io.github.deserthouse.prunoid
 
-import io.github.deserthouse.sdkpruner.core.engine.IfwXmlBuilder
+import io.github.deserthouse.prunoid.core.engine.IfwXmlBuilder
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
