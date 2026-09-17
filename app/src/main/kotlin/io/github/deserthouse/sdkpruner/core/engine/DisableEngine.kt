@@ -68,8 +68,15 @@ class DisableEngine(
             ).exec()
             val has = Shell.cmd("test -s $out").exec().isSuccess
             check(has) { "backup not created (tar rc=${r.code}, root ok?): ${r.err}" }
+            pruneBackups(dir)
             out
         }
+    }
+
+    /** 备份保留策略：按文件名时间戳降序，只留最近 10 份 */
+    private fun pruneBackups(dir: String) {
+        val files = Shell.cmd("ls -1 $dir/backup_*.tar.gz 2>/dev/null").exec().out.toList().sortedDescending()
+        files.drop(10).forEach { Shell.cmd("rm -f $it").exec() }
     }
 
     // ── 安全层：恢复备份（tar 解包回原路径 + 归属/上下文修复） ─────

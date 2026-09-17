@@ -232,6 +232,9 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit, modif
         Spacer(Modifier.height(12.dp))
         LazyColumn {
             items(app.matchedSdks, key = { it.ruleId }) { hit ->
+                val sideEffect = remember(hit.ruleId) {
+                    vm.ruleSideEffect(hit.ruleId)
+                }
                 ListItem(
                     headlineContent = { Text(hit.name) },
                     supportingContent = {
@@ -239,6 +242,9 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit, modif
                             Text("${hit.category} · ${safetyLabel(hit.safety)}")
                             if (hit.matchedComponents.isNotEmpty()) {
                                 Text("命中组件 ${hit.matchedComponents.size}：${hit.matchedComponents.take(2).joinToString()}")
+                            }
+                            sideEffect?.takeIf { it.isNotBlank() && !it.equals("unknown", true) && it != "未知" }?.let {
+                                Text("影响：$it", style = MaterialTheme.typography.bodySmall)
                             }
                         }
                     },
