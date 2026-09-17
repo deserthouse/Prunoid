@@ -25,6 +25,18 @@ Toolchain: Gradle 9.5.1 / AGP 9.2.1 / Kotlin 2.2.10 / JDK 21.
 
 The ruleset lives in the companion repo [sdk-pruner-rules](https://github.com/deserthouse/sdk-pruner-rules) — PRs welcome. Every rule carries `sources[]` attribution and a confidence level.
 
+## Safety & recovery
+
+Every apply is preceded by an automatic backup (IFW rules + pm state). Restore from the
+in-app "应急恢复" (Emergency recovery) dialog, or — if the UI is unavailable — clear all
+IFW rules over adb:
+
+```bash
+adb shell am broadcast -a io.github.deserthouse.sdkpruner.action.CLEAR_IFW --ez confirm true
+```
+
+The whitelist hard-blocks system packages; the tool only ever touches third-party apps.
+
 ## License
 
 Apache-2.0. Attributions for inherited datasets are listed in the rules repo's [NOTICE](https://github.com/deserthouse/sdk-pruner-rules/blob/main/NOTICE).

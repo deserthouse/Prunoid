@@ -35,15 +35,18 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    signingConfigs {
-        create("release") {
-            // keystore lives OUTSIDE the repo (never commit!).
-            // Override via ~/.gradle/gradle.properties: SDKPRUNER_STORE_FILE / _PASS / _KEY_PASS
-            storeFile = file(providers.gradleProperty("SDKPRUNER_STORE_FILE").getOrElse(
-                "C:/Users/deser/.android/sdkpruner-release.jks"))
-            storePassword = providers.gradleProperty("SDKPRUNER_STORE_PASS").getOrElse("sdkpruner2026")
+    // release 签名凭据只从 ~/.gradle/gradle.properties 读取（仓库不落任何默认口令）：
+    // SDKPRUNER_STORE_FILE / SDKPRUNER_STORE_PASS / SDKPRUNER_KEY_ALIAS / SDKPRUNER_KEY_PASS
+    // 凭据缺失时（如 CI）release 回退 debug 签名，保证可构建
+    val hasReleaseSigning = providers.gradleProperty("SDKPRUNER_STORE_FILE").isPresent &&
+        providers.gradleProperty("SDKPRUNER_STORE_PASS").isPresent
+
+    if (hasReleaseSigning) {
+        signingConfigs.create("release") {
+            storeFile = file(providers.gradleProperty("SDKPRUNER_STORE_FILE").get())
+            storePassword = providers.gradleProperty("SDKPRUNER_STORE_PASS").get()
             keyAlias = providers.gradleProperty("SDKPRUNER_KEY_ALIAS").getOrElse("sdkpruner")
-            keyPassword = providers.gradleProperty("SDKPRUNER_KEY_PASS").getOrElse("sdkpruner2026")
+            keyPassword = providers.gradleProperty("SDKPRUNER_KEY_PASS").get()
         }
     }
 
@@ -51,7 +54,8 @@ android {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
-            signingConfig = signingConfigs.getByName("release")
+            signingConfig = if (hasReleaseSigning) signingConfigs.getByName("release")
+                else signingConfigs.getByName("debug")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
