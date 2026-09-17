@@ -9,14 +9,16 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.util.concurrent.TimeUnit
 
-// M2-R7 规则订阅：拉取版本化规则源（格式 = 快照同 schema）+ 本地缓存
-// 合并策略：订阅条目按 id 覆盖内置快照，其余追加；url/fetchedAt 留痕便于溯源
+// 规则订阅：多源并存，每源独立缓存（files/rules/src_<id>.json）。
+// 合并策略见 RuleRepository.rebuild；旧版单源缓存（rules/subscription.json）
+// 首次访问时迁移为官方源缓存，订阅状态不丢。
 class RuleSubscription(context: Context) {
 
     @Serializable
     data class CacheEntry(val url: String, val fetchedAt: String, val snapshot: RuleSnapshot)
 
-    private val cacheFile = java.io.File(context.filesDir, "rules/subscription.json")
+    private val dir = java.io.File(context.filesDir, "rules")
+    private val legacyFile = java.io.File(dir, "subscription.json")
     private val http = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
@@ -25,7 +27,17 @@ class RuleSubscription(context: Context) {
 
     data class Result(val ok: Boolean, val message: String, val entries: Int = 0)
 
-    suspend fun fetch(url: String): Result = withContext(Dispatchers.IO) {
+    private fun cacheFile(id: String) = java.io.File(dir, "src_$id.json")
+
+    init {
+        // 旧单源缓存 → 官方源缓存（一次性迁移；官方缓存已存在则保留新数据）
+        val official = cacheFile(SettingsRepository.OFFICIAL_SOURCE.id)
+        if (legacyFile.exists() && !official.exists()) {
+            runCatching { legacyFile.renameTo(official) }
+        }
+    }
+
+    suspend fun fetchTo(id: String, url: String): Result = withContext(Dispatchers.IO) {
         runCatching {
             val body = http.newCall(Request.Builder().url(url).build()).execute().use { resp ->
                 check(resp.isSuccessful) { "HTTP ${resp.code}" }
@@ -33,22 +45,23 @@ class RuleSubscription(context: Context) {
             }
             val snapshot = json.decodeFromString<RuleSnapshot>(body)
             require(snapshot.sdks.isNotEmpty()) { "规则源为空" }
-            cacheFile.parentFile?.mkdirs()
+            dir.mkdirs()
             val entry = CacheEntry(url, java.time.Instant.now().toString(), snapshot)
-            cacheFile.writeText(json.encodeToString(CacheEntry.serializer(), entry))
+            cacheFile(id).writeText(json.encodeToString(CacheEntry.serializer(), entry))
             Result(true, "订阅成功：${snapshot.sdks.size} 条规则（版本 ${snapshot.generatedAt.ifEmpty { "未知" }}）", snapshot.sdks.size)
         }.getOrElse { Result(false, "订阅失败：${it.message}") }
     }
 
-    fun cached(): CacheEntry? = runCatching {
-        val text = cacheFile.takeIf { it.exists() }?.readText() ?: return null
+    fun cached(id: String): CacheEntry? = runCatching {
+        val text = cacheFile(id).takeIf { it.exists() }?.readText() ?: return null
         json.decodeFromString<CacheEntry>(text)
     }.getOrNull()
 
-    fun clear() {
-        cacheFile.delete()
+    fun clear(id: String) {
+        cacheFile(id).delete()
     }
 
-    /** 读取订阅规则（失败/缺失返回空），供 RuleRepository 合并 */
-    fun loadSubscribed(): List<SdkRule> = cached()?.snapshot?.sdks ?: emptyList()
+    /** 汇总全部启用源的订阅规则（并集，交给 RuleRepository 合并） */
+    fun loadSubscribed(sources: List<SettingsRepository.SubSource>): List<SdkRule> =
+        sources.flatMap { cached(it.id)?.snapshot?.sdks ?: emptyList() }
 }

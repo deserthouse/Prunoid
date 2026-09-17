@@ -24,12 +24,27 @@ class RuleRepository(context: Context) {
         private set
 
     init {
-        rebuild()
+        rebuild(listOf(SettingsRepository.OFFICIAL_SOURCE))
     }
 
-    /** 重建合并视图与索引（订阅变更后调用） */
-    fun rebuild() {
-        val rules = RuleMerger.merge(snapshot.sdks, subscription.loadSubscribed())
+    /**
+     * 重建合并视图与索引（多源）。
+     * 合并口径：内置快照为底座；各源快照按注册表顺序依次并入——同 id 规则
+     * 置信度高者胜（high>medium>low，平手保留先入），新 id 追加（并集语义）。
+     */
+    fun rebuild(sources: List<SettingsRepository.SubSource>) {
+        val rank = mapOf("high" to 3, "medium" to 2, "low" to 1)
+        val merged = snapshot.sdks.associateByTo(LinkedHashMap()) { it.id }
+        for (src in sources) {
+            for (r in subscription.cached(src.id)?.snapshot?.sdks ?: emptyList()) {
+                val prev = merged[r.id]
+                when {
+                    prev == null -> merged[r.id] = r
+                    (rank[r.confidence] ?: 0) > (rank[prev.confidence] ?: 0) -> merged[r.id] = r
+                }
+            }
+        }
+        val rules = merged.values.toList()
         effectiveRules = rules
         rulesById = rules.associateBy { it.id }
         val m = HashMap<String, MutableList<String>>()
@@ -49,22 +64,21 @@ class RuleRepository(context: Context) {
         return hits.mapNotNull { rulesById[it] }
     }
 
-    // ── 订阅管理（委托） ──────────────────────────────────────────
-    suspend fun subscribe(url: String): RuleSubscription.Result =
-        subscription.fetch(url).also { if (it.ok) rebuild() }
+    // ── 订阅管理（多源） ─────────────────────────────────────────
+    /** 拉取/刷新指定源并重建合并视图（lastFetched 由调用方写回注册表） */
+    suspend fun refreshSource(id: String, url: String): RuleSubscription.Result =
+        subscription.fetchTo(id, url).also { if (it.ok) rebuild(subscribedSources) }
 
-    fun subscriptionInfo(): Pair<String?, String?> =
-        subscription.cached()?.let { it.url to it.fetchedAt } ?: (null to null)
+    fun clearSourceCache(id: String) = subscription.clear(id)
 
-    /** 订阅元数据（设置页用）：url / 拉取时间 / 规则条数；未订阅返回 null */
-    data class SubMeta(val url: String, val fetchedAt: String, val sdkCount: Int)
+    /** 当前注册表（由 VM 从 Settings 注入，供 rebuild 与拉取使用） */
+    @Volatile
+    var subscribedSources: List<SettingsRepository.SubSource> = listOf(SettingsRepository.OFFICIAL_SOURCE)
+        private set
 
-    fun subscriptionMeta(): SubMeta? =
-        subscription.cached()?.let { SubMeta(it.url, it.fetchedAt, it.snapshot.sdks.size) }
-
-    fun unsubscribe() {
-        subscription.clear()
-        rebuild()
+    fun setSources(sources: List<SettingsRepository.SubSource>) {
+        subscribedSources = sources
+        rebuild(sources)
     }
 
     companion object {

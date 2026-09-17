@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.deserthouse.prunoid.core.engine.Engine
 import io.github.deserthouse.prunoid.BuildConfig
@@ -35,8 +36,7 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
     val st by vm.state.collectAsState()
     val snackbar = rememberSnackbar()
     var msg by remember { mutableStateOf<String?>(null) }
-    var showSubscribe by remember { mutableStateOf(false) }
-    val meta = remember(st) { vm.subscriptionMeta() }
+    var showAddSource by remember { mutableStateOf(false) }
 
     SnackbarEffect(snackbar, msg)
 
@@ -91,6 +91,37 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
                     )
                 }
             }
+            // ── 自动重应用 ───────────────────────────────────────
+            Card(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(16.dp)) {
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(Modifier.weight(1f)) {
+                            Text("自动重应用", style = MaterialTheme.typography.titleSmall)
+                            Text(
+                                "应用安装/更新后自动重新禁用其 SDK 组件（后台常驻服务 + 常驻通知）",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Switch(
+                            checked = st.autoReapply,
+                            onCheckedChange = { vm.setAutoReapply(it) }
+                        )
+                    }
+                    if (!st.autoReapply) {
+                        Spacer(Modifier.height(6.dp))
+                        Text(
+                            "已关闭：后台服务已停止。Android 15+ 系统会跳过对后台应用的安装/更新广播，" +
+                                "因此关闭后新装或更新的应用不会自动重应用规则，需要你手动重扫并重新应用。",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+            }
             // ── 默认引擎 ─────────────────────────────────────────
             Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp)) {
@@ -135,46 +166,66 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
                     )
                 }
             }
-            // ── 规则订阅 ─────────────────────────────────────────
+            // ── 规则订阅（多源并集） ─────────────────────────────
             Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp)) {
                     Text("规则订阅", style = MaterialTheme.typography.titleSmall)
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "多源并发生效，规则取并集；同 id 冲突时置信度高者胜",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                     Spacer(Modifier.height(8.dp))
-                    if (meta != null) {
-                        Text(
-                            meta.url,
-                            fontFamily = FontFamily.Monospace,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(Modifier.height(4.dp))
-                        Text(
-                            "${meta.sdkCount} 条规则 · 拉取于 ${fmtFetched(meta.fetchedAt)}",
-                            style = MaterialTheme.typography.labelMedium
-                        )
-                        Spacer(Modifier.height(8.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Button(
-                                onClick = { vm.subscribe(meta.url) { msg = it } },
+                    st.sources.forEach { src ->
+                        Row(
+                            Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(Modifier.weight(1f)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(src.name, style = MaterialTheme.typography.labelLarge)
+                                    if (src.builtin) {
+                                        Spacer(Modifier.width(4.dp))
+                                        Text(
+                                            "内置",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                                Text(
+                                    src.url,
+                                    fontFamily = FontFamily.Monospace,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Text(
+                                    if (src.lastFetched.isBlank()) "未拉取"
+                                    else "拉取于 " + fmtFetched(src.lastFetched),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            TextButton(
+                                onClick = { vm.refreshSource(src) { msg = it } },
                                 enabled = !st.busy
-                            ) { Text("检查更新") }
-                            OutlinedButton(
-                                onClick = { showSubscribe = true },
-                                enabled = !st.busy
-                            ) { Text("更换源") }
-                            OutlinedButton(
-                                onClick = { vm.unsubscribe { msg = it } },
-                                enabled = !st.busy
-                            ) { Text("退订") }
+                            ) { Text("更新") }
+                            if (!src.builtin) {
+                                TextButton(
+                                    onClick = { vm.removeSource(src) { msg = it } },
+                                    enabled = !st.busy
+                                ) { Text("移除") }
+                            }
                         }
-                    } else {
-                        Text(
-                            "未订阅，使用内置快照（1929 条）",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                        Spacer(Modifier.height(8.dp))
-                        Button(onClick = { showSubscribe = true }, enabled = !st.busy) { Text("添加订阅源") }
                     }
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedButton(
+                        onClick = { showAddSource = true },
+                        enabled = !st.busy
+                    ) { Text("添加规则源") }
                 }
             }
             // ── 应急通道 ─────────────────────────────────────────
@@ -229,14 +280,49 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
         }
     }
 
-    if (showSubscribe) {
-        SubscribeDialog(
-            initial = meta?.url.orEmpty(),
-            onDismiss = { showSubscribe = false },
-            onConfirm = { url ->
-                showSubscribe = false
-                vm.subscribe(url) { msg = it }
+    if (showAddSource) {
+        AddSourceDialog(
+            onDismiss = { showAddSource = false },
+            onConfirm = { name, url ->
+                showAddSource = false
+                vm.addSource(name, url) { msg = it }
             }
         )
     }
+}
+
+
+@Composable
+fun AddSourceDialog(onDismiss: () -> Unit, onConfirm: (String, String) -> Unit) {
+    var name by remember { mutableStateOf("") }
+    var url by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("添加规则源") },
+        text = {
+            Column {
+                Text("格式与内置快照一致（schemaVersion + sdks），多源并集生效")
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    singleLine = true,
+                    label = { Text("名称（可选）") }
+                )
+                OutlinedTextField(
+                    value = url,
+                    onValueChange = { url = it },
+                    singleLine = true,
+                    label = { Text("https://…") }
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { if (url.isNotBlank()) onConfirm(name.trim(), url.trim()) },
+                enabled = url.startsWith("http")
+            ) { Text("添加") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } }
+    )
 }

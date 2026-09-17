@@ -186,7 +186,7 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
     var subMsg by remember { mutableStateOf<String?>(null) }
     var query by remember { mutableStateOf("") }
     val pm = LocalContext.current.packageManager
-    val (subUrl, _) = remember(st) { vm.subscriptionInfo() }
+    val subscribed = st.sources.isNotEmpty()
 
     SnackbarEffect(snackbar, st.message)
     SnackbarEffect(snackbar, subMsg)
@@ -204,12 +204,12 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
                             Modifier
                                 .size(10.dp)
                                 .background(
-                                    if (subUrl != null) MaterialTheme.colorScheme.primary
+                                    if (subscribed) MaterialTheme.colorScheme.primary
                                     else MaterialTheme.colorScheme.surfaceVariant,
                                     RoundedCornerShape(50)
                                 )
                                 .semantics {
-                                    contentDescription = if (subUrl != null) "已订阅规则源" else "使用内置快照"
+                                    contentDescription = if (subscribed) "已订阅规则源" else "使用内置快照"
                                 }
                         )
                     }
@@ -423,11 +423,11 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
 
     if (showSubscribe) {
         SubscribeDialog(
-            initial = subUrl.orEmpty(),
+            initial = "",
             onDismiss = { showSubscribe = false },
             onConfirm = { url ->
                 showSubscribe = false
-                vm.subscribe(url) { subMsg = it }
+                vm.addSource("", url) { subMsg = it }
             }
         )
     }

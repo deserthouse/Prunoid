@@ -8,13 +8,16 @@ import io.github.deserthouse.prunoid.core.engine.DisableEngine
 import io.github.deserthouse.prunoid.core.engine.Engine
 import io.github.deserthouse.prunoid.core.rules.RuleRepository
 import io.github.deserthouse.prunoid.core.rules.Safety
+import io.github.deserthouse.prunoid.core.engine.RuleGuardService
 import io.github.deserthouse.prunoid.core.rules.SettingsRepository
+import android.content.Intent
 import io.github.deserthouse.prunoid.core.scanner.ScannedApp
 import io.github.deserthouse.prunoid.core.scanner.Scanner
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -27,6 +30,8 @@ data class AppUiState(
     val message: String? = null,
     val engine: Engine = Engine.IFW,   // 双引擎切换，默认 IFW（app 无感知、无法自恢复）
     val busy: Boolean = false,         // 任一 root/网络操作进行中（按钮禁用 + 进度）
+    val autoReapply: Boolean = true,   // 自动重应用总开关（控制 RuleGuardService）
+    val sources: List<SettingsRepository.SubSource> = listOf(SettingsRepository.OFFICIAL_SOURCE),
     val applied: Map<String, AppliedRulesStore.AppliedEntry> = emptyMap(), // 包名 -> 已应用记录
     val backupKeep: Int = 10           // 备份保留份数（设置页可调）
 )
@@ -50,14 +55,23 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             }
         }
         viewModelScope.launch {
+            var lastSourceKey: String? = null
             settings.settings.collect { s ->
+                // 源注册表变化 → 重建合并视图并重扫（规则集可能变化）
+                val srcKey = s.sources.joinToString("|") { it.id + "@" + it.url }
+                val sourcesChanged = lastSourceKey != null && srcKey != lastSourceKey
+                lastSourceKey = srcKey
+                if (sourcesChanged) rules.setSources(s.sources)
                 _state.update { st ->
                     st.copy(
                         backupKeep = s.backupKeep,
+                        autoReapply = s.autoReapply,
+                        sources = s.sources,
                         // 用户本次会话未手动切引擎时，跟随设置的默认引擎
                         engine = if (!userTouchedEngine) Engine.entries.first { it.name == s.defaultEngine } else st.engine
                     )
                 }
+                if (sourcesChanged) rescan()
             }
         }
         rescan()
@@ -105,28 +119,58 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch { settings.setBackupKeep(v) }
     }
 
-    fun subscriptionMeta() = rules.subscriptionMeta()
+    /** 自动重应用总开关：关=停前台服务撤通知（A15+ 将收不到包事件），开=重启服务 */
+    fun setAutoReapply(on: Boolean) {
+        viewModelScope.launch {
+            settings.setAutoReapply(on)
+            val app = getApplication<Application>()
+            if (on) {
+                app.startForegroundService(Intent(app, RuleGuardService::class.java))
+            } else {
+                app.stopService(Intent(app, RuleGuardService::class.java))
+            }
+        }
+    }
 
-    /** 订阅规则源（OkHttp 拉取 + 缓存 + 合并重建）；成功后自动重扫 */
-    fun subscribe(url: String, onDone: (String) -> Unit) {
+    // ── 多源订阅管理 ─────────────────────────────────────────────
+    fun refreshSource(source: SettingsRepository.SubSource, onDone: (String) -> Unit) {
         viewModelScope.launch {
             _state.update { it.copy(busy = true) }
-            val result = withContext(Dispatchers.IO) { rules.subscribe(url) }
+            val result = withContext(Dispatchers.IO) { rules.refreshSource(source.id, source.url) }
+            _state.update { it.copy(busy = false) }
+            if (result.ok) {
+                settings.updateSourceFetched(source.id, java.time.Instant.now().toString())
+                rescan()
+            }
+            onDone(result.message)
+        }
+    }
+
+    fun addSource(name: String, url: String, onDone: (String) -> Unit) {
+        viewModelScope.launch {
+            _state.update { it.copy(busy = true) }
+            val id = "src_" + url.hashCode().let { if (it < 0) -it else it }
+            val result = withContext(Dispatchers.IO) { rules.refreshSource(id, url) }
+            if (result.ok) {
+                val cur = _state.value.sources
+                settings.setSources(cur + SettingsRepository.SubSource(
+                    id = id, name = name.ifBlank { url.substringAfter("//").substringBefore('/') },
+                    url = url, lastFetched = java.time.Instant.now().toString()
+                ))
+            }
             _state.update { it.copy(busy = false) }
             onDone(result.message)
-            if (result.ok) rescan()
         }
     }
 
-    fun unsubscribe(onDone: (String) -> Unit) {
+    fun removeSource(source: SettingsRepository.SubSource, onDone: (String) -> Unit) {
         viewModelScope.launch {
-            withContext(Dispatchers.IO) { rules.unsubscribe() }
-            onDone("已退订，恢复内置快照")
-            rescan()
+            if (source.builtin) { onDone("官方源不可删除"); return@launch }
+            withContext(Dispatchers.IO) { rules.clearSourceCache(source.id) }
+            settings.setSources(_state.value.sources.filterNot { it.id == source.id })
+            onDone("已移除源「${source.name}」")
         }
     }
-
-    fun subscriptionInfo(): Pair<String?, String?> = rules.subscriptionInfo()
 
     fun ruleSideEffect(ruleId: String): String? = rules.rule(ruleId)?.sideEffect
 

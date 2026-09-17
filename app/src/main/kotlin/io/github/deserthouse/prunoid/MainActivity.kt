@@ -12,6 +12,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.flow.first
 import io.github.deserthouse.prunoid.core.engine.RuleGuardService
 import io.github.deserthouse.prunoid.core.scanner.ScannedApp
 import io.github.deserthouse.prunoid.ui.AppDetailScreen
@@ -44,7 +45,12 @@ class MainActivity : ComponentActivity() {
         ) {
             requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 1)
         }
-        startForegroundService(Intent(this, RuleGuardService::class.java))
+        // 自动重应用开关（设置）：关=不启动规则守护（A15+ 收不到包事件，需手动重扫）
+        val autoOn = kotlinx.coroutines.runBlocking {
+            io.github.deserthouse.prunoid.core.rules.SettingsRepository(this@MainActivity)
+                .settings.first().autoReapply
+        }
+        if (autoOn) startForegroundService(Intent(this, RuleGuardService::class.java))
     }
 }
 
