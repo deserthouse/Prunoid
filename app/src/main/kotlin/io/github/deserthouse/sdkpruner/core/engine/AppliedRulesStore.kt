@@ -12,7 +12,8 @@ class AppliedRulesStore(context: Context) {
     data class AppliedEntry(
         val engine: String,               // IFW | PM
         val components: List<String>,     // 组件全类名
-        val types: Map<String, String>    // 组件全类名 -> 类型（IFW 分组用）
+        val types: Map<String, String>,   // 组件全类名 -> 类型（IFW 分组用）
+        val at: Long = 0                  // 应用时间（epoch ms；旧条目为 0 则不展示时间）
     )
 
     private val file = java.io.File(context.filesDir, "applied_rules.json")
@@ -33,7 +34,7 @@ class AppliedRulesStore(context: Context) {
     fun record(pkg: String, engine: String, components: List<String>, types: Map<String, String>) {
         if (components.isEmpty()) return
         val store = load()
-        store.entries[pkg] = AppliedEntry(engine, components, types)
+        store.entries[pkg] = AppliedEntry(engine, components, types, System.currentTimeMillis())
         save(store)
     }
 

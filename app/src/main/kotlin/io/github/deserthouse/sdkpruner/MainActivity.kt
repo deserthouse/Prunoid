@@ -18,6 +18,7 @@ import io.github.deserthouse.sdkpruner.ui.AppDetailScreen
 import io.github.deserthouse.sdkpruner.ui.AppListScreen
 import io.github.deserthouse.sdkpruner.ui.AppViewModel
 import io.github.deserthouse.sdkpruner.ui.SdkPrunerTheme
+import io.github.deserthouse.sdkpruner.ui.SettingsScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,17 +48,23 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-// 两屏各自持有 Scaffold（大标题/底部操作区），外层只做选中状态切换
+// 三屏切换（列表/详情/设置），各自持有 Scaffold；外层只做选中状态管理
 @Composable
 fun SdkPrunerApp() {
     val vm: AppViewModel = viewModel()
     var selected by remember { mutableStateOf<ScannedApp?>(null) }
-    // 详情屏系统返回 = 回列表，不退出 app
-    BackHandler(enabled = selected != null) { selected = null }
-    val s = selected
-    if (s == null) {
-        AppListScreen(vm, onOpen = { selected = it })
-    } else {
-        AppDetailScreen(s, vm, onBack = { selected = null })
+    var inSettings by remember { mutableStateOf(false) }
+    // 详情/设置屏系统返回 = 回上级，不退出 app
+    BackHandler(enabled = selected != null || inSettings) {
+        if (inSettings) inSettings = false else selected = null
+    }
+    when {
+        inSettings -> SettingsScreen(vm, onBack = { inSettings = false })
+        selected == null -> AppListScreen(
+            vm,
+            onOpen = { selected = it },
+            onOpenSettings = { inSettings = true }
+        )
+        else -> AppDetailScreen(selected!!, vm, onBack = { selected = null })
     }
 }

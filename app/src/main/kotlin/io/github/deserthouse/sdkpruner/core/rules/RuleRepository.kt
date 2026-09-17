@@ -56,6 +56,12 @@ class RuleRepository(context: Context) {
     fun subscriptionInfo(): Pair<String?, String?> =
         subscription.cached()?.let { it.url to it.fetchedAt } ?: (null to null)
 
+    /** 订阅元数据（设置页用）：url / 拉取时间 / 规则条数；未订阅返回 null */
+    data class SubMeta(val url: String, val fetchedAt: String, val sdkCount: Int)
+
+    fun subscriptionMeta(): SubMeta? =
+        subscription.cached()?.let { SubMeta(it.url, it.fetchedAt, it.snapshot.sdks.size) }
+
     fun unsubscribe() {
         subscription.clear()
         rebuild()

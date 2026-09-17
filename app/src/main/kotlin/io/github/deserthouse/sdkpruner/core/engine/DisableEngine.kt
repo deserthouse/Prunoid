@@ -56,7 +56,7 @@ class DisableEngine(
     }
 
     // ── 安全层：操作前全量备份（IFW 规则目录 + pm 组件限制状态，单个 tar 归档） ──
-    suspend fun backup(): Result<String> = withContext(Dispatchers.IO) {
+    suspend fun backup(keep: Int = 10): Result<String> = withContext(Dispatchers.IO) {
         runCatching {
             val dir = "${context.filesDir.absolutePath}/backups"
             Shell.cmd("mkdir -p $dir").exec()
@@ -68,15 +68,15 @@ class DisableEngine(
             ).exec()
             val has = Shell.cmd("test -s $out").exec().isSuccess
             check(has) { "backup not created (tar rc=${r.code}, root ok?): ${r.err}" }
-            pruneBackups(dir)
+            pruneBackups(dir, keep)
             out
         }
     }
 
-    /** 备份保留策略：按文件名时间戳降序，只留最近 10 份 */
-    private fun pruneBackups(dir: String) {
+    /** 备份保留策略：按文件名时间戳降序，只留最近 keep 份（用户可在设置中调） */
+    private fun pruneBackups(dir: String, keep: Int) {
         val files = Shell.cmd("ls -1 $dir/backup_*.tar.gz 2>/dev/null").exec().out.toList().sortedDescending()
-        files.drop(10).forEach { Shell.cmd("rm -f $it").exec() }
+        files.drop(keep.coerceIn(3, 30)).forEach { Shell.cmd("rm -f $it").exec() }
     }
 
     // ── 安全层：恢复备份（tar 解包回原路径 + 归属/上下文修复） ─────
