@@ -1,7 +1,6 @@
 # SDK-Pruner 路线图与开发计划
 
-> 制定：2026-09-17（数据侧收口后）｜ 依据：四轮调研 + 数据源合规原则（已定稿）+ 2026-09-16~17 立项拍板
-> 原则：AI 全权负责代码，用户提需求验收；每阶段以可验收交付物闭环；先安全后功能
+> SDK-Pruner development roadmap. Milestones land when their acceptance criteria pass on emulator (rooted) before anything else.
 
 ## 总路线：三里程碑 + 一个持续动作
 
@@ -74,9 +73,10 @@ M1 最小可用 ──→ M2 规则生态 ──→ M3 自动化与共建
 | 版权炮 | 中性命名/口径/分发 | 贯穿 |
 | 协议传染 | ODbL 隔离、GPL 零接触、source 溯源 | R2 起每阶段 |
 
-## 当前状态
+## Status
 
-- ✅ 立项拍板（①②③④全闭环）
-- ✅ 数据源合规原则定稿（待用户批准本文即生效）
-- ✅ 全部上游数据到手/拆解完毕（Blocker 溯源修正后，冷启动正源 = blocker-general-rules）
-- ⏭️ 下一步 = M1-R1 脚手架（等开工令）
+- ✅ M1 complete: scan, dual engine (IFW + pm), safety layer, M3E UI — verified end-to-end on rooted emulator (block A/B: result 102 vs 0)
+- ✅ M2 complete: rule subscription (official source live), engine switching
+- ✅ M3 core: auto reapply after app updates (incremental, verified)
+- ✅ Rules repo live: [sdk-pruner-rules](https://github.com/deserthouse/sdk-pruner-rules)
+- ⏭️ Next: hardening from real-world feedback
