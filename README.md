@@ -28,3 +28,7 @@ The ruleset lives in the companion repo [sdk-pruner-rules](https://github.com/de
 ## License
 
 Apache-2.0. Attributions for inherited datasets are listed in the rules repo's [NOTICE](https://github.com/deserthouse/sdk-pruner-rules/blob/main/NOTICE).
+
+## AI usage & Disclaimer
+
+Developed with heavy AI assistance under human direction and review — see [DISCLAIMER.md](DISCLAIMER.md) for the full AI usage statement and disclaimer (provided as-is; component blocking may affect app functionality; use at your own risk).
