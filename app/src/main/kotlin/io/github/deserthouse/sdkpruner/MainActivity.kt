@@ -1,26 +1,17 @@
 package io.github.deserthouse.sdkpruner
 
-import android.os.Bundle
 import android.content.Intent
+import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.ui.Modifier
 import io.github.deserthouse.sdkpruner.core.engine.RuleGuardService
 import io.github.deserthouse.sdkpruner.core.scanner.ScannedApp
 import io.github.deserthouse.sdkpruner.ui.AppDetailScreen
@@ -56,29 +47,17 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+// 两屏各自持有 Scaffold（大标题/底部操作区），外层只做选中状态切换
 @Composable
 fun SdkPrunerApp() {
     val vm: AppViewModel = viewModel()
     var selected by remember { mutableStateOf<ScannedApp?>(null) }
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(if (selected == null) "SDK-Pruner" else selected!!.label) },
-                navigationIcon = {
-                    if (selected != null) IconButton(onClick = { selected = null }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
-                    }
-                }
-            )
-        }
-    ) { padding ->
-        val s = selected
-        val contentModifier = Modifier.padding(padding)
-        if (s == null) {
-            AppListScreen(vm, onOpen = { selected = it }, modifier = contentModifier)
-        } else {
-            AppDetailScreen(s, vm, onBack = { selected = null }, modifier = contentModifier)
-        }
+    // 详情屏系统返回 = 回列表，不退出 app
+    BackHandler(enabled = selected != null) { selected = null }
+    val s = selected
+    if (s == null) {
+        AppListScreen(vm, onOpen = { selected = it })
+    } else {
+        AppDetailScreen(s, vm, onBack = { selected = null })
     }
 }
