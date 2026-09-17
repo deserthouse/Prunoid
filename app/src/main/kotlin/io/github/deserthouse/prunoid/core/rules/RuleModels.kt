@@ -41,7 +41,9 @@ data class SdkRule(
     // 富描述（来源：LibChecker-Rules v4 组件规则，Apache-2.0，zh-Hans 优先）
     val description: String = "",
     val devTeam: String = "",
-    val sourceLink: String = ""
+    val sourceLink: String = "",
+    // 贡献者自有许可的品牌图标 URL（懒加载；空则回退 monogram/内置矢量）
+    val iconUrl: String = ""
 )
 
 @Serializable

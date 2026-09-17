@@ -105,7 +105,7 @@ private fun loadLibIcons(ctx: android.content.Context): Map<String, String> {
 }
 
 @Composable
-fun SdkMonogram(ruleId: String, name: String, modifier: Modifier = Modifier) {
+fun SdkMonogram(ruleId: String, name: String, modifier: Modifier = Modifier, iconUrl: String? = null) {
     val dark = isSystemInDarkTheme()
     val (bg, fg) = MONOGRAM_COLORS[ruleId.hashCode().let { if (it < 0) -it else it } % MONOGRAM_COLORS.size]
     val bgC = if (dark) fg.copy(alpha = 0.25f) else bg
@@ -126,14 +126,19 @@ fun SdkMonogram(ruleId: String, name: String, modifier: Modifier = Modifier) {
             .background(bgC, RoundedCornerShape(50)),
         contentAlignment = Alignment.Center
     ) {
-        if (iconRes != null) {
-            Icon(
+        when {
+            // 贡献者提供的品牌图标（iconUrl，懒加载）优先
+            !iconUrl.isNullOrBlank() -> coil.compose.AsyncImage(
+                model = iconUrl,
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize()
+            )
+            iconRes != null -> Icon(
                 painterResource(iconRes),
                 contentDescription = null,
                 modifier = Modifier.size(22.dp)
             )
-        } else {
-            Text(
+            else -> Text(
                 name.firstOrNull()?.uppercase() ?: "?",
                 style = MaterialTheme.typography.labelMedium,
                 color = fgC
@@ -846,7 +851,7 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                 selected = if (on) selected + hit.ruleId else selected - hit.ruleId
                             }
                         )
-                        SdkMonogram(hit.ruleId, hit.name, Modifier.padding(end = 8.dp))
+                        SdkMonogram(hit.ruleId, hit.name, Modifier.padding(end = 8.dp), vm.ruleInfo(hit.ruleId)?.iconUrl)
                         Column(Modifier.weight(1f)) {
                             Text(hit.name, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             Text(
@@ -1063,7 +1068,7 @@ fun SdkArchiveSheet(
                 .padding(bottom = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            SdkMonogram(hit.ruleId, hit.name, Modifier.size(56.dp))
+            SdkMonogram(hit.ruleId, hit.name, Modifier.size(56.dp), vm.ruleInfo(hit.ruleId)?.iconUrl)
             Spacer(Modifier.height(8.dp))
             Text(hit.name, style = MaterialTheme.typography.titleLarge)
             Text(
