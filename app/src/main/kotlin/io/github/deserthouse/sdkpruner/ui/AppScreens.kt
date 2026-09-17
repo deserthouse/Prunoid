@@ -869,11 +869,9 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                                 ) {
-                                    if (info.company.isNotBlank()) {
-                                        Text(
-                                            "开发者：${info.company}",
-                                            style = MaterialTheme.typography.labelMedium
-                                        )
+                                    val dev = info.devTeam.ifBlank { info.company }
+                                    if (dev.isNotBlank()) {
+                                        Text("开发者：$dev", style = MaterialTheme.typography.labelMedium)
                                     }
                                     Text(
                                         "置信度：${confidenceLabel(info.confidence)}",
@@ -887,6 +885,25 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                     }
+                                }
+                                if (info.description.isNotBlank()) {
+                                    Spacer(Modifier.height(6.dp))
+                                    Text(
+                                        info.description,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                if (info.sourceLink.isNotBlank()) {
+                                    Spacer(Modifier.height(4.dp))
+                                    Text(
+                                        info.sourceLink,
+                                        fontFamily = FontFamily.Monospace,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.tertiary,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
                                 }
                                 Spacer(Modifier.height(6.dp))
                             }

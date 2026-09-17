@@ -37,7 +37,11 @@ data class SdkRule(
     val sideEffect: String = "",
     val sources: List<String> = emptyList(),
     val confidence: String = "low",
-    val contributors: List<String> = emptyList()
+    val contributors: List<String> = emptyList(),
+    // 富描述（来源：LibChecker-Rules v4 组件规则，Apache-2.0，zh-Hans 优先）
+    val description: String = "",
+    val devTeam: String = "",
+    val sourceLink: String = ""
 )
 
 @Serializable
