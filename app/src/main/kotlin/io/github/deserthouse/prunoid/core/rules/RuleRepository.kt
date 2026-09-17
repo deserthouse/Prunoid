@@ -56,6 +56,9 @@ class RuleRepository(context: Context) {
 
     fun rule(id: String): SdkRule? = rulesById[id]
 
+    /** 全量规则（SDK 库浏览页用） */
+    fun allRules(): List<SdkRule> = effectiveRules
+
     fun match(packageName: String): List<SdkRule> {
         val hits = LinkedHashSet<String>()
         for ((prefix, ids) in prefixIndex) {

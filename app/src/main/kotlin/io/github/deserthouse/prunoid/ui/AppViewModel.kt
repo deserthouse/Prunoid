@@ -174,6 +174,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     fun ruleSideEffect(ruleId: String): String? = rules.rule(ruleId)?.sideEffect
 
+    fun allRules() = rules.allRules()
+
     fun ruleInfo(ruleId: String) = rules.rule(ruleId)
 
     // ── 备份与应急恢复 ────────────────────────────────────────────

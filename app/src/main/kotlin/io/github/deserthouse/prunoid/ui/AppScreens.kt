@@ -20,6 +20,7 @@ import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.CloudDownload
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.ExpandMore
+import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.outlined.HealthAndSafety
 import androidx.compose.material.icons.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.Info
@@ -179,7 +180,7 @@ private fun fmtTime(epochMs: Long): String = if (epochMs <= 0) "" else
 // ─────────────────────────── 列表屏 ───────────────────────────
 
 @Composable
-fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings: () -> Unit) {
+fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings: () -> Unit, onOpenLibrary: () -> Unit) {
     val st by vm.state.collectAsState()
     val dark = isSystemInDarkTheme()
     val snackbar = rememberSnackbar()
@@ -225,6 +226,9 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
                     }
                     IconButton(onClick = { showRecovery = true }) {
                         Icon(Icons.Outlined.HealthAndSafety, contentDescription = "备份与应急恢复")
+                    }
+                    IconButton(onClick = onOpenLibrary) {
+                        Icon(Icons.Outlined.Apps, contentDescription = "SDK 库")
                     }
                     IconButton(onClick = onOpenSettings) {
                         Icon(Icons.Outlined.Settings, contentDescription = "设置")

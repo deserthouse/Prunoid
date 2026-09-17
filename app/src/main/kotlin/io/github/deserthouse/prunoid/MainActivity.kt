@@ -18,6 +18,7 @@ import io.github.deserthouse.prunoid.core.scanner.ScannedApp
 import io.github.deserthouse.prunoid.ui.AppDetailScreen
 import io.github.deserthouse.prunoid.ui.AppListScreen
 import io.github.deserthouse.prunoid.ui.AppViewModel
+import io.github.deserthouse.prunoid.ui.SdkLibraryScreen
 import io.github.deserthouse.prunoid.ui.SdkPrunerTheme
 import io.github.deserthouse.prunoid.ui.SettingsScreen
 
@@ -60,16 +61,23 @@ fun SdkPrunerApp() {
     val vm: AppViewModel = viewModel()
     var selected by remember { mutableStateOf<ScannedApp?>(null) }
     var inSettings by remember { mutableStateOf(false) }
-    // 详情/设置屏系统返回 = 回上级，不退出 app
-    BackHandler(enabled = selected != null || inSettings) {
-        if (inSettings) inSettings = false else selected = null
+    var inLibrary by remember { mutableStateOf(false) }
+    // 详情/设置/SDK 库屏系统返回 = 回上级，不退出 app
+    BackHandler(enabled = selected != null || inSettings || inLibrary) {
+        when {
+            inSettings -> inSettings = false
+            inLibrary -> inLibrary = false
+            else -> selected = null
+        }
     }
     when {
         inSettings -> SettingsScreen(vm, onBack = { inSettings = false })
+        inLibrary -> SdkLibraryScreen(vm, onBack = { inLibrary = false })
         selected == null -> AppListScreen(
             vm,
             onOpen = { selected = it },
-            onOpenSettings = { inSettings = true }
+            onOpenSettings = { inSettings = true },
+            onOpenLibrary = { inLibrary = true }
         )
         else -> AppDetailScreen(selected!!, vm, onBack = { selected = null })
     }
