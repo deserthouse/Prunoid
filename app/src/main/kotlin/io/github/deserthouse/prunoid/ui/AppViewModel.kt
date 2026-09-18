@@ -60,8 +60,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 // 源注册表变化 → 重建合并视图并重扫（规则集可能变化）
                 val srcKey = s.sources.joinToString("|") { it.id + "@" + it.url }
                 val sourcesChanged = lastSourceKey != null && srcKey != lastSourceKey
+                val first = lastSourceKey == null
                 lastSourceKey = srcKey
-                if (sourcesChanged) rules.setSources(s.sources)
+                rules.setSources(s.sources)
+                if (sourcesChanged && !first) { /* 变更才重扫，见下 */ }
                 _state.update { st ->
                     st.copy(
                         backupKeep = s.backupKeep,
@@ -71,7 +73,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                         engine = if (!userTouchedEngine) Engine.entries.first { it.name == s.defaultEngine } else st.engine
                     )
                 }
-                if (sourcesChanged) rescan()
+                if (sourcesChanged && !first) rescan()
             }
         }
         rescan()
@@ -172,7 +174,6 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun ruleSideEffect(ruleId: String): String? = rules.rule(ruleId)?.sideEffect
 
     fun allRules() = rules.allRules()
 
@@ -214,9 +215,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun visibleApps(apps: List<ScannedApp>, showSystem: Boolean): List<ScannedApp> =
         apps.filter { showSystem || !it.isSystem }
 
+    // 用户显式勾选的选择集就是最终意志（含显式加选的 RISKY/UNKNOWN），
+    // 双引擎一致处理；安全建议由默认勾选与确认句承担，不在执行层二次过滤
     private fun byTypeFor(scanned: ScannedApp, ruleIds: Set<String>): Map<String, List<String>> =
         scanned.matchedSdks
-            .filter { it.ruleId in ruleIds && (it.safety == Safety.CAUTION || it.safety == Safety.SAFE) }
+            .filter { it.ruleId in ruleIds }
             .flatMap { it.componentTypes.entries }
             .groupBy({ it.value }, { it.key })
 
@@ -259,11 +262,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             _state.update { it.copy(busy = true) }
             val msg = withContext(Dispatchers.IO) {
-                val targets = scanned.matchedSdks
-                    .filter { it.safety == Safety.CAUTION || it.safety == Safety.SAFE }
-                    .flatMap { it.matchedComponents }
+                // 按 applied 记录回滚（当时真实写入集），不用当前扫描重算——
+                // 否则规则更新/显式加选的组件会成为恢复盲区
+                val entry = applied.get(scanned.packageName)
                 val r1 = engine.removeIfw(scanned.packageName)
-                val r2 = engine.enablePm(scanned.packageName, targets)
+                val r2 = entry?.components?.let { engine.enablePm(scanned.packageName, it) }
+                    ?: Result.success(0)
                 applied.remove(scanned.packageName)
                 _state.update { it.copy(applied = applied.all()) }
                 val ok = r1.isSuccess && r2.isSuccess

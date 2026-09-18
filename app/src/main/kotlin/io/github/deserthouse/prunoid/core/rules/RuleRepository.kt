@@ -1,12 +1,14 @@
 package io.github.deserthouse.prunoid.core.rules
 
 import android.content.Context
+import kotlinx.coroutines.flow.first
 import kotlinx.serialization.json.Json
 
 // 规则仓库：内置冷启动快照 + 订阅源合并（订阅条目按 id 覆盖内置，其余追加）
-class RuleRepository(context: Context) {
+class RuleRepository(context: Context, initialSources: List<SettingsRepository.SubSource>? = null) {
 
     private val subscription = RuleSubscription(context)
+    private val settings = SettingsRepository(context)
 
     val snapshot: RuleSnapshot by lazy {
         val text = context.assets.open("rules/snapshot.json").bufferedReader().use { it.readText() }
@@ -24,7 +26,12 @@ class RuleRepository(context: Context) {
         private set
 
     init {
-        rebuild(listOf(SettingsRepository.OFFICIAL_SOURCE))
+        // 单例化前置：所有构造点（VM/自动重应用/守护服务/应急恢复）默认同步装载
+        // 注册表全量源（含自定义源缓存），保证后台链路与 UI 使用同一规则集。
+        // sources 缺省走 DataStore 同步读（filesDir IO，量小可控）。
+        rebuild(initialSources ?: kotlinx.coroutines.runBlocking {
+            settings.settings.first().sources
+        })
     }
 
     /**
@@ -33,18 +40,10 @@ class RuleRepository(context: Context) {
      * 置信度高者胜（high>medium>low，平手保留先入），新 id 追加（并集语义）。
      */
     fun rebuild(sources: List<SettingsRepository.SubSource>) {
-        val rank = mapOf("high" to 3, "medium" to 2, "low" to 1)
-        val merged = snapshot.sdks.associateByTo(LinkedHashMap()) { it.id }
-        for (src in sources) {
-            for (r in subscription.cached(src.id)?.snapshot?.sdks ?: emptyList()) {
-                val prev = merged[r.id]
-                when {
-                    prev == null -> merged[r.id] = r
-                    (rank[r.confidence] ?: 0) > (rank[prev.confidence] ?: 0) -> merged[r.id] = r
-                }
-            }
-        }
-        val rules = merged.values.toList()
+        val rules = MultiSourceMerger.mergeMultiSource(
+            snapshot.sdks,
+            sources.map { it.id }.mapNotNull { id -> subscription.cached(id)?.snapshot?.sdks }
+        )
         effectiveRules = rules
         rulesById = rules.associateBy { it.id }
         val m = HashMap<String, MutableList<String>>()

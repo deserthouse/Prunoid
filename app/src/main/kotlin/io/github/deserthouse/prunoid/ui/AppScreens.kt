@@ -194,7 +194,8 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
     var subMsg by remember { mutableStateOf<String?>(null) }
     var query by remember { mutableStateOf("") }
     val pm = LocalContext.current.packageManager
-    val subscribed = st.sources.isNotEmpty()
+    // 订阅点语义：任一源成功拉取过才亮（sources 注册表默认恒含官方源，不能作为判据）
+    val subscribed = st.sources.any { it.lastFetched.isNotBlank() }
 
     SnackbarEffect(snackbar, st.message)
     SnackbarEffect(snackbar, subMsg)
@@ -1217,14 +1218,15 @@ fun CountdownConfirmTextButton(
     }
     TextButton(
         onClick = {
-            if (armed) {
+            // 倒计时归零前点击无效——锁定语义：数到 0 才放行
+            if (armed && tick == 0) {
                 armed = false
                 onConfirm()
-            } else {
+            } else if (!armed) {
                 armed = true
             }
         },
-        enabled = enabled
+        enabled = enabled && (!armed || tick == 0)
     ) {
         Text(
             when {
