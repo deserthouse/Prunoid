@@ -115,7 +115,7 @@
     <string name="stats_rank_title">Top SDKs on device</string>
     <string name="stats_api_title">Target API distribution</string>
     <string name="stats_api_label">API %1$d</string>
-    <string name="stats_api_count">%1$d apps · %2$s%%</string>
+    <string name="stats_api_count">%1$s%%</string>
     <string name="installed_at">Installed %1$s</string>
     <string name="updated_at">Updated %1$s</string>
     <string name="settings_title">Settings</string>

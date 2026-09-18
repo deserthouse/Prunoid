@@ -128,7 +128,7 @@
     <string name="stats_rank_title">在机 SDK 排行</string>
     <string name="stats_api_title">Target API 分布</string>
     <string name="stats_api_label">API %1$d</string>
-    <string name="stats_api_count">%1$d 个 app · %2$s%%</string>
+    <string name="stats_api_count">%1$s%%</string>
     <string name="installed_at">安装于 %1$s</string>
     <string name="updated_at">更新于 %1$s</string>
     <!-- 设置页 -->

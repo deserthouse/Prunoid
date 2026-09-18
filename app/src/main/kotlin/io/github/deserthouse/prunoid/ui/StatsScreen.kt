@@ -1,5 +1,6 @@
 package io.github.deserthouse.prunoid.ui
 
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import io.github.deserthouse.prunoid.R
 import androidx.compose.foundation.background
@@ -103,13 +104,23 @@ fun StatsScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
             }
         }
         // Target API 分布（AppChecker 吸收：N Apps + 占比 + 进度条）
+        // 最大余数法取整：占比显示值合计恒为 100.0%，避免逐项四舍五入漂移
+        fun floorOf(x: Double): Int = kotlin.math.floor(x * 10).toInt()
+        val pctRounded = remember(apiDist) {
+            val exact = apiDist.map { (api, n) -> api to (if (apiTotal > 0) n * 100.0 / apiTotal else 0.0) }
+            // 精度=0.1%（总 1000 份）：floor 到 0.1%，余数逐份分给小数部分最大者
+            val floors = exact.map { (api, p) -> Triple(api, floorOf(p), p * 10 - floorOf(p)) }
+            val remainder = 1000 - floors.sumOf { it.second }
+            val bump = floors.sortedByDescending { it.third }.take(remainder).map { it.first }.toSet()
+            floors.map { (api, f, _) -> api to (f + if (api in bump) 1 else 0) }.toMap()
+        }
         if (apiDist.isNotEmpty()) {
             Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp)) {
                     Text(stringResource(R.string.stats_api_title), style = MaterialTheme.typography.titleSmall)
                     Spacer(Modifier.height(8.dp))
                     apiDist.forEach { (api, n) ->
-                        val pct = if (apiTotal > 0) n * 100f / apiTotal else 0f
+                        val pct = (pctRounded[api] ?: 0) / 10f
                         Row(
                             Modifier.fillMaxWidth().padding(top = 4.dp),
                             verticalAlignment = Alignment.CenterVertically
@@ -120,7 +131,12 @@ fun StatsScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
                                 modifier = Modifier.weight(1f)
                             )
                             Text(
-                                stringResource(R.string.stats_api_count, n, "%.1f".format(pct)),
+                                pluralStringResource(R.plurals.stats_api_apps, n, n),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                "  " + stringResource(R.string.stats_api_count, "%.1f".format(pct)),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
