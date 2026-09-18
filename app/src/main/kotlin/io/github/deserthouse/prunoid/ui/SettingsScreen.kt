@@ -1,5 +1,10 @@
 package io.github.deserthouse.prunoid.ui
 
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Sync
+import androidx.compose.material.icons.outlined.Shield
+import androidx.compose.material.icons.outlined.ContentCopy
 import androidx.compose.ui.res.stringResource
 import io.github.deserthouse.prunoid.R
 import androidx.compose.foundation.clickable
@@ -40,6 +45,7 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
     val snackbar = rememberSnackbar()
     var msg by remember { mutableStateOf<String?>(null) }
     var showAddSource by remember { mutableStateOf(false) }
+    var showBackup by remember { mutableStateOf(false) }
 
     SnackbarEffect(snackbar, msg)
 
@@ -142,23 +148,13 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
                         )
                     }
                     HorizontalDivider(Modifier.padding(vertical = 4.dp))
-                    Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-                        Text(stringResource(R.string.backup_keep_title), style = MaterialTheme.typography.titleSmall)
-                        var keepLocal by remember(st.backupKeep) { mutableStateOf(st.backupKeep.toFloat()) }
-                        Text(
-                            stringResource(R.string.backup_keep_current, keepLocal.toInt()),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Slider(
-                            value = keepLocal,
-                            onValueChange = { keepLocal = it },
-                            // 松手才落盘，避免拖动过程高频写 DataStore
-                            onValueChangeFinished = { vm.setBackupKeep(keepLocal.toInt()) },
-                            valueRange = 3f..30f,
-                            steps = 26
-                        )
-                    }
+                    // F3：备份降级为可选机制——入口行 + 二级对话框披露路径/用法/份数自由填写
+                    SettingRow(
+                        icon = Icons.Outlined.Shield,
+                        title = stringResource(R.string.backup_entry_title),
+                        subtitle = stringResource(R.string.backup_entry_sub, st.backupKeep),
+                        onClick = { showBackup = true }
+                    )
                 }
             }
 
@@ -172,16 +168,17 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(Modifier.height(8.dp))
+                    // F2：OptIcon 式源行——恒定 40dp IconButton 足迹，busy 原位换 spinner
                     st.sources.forEach { src ->
                         Row(
-                            Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            Modifier.fillMaxWidth().padding(vertical = 2.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(Modifier.weight(1f)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(src.name, style = MaterialTheme.typography.labelLarge)
+                                    Text(src.name, style = MaterialTheme.typography.bodyLarge)
                                     if (src.builtin) {
-                                        Spacer(Modifier.width(4.dp))
+                                        Spacer(Modifier.width(6.dp))
                                         Text(
                                             stringResource(R.string.builtin),
                                             style = MaterialTheme.typography.labelSmall,
@@ -190,29 +187,38 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
                                     }
                                 }
                                 Text(
-                                    src.url,
+                                    src.url + "  ·  " + (
+                                        if (src.lastFetched.isBlank()) stringResource(R.string.not_fetched)
+                                        else stringResource(R.string.fetched_at) + " " + fmtFetched(src.lastFetched)
+                                    ),
                                     fontFamily = FontFamily.Monospace,
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
                                 )
-                                Text(
-                                    if (src.lastFetched.isBlank()) stringResource(R.string.not_fetched)
-                                    else stringResource(R.string.fetched_at) + " " + fmtFetched(src.lastFetched),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
                             }
-                            TextButton(
-                                onClick = { vm.refreshSource(src) { msg = it } },
-                                enabled = !st.busy
-                            ) { Text(stringResource(R.string.update)) }
+                            if (st.busy) {
+                                Box(Modifier.size(40.dp), contentAlignment = Alignment.Center) {
+                                    CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+                                }
+                            } else {
+                                IconButton(onClick = { vm.refreshSource(src) { msg = it } }, Modifier.size(40.dp)) {
+                                    Icon(Icons.Outlined.Sync, contentDescription = stringResource(R.string.update), Modifier.size(20.dp))
+                                }
+                            }
                             if (!src.builtin) {
-                                TextButton(
+                                IconButton(
                                     onClick = { vm.removeSource(src) { msg = it } },
-                                    enabled = !st.busy
-                                ) { Text(stringResource(R.string.remove)) }
+                                    Modifier.size(40.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Outlined.Delete,
+                                        contentDescription = stringResource(R.string.remove),
+                                        Modifier.size(18.dp),
+                                        tint = MaterialTheme.colorScheme.error
+                                    )
+                                }
                             }
                         }
                     }
@@ -224,28 +230,51 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
                 }
             }
 
-            // ── 应急通道 ──
+            // ── 应急通道（F3：恢复点管理迁入 + 复制按钮 + 清除全部迁入） ──
             SectionTitle(stringResource(R.string.sec_recovery))
             SettingsCard {
-                Column(Modifier.padding(16.dp)) {
-                    Text(
-                        stringResource(R.string.recovery_desc),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                Column(Modifier.padding(vertical = 4.dp)) {
+                    val clipboard = androidx.compose.ui.platform.LocalClipboardManager.current
+                    val cmd = "adb shell am broadcast -a io.github.deserthouse.prunoid.action.CLEAR_IFW --ez confirm true"
+                    SettingRow(
+                        icon = Icons.Outlined.ContentCopy,
+                        title = stringResource(R.string.recovery_cmd_title),
+                        subtitle = stringResource(R.string.recovery_cmd_sub),
+                        onClick = {
+                            clipboard.setText(androidx.compose.ui.text.AnnotatedString(cmd))
+                            msg = cmd
+                        }
                     )
-                    Spacer(Modifier.height(6.dp))
-                    Surface(
-                        color = MaterialTheme.colorScheme.surfaceVariant,
-                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
+                    Text(
+                        cmd,
+                        fontFamily = FontFamily.Monospace,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                    )
+                    HorizontalDivider(Modifier.padding(vertical = 4.dp))
+                    Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                        Text(stringResource(R.string.recovery_clear_title), style = MaterialTheme.typography.titleSmall)
+                        if (st.ifwTotal > 0) {
+                            Text(
+                                stringResource(R.string.recovery_ifw_count, st.ifwTotal),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontFamily = FontFamily.Monospace,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Spacer(Modifier.height(4.dp))
                         Text(
-                            "adb shell am broadcast -a io.github.deserthouse.prunoid.action.CLEAR_IFW --ez confirm true",
-                            fontFamily = FontFamily.Monospace,
+                            stringResource(R.string.recovery_clear_desc),
                             style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(8.dp)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        CountdownConfirmTextButton(
+                            label = stringResource(R.string.clear_ifw),
+                            armedLabel = stringResource(R.string.clear_ifw_confirm),
+                            enabled = !st.busy,
+                            onConfirm = { vm.clearAllIfw { msg = it } }
                         )
                     }
                 }
@@ -302,6 +331,14 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
             }
             Spacer(Modifier.height(8.dp))
         }
+    }
+
+    if (showBackup) {
+        BackupDialog(
+            vm = vm,
+            onMessage = { msg = it },
+            onDismiss = { showBackup = false }
+        )
     }
 
     if (showAddSource) {
@@ -362,6 +399,124 @@ private fun SettingRow(
             )
         }
         action?.invoke()
+    }
+}
+
+
+@Composable
+fun BackupDialog(vm: AppViewModel, onMessage: (String) -> Unit, onDismiss: () -> Unit) {
+    // F3：备份=可选机制。对话框披露用法/路径/恢复点/份数（自由填写，不再滑杆）
+    val backups = remember { vm.listBackups() }
+    val selected = remember { mutableStateMapOf<String, Boolean>() }
+    var keepText by remember { mutableStateOf(vm.state.value.backupKeep.toString()) }
+    var confirmRestore by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.backup_entry_title)) },
+        text = {
+            Column(Modifier.verticalScroll(rememberScrollState())) {
+                Text(
+                    stringResource(R.string.backup_howto),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    stringResource(R.string.backup_path_label),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    "/data/data/io.github.deserthouse.prunoid/files/backups/",
+                    fontFamily = FontFamily.Monospace,
+                    style = MaterialTheme.typography.labelSmall
+                )
+                Text(
+                    stringResource(R.string.backup_path_note),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.height(10.dp))
+                Text(stringResource(R.string.backup_points_title), style = MaterialTheme.typography.titleSmall)
+                if (backups.isEmpty()) {
+                    Text(
+                        stringResource(R.string.recovery_empty),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                } else {
+                    backups.forEach { path ->
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Checkbox(
+                                checked = selected[path] == true,
+                                onCheckedChange = { selected[path] = it }
+                            )
+                            Text(
+                                path.substringAfterLast("/"),
+                                fontFamily = FontFamily.Monospace,
+                                style = MaterialTheme.typography.labelSmall,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                    TextButton(
+                        onClick = { confirmRestore = true },
+                        enabled = selected.values.any { it }
+                    ) { Text(stringResource(R.string.restore_selected)) }
+                }
+                Spacer(Modifier.height(10.dp))
+                Text(stringResource(R.string.backup_keep_title), style = MaterialTheme.typography.titleSmall)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedTextField(
+                        value = keepText,
+                        onValueChange = { v -> keepText = v.filter { it.isDigit() }.take(5) },
+                        singleLine = true,
+                        modifier = Modifier.width(120.dp)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    TextButton(
+                        onClick = {
+                            val n = keepText.toIntOrNull()?.coerceIn(1, 99999) ?: 10
+                            vm.setBackupKeep(n)
+                            onMessage("")
+                        },
+                        enabled = keepText.toIntOrNull() != null
+                    ) { Text(stringResource(R.string.add)) }
+                }
+                Text(
+                    stringResource(R.string.backup_keep_note),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.close)) }
+        }
+    )
+
+    if (confirmRestore) {
+        AlertDialog(
+            onDismissRequest = { confirmRestore = false },
+            title = { Text(stringResource(R.string.restore_selected)) },
+            text = { Text(stringResource(R.string.backup_restore_confirm)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmRestore = false
+                    val paths = selected.filterValues { it }.keys.toList()
+                    vm.restoreBackup(paths.first()) { onMessage(it) }
+                    onDismiss()
+                }) { Text(stringResource(R.string.restore)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmRestore = false }) { Text(stringResource(R.string.cancel)) }
+            }
+        )
     }
 }
 

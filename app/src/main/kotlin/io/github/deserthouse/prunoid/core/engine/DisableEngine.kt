@@ -55,6 +55,57 @@ class DisableEngine(
         private const val PKG_RESTRICTIONS = "/data/system/users/0/package-restrictions.xml"
     }
 
+    // ── 批G：读现场——IFW 文件 + pm 停用状态的实际内容（展示层以现场为准，记账只喂恢复） ──
+    /** 单次合并 shell 读取多个包的现场禁用集；返回 包名→被禁组件类名集合，及全库 IFW component-filter 总条数 */
+    suspend fun readLiveDisabled(pkgs: List<String>): Pair<Map<String, Set<String>>, Int> = withContext(Dispatchers.IO) {
+        if (pkgs.isEmpty()) return@withContext emptyMap<String, Set<String>>() to 0
+        val script = buildString {
+            append("for p in")
+            pkgs.forEach { append(" ").append(it) }
+            append("; do echo \"==IFW \$p\"; cat ")
+            append(IFW_DIR)
+            append("/\$p.xml 2>/dev/null; echo \"==PM \$p\"; dumpsys package \$p 2>/dev/null | sed -n '/Disabled components:/,/Enabled components:/p'; done; ")
+            append("echo ==TOTAL; grep -h -o component-filter ")
+            append(IFW_DIR)
+            append("/*.xml 2>/dev/null | wc -l")
+        }
+        val out = Shell.cmd(script).exec().out
+        android.util.Log.d("PrunoidLive", "pkgs=" + pkgs.size + " outLines=" + out.size + " scriptHead=" + script.take(120))
+        val live = HashMap<String, MutableSet<String>>()
+        var total = 0
+        var cur: String? = null
+        var inPm = false
+        for (line in out) {
+            when {
+                line.startsWith("==IFW ") -> {
+                    cur = line.removePrefix("==IFW ").trim(); inPm = false
+                    if (cur.isNotEmpty()) live.getOrPut(cur) { mutableSetOf() }
+                }
+                line.startsWith("==PM ") -> {
+                    cur = line.removePrefix("==PM ").trim(); inPm = true
+                    if (cur.isNotEmpty()) live.getOrPut(cur) { mutableSetOf() }
+                }
+                line.startsWith("==TOTAL") -> inPm = false
+                else -> {
+                    val set = cur?.let { live.getOrPut(it) { mutableSetOf() } } ?: continue
+                    if (inPm) {
+                        // dumpsys 缩进行形如 "    com.pkg/.Cls"
+                        val t = line.trim()
+                        if (t.contains("/")) set.add(t.substringAfter('/'))
+                    } else {
+                        // IFW xml：<component-filter name="pkg/.Cls"
+                        val m = Regex("component-filter\\s+name=\"([^\"]+)\"").find(line) ?: continue
+                        set.add(m.groupValues[1].substringAfter('/'))
+                    }
+                }
+            }
+        }
+        // ==TOTAL 行取 wc 数
+        out.lastOrNull()?.trim()?.toIntOrNull()?.let { total = it }
+        android.util.Log.d("PrunoidLive", "parsed live=" + live.size + " total=" + total)
+        live.mapValues { it.value.toSet() } to total
+    }
+
     // ── 安全层：操作前全量备份（IFW 规则目录 + pm 组件限制状态，单个 tar 归档） ──
     suspend fun backup(keep: Int = 10): Result<String> = withContext(Dispatchers.IO) {
         runCatching {

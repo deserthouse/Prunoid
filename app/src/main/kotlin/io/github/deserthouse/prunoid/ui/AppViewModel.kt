@@ -35,7 +35,10 @@ data class AppUiState(
     val sources: List<SettingsRepository.SubSource> = listOf(SettingsRepository.OFFICIAL_SOURCE),
     val applied: Map<String, AppliedRulesStore.AppliedEntry> = emptyMap(), // 包名 -> 已应用记录
     val backupKeep: Int = 10,          // 备份保留份数（设置页可调）
-    val icons: Map<String, android.graphics.drawable.Drawable> = emptyMap() // 扫描后后台预载，列表/详情零主线程 binder 调用
+    val icons: Map<String, android.graphics.drawable.Drawable> = emptyMap(), // 扫描后后台预载，列表/详情零主线程 binder 调用
+    // 批G：现场禁用集（包名→组件类名）。展示层以现场为准；applied 记账只喂恢复。
+    val liveDisabled: Map<String, Set<String>> = emptyMap(),
+    val ifwTotal: Int = 0
 )
 
 class AppViewModel(app: Application) : AndroidViewModel(app) {
@@ -103,6 +106,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     a.packageName to (runCatching { pm.getApplicationIcon(a.packageName) }.getOrNull())
                 }.filterValues { it != null }.mapValues { it.value!! }
                 _state.update { it.copy(icons = icons) }
+            }
+            // 批G：读现场——仅命中 app（shell 合并单次调用），IFW+pm 两处
+            viewModelScope.launch(Dispatchers.IO) {
+                val targets = apps.filter { it.matchedSdks.isNotEmpty() }.map { it.packageName }
+                val (live, total) = engine.readLiveDisabled(targets)
+                _state.update { it.copy(liveDisabled = live, ifwTotal = total) }
             }
         }
     }
@@ -257,7 +266,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                         byType.entries.flatMap { (t, cs) -> cs.map { it to t } }.toMap()
                     )
                 }
-                _state.update { it.copy(applied = applied.all()) }
+                // 批G：写入后单包重读现场（展示层以现场为准）
+                val liveAfter = if (r.isSuccess) engine.readLiveDisabled(listOf(scanned.packageName)).first else null
+                _state.update {
+                    it.copy(
+                        applied = applied.all(),
+                        liveDisabled = liveAfter?.let { l -> it.liveDisabled + (scanned.packageName to (l[scanned.packageName] ?: emptySet())) } ?: it.liveDisabled
+                    )
+                }
                 buildString {
                     append(appCtx.getString(R.string.vm_apply_ok, _state.value.engine.name, r.getOrDefault(0)))
                     if (backup != null) append(appCtx.getString(R.string.vm_apply_backup))
@@ -282,6 +298,13 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 applied.remove(scanned.packageName)
                 _state.update { it.copy(applied = applied.all()) }
                 val ok = r1.isSuccess && r2.isSuccess
+                // 批G：恢复后单包重读现场
+                val liveAfterR = if (ok) engine.readLiveDisabled(listOf(scanned.packageName)).first else null
+                _state.update {
+                    it.copy(
+                        liveDisabled = liveAfterR?.let { l -> it.liveDisabled + (scanned.packageName to (l[scanned.packageName] ?: emptySet())) } ?: it.liveDisabled
+                    )
+                }
                 if (ok) appCtx.getString(R.string.vm_restore_ok) else appCtx.getString(R.string.vm_restore_fail, r1.exceptionOrNull()?.message ?: r2.exceptionOrNull()?.message ?: "")
             }
             _state.update { it.copy(busy = false) }

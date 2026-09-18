@@ -24,6 +24,7 @@ import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.CloudDownload
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.ExpandMore
+import androidx.compose.material.icons.outlined.FactCheck
 import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.outlined.HealthAndSafety
 import androidx.compose.material.icons.outlined.HelpOutline
@@ -33,6 +34,7 @@ import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Sort
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.WarningAmber
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.res.painterResource
@@ -208,8 +210,6 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
     val st by vm.state.collectAsState()
     val dark = isSystemInDarkTheme()
     val snackbar = rememberSnackbar()
-    var showSubscribe by remember { mutableStateOf(false) }
-    var showRecovery by remember { mutableStateOf(false) }
     var subMsg by remember { mutableStateOf<String?>(null) }
     var query by remember { mutableStateOf("") }
     // 订阅点语义：任一源成功拉取过才亮（sources 注册表默认恒含官方源，不能作为判据）
@@ -272,18 +272,7 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
                     }
                 },
                 actions = {
-                    IconButton(onClick = { vm.rescan() }, enabled = !st.scanning) {
-                        Icon(Icons.Outlined.Refresh, contentDescription = stringResource(R.string.rescan))
-                    }
-                    IconButton(onClick = { showSubscribe = true }) {
-                        Icon(Icons.Outlined.CloudDownload, contentDescription = stringResource(R.string.menu_sources))
-                    }
-                    IconButton(onClick = { showRecovery = true }) {
-                        Icon(Icons.Outlined.HealthAndSafety, contentDescription = stringResource(R.string.menu_recovery))
-                    }
-                    IconButton(onClick = onOpenLibrary) {
-                        Icon(Icons.Outlined.Apps, contentDescription = stringResource(R.string.menu_library))
-                    }
+                    // F1 顶栏精简：库/订阅/恢复入口由底部 tab 与设置页承担；重扫改下拉刷新
                     IconButton(onClick = onOpenSettings) {
                         Icon(Icons.Outlined.Settings, contentDescription = stringResource(R.string.menu_settings))
                     }
@@ -304,7 +293,13 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
             }
         }
     ) { padding ->
-        Column(Modifier.padding(padding).fillMaxSize()) {
+        // F1：下拉刷新取代顶栏重扫按钮（重扫进度仍由波浪进度/汇总条呈现）
+        PullToRefreshBox(
+            isRefreshing = st.scanning,
+            onRefresh = { vm.rescan() },
+            modifier = Modifier.padding(padding).fillMaxSize()
+        ) {
+        Column(Modifier.fillMaxSize()) {
             if (!st.rootGranted) {
                 Surface(
                     color = if (dark) WarnContainerDark else WarnContainerLight,
@@ -522,137 +517,11 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
                 }
             }
         }
+        }
     }
 
-    if (showSubscribe) {
-        SubscribeDialog(
-            initial = "",
-            onDismiss = { showSubscribe = false },
-            onConfirm = { url ->
-                showSubscribe = false
-                vm.addSource("", url) { subMsg = it }
-            }
-        )
-    }
-    if (showRecovery) {
-        RecoveryDialog(
-            vm = vm,
-            onMessage = { subMsg = it },
-            onDismiss = { showRecovery = false }
-        )
-    }
 }
 
-@Composable
-fun SubscribeDialog(initial: String, onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
-    var url by remember { mutableStateOf(initial) }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.menu_sources)) },
-        text = {
-            Column {
-                Text(stringResource(R.string.dlg_sources_desc))
-                Spacer(Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = url,
-                    onValueChange = { url = it },
-                    singleLine = true,
-                    label = { Text("https://…") }
-                )
-                Spacer(Modifier.height(4.dp))
-                TextButton(
-                    onClick = {
-                        url = "https://raw.githubusercontent.com/deserthouse/Prunoid-Rules/main/rules/snapshot.json"
-                    }
-                ) { Text(stringResource(R.string.fill_official)) }
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = { if (url.isNotBlank()) onConfirm(url.trim()) },
-                enabled = url.startsWith("http")
-            ) { Text(stringResource(R.string.subscribe)) }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } }
-    )
-}
-
-@Composable
-fun RecoveryDialog(vm: AppViewModel, onMessage: (String) -> Unit, onDismiss: () -> Unit) {
-    var selected by remember { mutableStateOf<String?>(null) }
-    val backups = remember { vm.listBackups() }
-    val busy = vm.state.collectAsState().value.busy
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.menu_recovery)) },
-        text = {
-            Column {
-                if (backups.isEmpty()) {
-                    Text(stringResource(R.string.recovery_empty))
-                } else {
-                    Text(stringResource(R.string.recovery_points), style = MaterialTheme.typography.bodySmall)
-                    backups.take(10).forEach { path ->
-                        val name = path.substringAfterLast('/')
-                        Row(
-                            Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = selected == path,
-                                onClick = { selected = path }
-                            )
-                            Text(
-                                name,
-                                style = MaterialTheme.typography.bodySmall,
-                                fontFamily = FontFamily.Monospace
-                            )
-                        }
-                    }
-                }
-                Spacer(Modifier.height(8.dp))
-                Surface(
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text(
-                        "adb shell am broadcast -a io.github.deserthouse.prunoid.action.CLEAR_IFW --ez confirm true",
-                        fontFamily = FontFamily.Monospace,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp)
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            Row {
-                // 清除全部 IFW：最高危级 → 倒计时锁定（Thanox 式）
-                CountdownConfirmTextButton(
-                    label = stringResource(R.string.clear_ifw),
-                    armedLabel = stringResource(R.string.clear_ifw_confirm),
-                    enabled = !busy,
-                    onConfirm = { vm.clearAllIfw { onMessage(it) } }
-                )
-                Spacer(Modifier.width(4.dp))
-                // 恢复所选：倒计时锁定
-                CountdownConfirmTextButton(
-                    label = stringResource(R.string.restore_selected),
-                    armedLabel = stringResource(R.string.restore_selected_confirm),
-                    enabled = selected != null && !busy,
-                    onConfirm = {
-                        selected?.let { p ->
-                            vm.restoreBackup(p) { onMessage(it) }
-                            onDismiss()
-                        }
-                    }
-                )
-            }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.close)) } }
-    )
-}
 
 // ─────────────────────────── 详情屏 ───────────────────────────
 
@@ -889,6 +758,25 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                 }
                             }
                         }
+                        // 批G：现场口径行独立于 applied 记账显示（IFW+pm 两处，来源不限本应用）
+                        val liveN = st.liveDisabled[app.packageName]?.size ?: -1
+                        if (liveN >= 0) {
+                            Spacer(Modifier.height(6.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    Icons.Outlined.FactCheck,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.tertiary,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(Modifier.width(4.dp))
+                                Text(
+                                    stringResource(R.string.live_line, liveN),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.tertiary
+                                )
+                            }
+                        }
                         appliedEntry?.let { e ->
                             Spacer(Modifier.height(6.dp))
                             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1077,6 +965,24 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
+                        }
+                        val liveSet = st.liveDisabled[app.packageName]
+                        val disN = liveSet?.count { c ->
+                            hit.matchedComponents.any { it == c || (app.packageName + "/" + it) == c }
+                        } ?: -1
+                        if (disN > 0) {
+                            Surface(
+                                color = MaterialTheme.colorScheme.tertiaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                                shape = RoundedCornerShape(50),
+                                modifier = Modifier.padding(end = 6.dp)
+                            ) {
+                                Text(
+                                    stringResource(R.string.disabled_count, disN),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                )
+                            }
                         }
                         SafetyBadge(hit.safety)
                         Icon(

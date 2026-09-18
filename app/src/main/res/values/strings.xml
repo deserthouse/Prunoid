@@ -208,4 +208,20 @@
     <string name="about_ai_body">本应用由 AI 在人类指导下开发，并经人工审查验收</string>
     <string name="about_disclaimer_title">免责声明</string>
     <string name="about_disclaimer_body">按“现状”提供，不附带任何担保；root 操作风险自担；与任何商标持有方无关联</string>
+    <string name="backup_entry_title">备份与恢复</string>
+    <string name="backup_entry_sub">自动备份 · 当前保留 %1$d 份 · 点按管理</string>
+    <string name="backup_howto">每次应用规则前自动创建时点快照（IFW 规则目录 + pm 组件停用状态，单个 tar.gz 归档）。恢复会把所选归档解回原路径并修复归属。</string>
+    <string name="backup_path_label">备份存放路径（应用私有目录，卸载即随数据清除；如需留存请先 adb pull）：</string>
+    <string name="backup_path_note">此为可选功能：不使用本工具的备份也可通过单 app 恢复 / 清除全部 IFW / adb 应急命令回滚。</string>
+    <string name="backup_points_title">恢复点（新 → 旧）</string>
+    <string name="backup_keep_note">份数自由填写；超出的旧备份自动清理。磁盘占用为天然后果，请按需取舍。</string>
+    <string name="backup_restore_confirm">将把所选归档解回原路径（覆盖现有 IFW 规则与 pm 状态）并修复归属。继续？</string>
+    <string name="recovery_cmd_title">应急命令（点击复制）</string>
+    <string name="recovery_cmd_sub">UI 无法进入时，在电脑上执行以下命令清除全部 IFW 规则</string>
+    <string name="recovery_clear_title">清除全部 IFW 规则</string>
+    <string name="recovery_clear_desc">将无差别清除本应用与其他工具写入的全部 IFW 规则；pm 停用状态不受影响。</string>
+    <string name="live_line">现场已禁用 %1$d 组件</string>
+    <string name="cd_disabled">已禁用</string>
+    <string name="disabled_count">已禁用 %1$d</string>
+    <string name="recovery_ifw_count">当前 IFW 规则 %1$d 条（含其他工具写入）</string>
 </resources>

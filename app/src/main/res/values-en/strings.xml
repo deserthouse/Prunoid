@@ -192,4 +192,20 @@
     <string name="about_ai_body">Developed by AI under human direction, reviewed and accepted by humans</string>
     <string name="about_disclaimer_title">Disclaimer</string>
     <string name="about_disclaimer_body">Provided AS-IS without warranty; use root operations at your own risk; not affiliated with any trademark holder</string>
+    <string name="backup_entry_title">Backup &amp; restore</string>
+    <string name="backup_entry_sub">Auto backup · keeping %1$d · tap to manage</string>
+    <string name="backup_howto">A point-in-time snapshot (IFW rule dir + pm component-disabled state, one tar.gz) is created automatically before each apply. Restoring unpacks the selected archive back to the original paths and fixes ownership.</string>
+    <string name="backup_path_label">Backup path (app-private; wiped on uninstall — adb pull first if you want to keep them):</string>
+    <string name="backup_path_note">Optional feature: even without backups you can roll back via per-app restore / clear-all-IFW / the adb emergency command.</string>
+    <string name="backup_points_title">Restore points (new → old)</string>
+    <string name="backup_keep_note">Any count is fine; older backups beyond the limit are pruned automatically. Disk usage is a natural consequence — your call.</string>
+    <string name="backup_restore_confirm">The selected archive will be unpacked back to the original paths (overwriting current IFW rules and pm state) with ownership fixed. Continue?</string>
+    <string name="recovery_cmd_title">Emergency command (tap to copy)</string>
+    <string name="recovery_cmd_sub">If the UI cannot be reached, run this on a computer to clear all IFW rules</string>
+    <string name="recovery_clear_title">Clear all IFW rules</string>
+    <string name="recovery_clear_desc">Clears ALL IFW rules written by this app and other tools indiscriminately; pm disabled states are unaffected.</string>
+    <string name="live_line">Disabled now: %1$d components</string>
+    <string name="cd_disabled">Disabled</string>
+    <string name="disabled_count">%1$d disabled</string>
+    <string name="recovery_ifw_count">Current IFW rules: %1$d (incl. other tools)</string>
 </resources>
