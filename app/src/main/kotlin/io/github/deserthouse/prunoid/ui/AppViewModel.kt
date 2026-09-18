@@ -1,5 +1,6 @@
 package io.github.deserthouse.prunoid.ui
 
+import io.github.deserthouse.prunoid.R
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -38,6 +39,7 @@ data class AppUiState(
 )
 
 class AppViewModel(app: Application) : AndroidViewModel(app) {
+    private val appCtx get() = getApplication<Application>()
     private val rules = RuleRepository(app)
     private val scanner = Scanner(app, rules)
     private val engine = DisableEngine(app, rules)
@@ -52,7 +54,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             // 主动建立 root shell（首次调用触发 Magisk su 授权请求）
             val root = withContext(Dispatchers.IO) { engine.rootAvailable() }
             _state.update {
-                it.copy(rootGranted = root, message = if (root) null else "未取得 root：扫描可用，禁用操作不可用")
+                it.copy(rootGranted = root, message = if (root) null else appCtx.getString(R.string.vm_no_root))
             }
         }
         viewModelScope.launch {
@@ -89,7 +91,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 withContext(Dispatchers.IO) { scanner.scanAll() }
             } catch (e: Exception) {
                 android.util.Log.e("SdkPruner", "scan failed", e)
-                _state.update { it.copy(scanning = false, message = "扫描失败: ${e.message}") }
+                _state.update { it.copy(scanning = false, message = appCtx.getString(R.string.vm_scan_failed, e.message ?: "")) }
                 return@launch
             }
             android.util.Log.d("SdkPruner", "scan done: ${apps.size} apps, ${apps.sumOf { it.matchedSdks.size }} hits")
@@ -176,10 +178,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     fun removeSource(source: SettingsRepository.SubSource, onDone: (String) -> Unit) {
         viewModelScope.launch {
-            if (source.builtin) { onDone("官方源不可删除"); return@launch }
+            if (source.builtin) { onDone(appCtx.getString(R.string.vm_source_builtin)); return@launch }
             withContext(Dispatchers.IO) { rules.clearSourceCache(source.id) }
             settings.setSources(_state.value.sources.filterNot { it.id == source.id })
-            onDone("已移除源「${source.name}」")
+            onDone(appCtx.getString(R.string.vm_source_removed, source.name))
         }
     }
 
@@ -198,8 +200,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             _state.update { it.copy(busy = true) }
             val msg = withContext(Dispatchers.IO) {
                 engine.restoreBackup(path).fold(
-                    onSuccess = { "已恢复备份（IFW 即时生效；pm 状态重启后完全生效）" },
-                    onFailure = { "恢复失败：${it.message}" }
+                    onSuccess = { appCtx.getString(R.string.vm_restore_backup_ok) },
+                    onFailure = { appCtx.getString(R.string.vm_restore_backup_fail, it.message ?: "") }
                 )
             }
             _state.update { it.copy(busy = false, applied = withContext(Dispatchers.IO) { applied.all() }) }
@@ -212,8 +214,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             _state.update { it.copy(busy = true) }
             val msg = withContext(Dispatchers.IO) {
                 engine.clearAllIfw().fold(
-                    onSuccess = { "已清除 $it 个 IFW 规则文件" },
-                    onFailure = { "清除失败：${it.message}" }
+                    onSuccess = { appCtx.getString(R.string.vm_ifw_cleared, it) },
+                    onFailure = { appCtx.getString(R.string.vm_clear_fail, it.message ?: "") }
                 )
             }
             _state.update { it.copy(busy = false, applied = withContext(Dispatchers.IO) { applied.all() }) }
@@ -237,11 +239,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             _state.update { it.copy(busy = true) }
             val msg = withContext(Dispatchers.IO) {
-                if (!engine.rootAvailable()) return@withContext "需要 root"
-                if (DisableEngine.isForbidden(scanned.packageName)) return@withContext "系统 app 已被白名单拦截"
+                if (!engine.rootAvailable()) return@withContext appCtx.getString(R.string.vm_need_root)
+                if (DisableEngine.isForbidden(scanned.packageName)) return@withContext appCtx.getString(R.string.vm_forbidden)
                 val selected = scanned.matchedSdks.filter { it.ruleId in selectedRuleIds }
                 val targets = selected.flatMap { it.matchedComponents }
-                if (targets.isEmpty()) return@withContext "无可应用的组件目标"
+                if (targets.isEmpty()) return@withContext appCtx.getString(R.string.vm_no_targets)
                 val backup = engine.backup(_state.value.backupKeep).getOrNull()
                 val byType = byTypeFor(scanned, selectedRuleIds)
                 val r = when (_state.value.engine) {
@@ -257,9 +259,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 }
                 _state.update { it.copy(applied = applied.all()) }
                 buildString {
-                    append("${_state.value.engine.name} 规则 ${r.getOrDefault(0)} 条已应用")
-                    if (backup != null) append("（已自动备份）")
-                    r.exceptionOrNull()?.let { append(" — 失败：${it.message}") }
+                    append(appCtx.getString(R.string.vm_apply_ok, _state.value.engine.name, r.getOrDefault(0)))
+                    if (backup != null) append(appCtx.getString(R.string.vm_apply_backup))
+                    r.exceptionOrNull()?.let { append(appCtx.getString(R.string.vm_fail_suffix, it.message ?: "")) }
                 }
             }
             _state.update { it.copy(busy = false) }
@@ -280,7 +282,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 applied.remove(scanned.packageName)
                 _state.update { it.copy(applied = applied.all()) }
                 val ok = r1.isSuccess && r2.isSuccess
-                if (ok) "已恢复（IFW 规则移除 + pm 组件重启用）" else "失败：${r1.exceptionOrNull()?.message ?: r2.exceptionOrNull()?.message}"
+                if (ok) appCtx.getString(R.string.vm_restore_ok) else appCtx.getString(R.string.vm_restore_fail, r1.exceptionOrNull()?.message ?: r2.exceptionOrNull()?.message ?: "")
             }
             _state.update { it.copy(busy = false) }
             onDone(msg)

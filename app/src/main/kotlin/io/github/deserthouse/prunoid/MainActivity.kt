@@ -1,5 +1,7 @@
 package io.github.deserthouse.prunoid
 
+import androidx.compose.ui.res.stringResource
+import io.github.deserthouse.prunoid.R
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -52,7 +54,7 @@ class MainActivity : ComponentActivity() {
     private fun ensureRuleGuard() {
         // M3-R8：规则守护前台服务（保持进程活跃以接收包更新广播）
         val channel = android.app.NotificationChannel(
-            RuleGuardService.CHANNEL_ID, "规则守护",
+            RuleGuardService.CHANNEL_ID, getString(R.string.guard_channel),
             android.app.NotificationManager.IMPORTANCE_MIN
         )
         getSystemService(android.app.NotificationManager::class.java).createNotificationChannel(channel)
@@ -92,19 +94,19 @@ fun SdkPrunerApp() {
                         selected = tab == 0,
                         onClick = { tab = 0 },
                         icon = { Icon(Icons.Outlined.Apps, contentDescription = null) },
-                        label = { Text("应用") }
+                        label = { Text(stringResource(R.string.tab_apps)) }
                     )
                     NavigationBarItem(
                         selected = tab == 1,
                         onClick = { tab = 1 },
                         icon = { Icon(Icons.Outlined.LibraryBooks, contentDescription = null) },
-                        label = { Text("SDK 库") }
+                        label = { Text(stringResource(R.string.menu_library)) }
                     )
                     NavigationBarItem(
                         selected = tab == 2,
                         onClick = { tab = 2 },
                         icon = { Icon(Icons.Outlined.BarChart, contentDescription = null) },
-                        label = { Text("统计") }
+                        label = { Text(stringResource(R.string.tab_stats)) }
                     )
                 }
             }

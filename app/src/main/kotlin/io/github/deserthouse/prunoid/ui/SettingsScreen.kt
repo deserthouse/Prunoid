@@ -1,5 +1,7 @@
 package io.github.deserthouse.prunoid.ui
 
+import androidx.compose.ui.res.stringResource
+import io.github.deserthouse.prunoid.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
@@ -44,10 +46,10 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
-                title = { Text("设置") },
+                title = { Text(stringResource(R.string.settings_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 }
             )
@@ -64,28 +66,28 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
             // ── 禁用引擎原理与区别 ───────────────────────────────
             Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp)) {
-                    Text("两种禁用引擎的区别", style = MaterialTheme.typography.titleSmall)
+                    Text(stringResource(R.string.engines_title), style = MaterialTheme.typography.titleSmall)
                     Spacer(Modifier.height(8.dp))
-                    Text("IFW（意图防火墙，无感知）", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                    Text(stringResource(R.string.engine_ifw_title), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                     Spacer(Modifier.height(2.dp))
                     Text(
-                        "向 /data/system/ifw/ 写入拦截规则，在系统框架层拦下组件的启动请求。" +
-                            "应用完全感知不到，也无法自行恢复；规则文件独立于 APK，应用更新后依然生效。推荐日常使用。",
+                        stringResource(R.string.engine_ifw_body1) +
+                            stringResource(R.string.engine_ifw_body2),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(Modifier.height(8.dp))
-                    Text("pm disable（组件停用，跨更新）", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                    Text(stringResource(R.string.engine_pm_title), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                     Spacer(Modifier.height(2.dp))
                     Text(
-                        "把组件置为系统级“已停用”状态。兼容性好、状态可查，但应用能检测到组件被禁并可能自行恢复；" +
-                            "停用状态同样跨应用更新保留。适合排查 IFW 行为异常的兼容性场景。",
+                        stringResource(R.string.engine_pm_body1) +
+                            stringResource(R.string.engine_pm_body2),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        "两种引擎都只针对第三方应用组件，操作前自动备份；恢复入口在列表页应急菜单。",
+                        stringResource(R.string.engines_note),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -99,9 +101,9 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(Modifier.weight(1f)) {
-                            Text("自动重应用", style = MaterialTheme.typography.titleSmall)
+                            Text(stringResource(R.string.auto_title), style = MaterialTheme.typography.titleSmall)
                             Text(
-                                "应用安装/更新后自动重新禁用其 SDK 组件（后台常驻服务 + 常驻通知）",
+                                stringResource(R.string.auto_summary),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -114,8 +116,8 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
                     if (!st.autoReapply) {
                         Spacer(Modifier.height(6.dp))
                         Text(
-                            "已关闭：后台服务已停止。Android 15+ 系统会跳过对后台应用的安装/更新广播，" +
-                                "因此关闭后新装或更新的应用不会自动重应用规则，需要你手动重扫并重新应用。",
+                            stringResource(R.string.auto_off_note1) +
+                                stringResource(R.string.auto_off_note2),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.error
                         )
@@ -125,7 +127,7 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
             // ── 默认引擎 ─────────────────────────────────────────
             Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp)) {
-                    Text("默认禁用引擎", style = MaterialTheme.typography.titleSmall)
+                    Text(stringResource(R.string.engine_default_title), style = MaterialTheme.typography.titleSmall)
                     Spacer(Modifier.height(8.dp))
                     SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                         Engine.entries.forEachIndexed { i, e ->
@@ -138,7 +140,7 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
                     }
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        "启动时使用此引擎；详情页可临时切换",
+                        stringResource(R.string.engine_default_desc),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -147,11 +149,11 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
             // ── 备份保留份数 ─────────────────────────────────────
             Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp)) {
-                    Text("备份保留份数", style = MaterialTheme.typography.titleSmall)
+                    Text(stringResource(R.string.backup_keep_title), style = MaterialTheme.typography.titleSmall)
                     Spacer(Modifier.height(4.dp))
                     var keepLocal by remember(st.backupKeep) { mutableStateOf(st.backupKeep.toFloat()) }
                     Text(
-                        "当前保留最近 ${keepLocal.toInt()} 份（3–30）",
+                        stringResource(R.string.backup_keep_current, keepLocal.toInt()),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -169,10 +171,10 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
             // ── 规则订阅（多源并集） ─────────────────────────────
             Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp)) {
-                    Text("规则订阅", style = MaterialTheme.typography.titleSmall)
+                    Text(stringResource(R.string.sub_title), style = MaterialTheme.typography.titleSmall)
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        "多源并发生效，规则取并集；同 id 冲突时置信度高者胜",
+                        stringResource(R.string.sub_desc),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -188,7 +190,7 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
                                     if (src.builtin) {
                                         Spacer(Modifier.width(4.dp))
                                         Text(
-                                            "内置",
+                                            stringResource(R.string.builtin),
                                             style = MaterialTheme.typography.labelSmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
@@ -203,8 +205,8 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
                                     overflow = TextOverflow.Ellipsis
                                 )
                                 Text(
-                                    if (src.lastFetched.isBlank()) "未拉取"
-                                    else "拉取于 " + fmtFetched(src.lastFetched),
+                                    if (src.lastFetched.isBlank()) stringResource(R.string.not_fetched)
+                                    else stringResource(R.string.fetched_at) + fmtFetched(src.lastFetched),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -212,12 +214,12 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
                             TextButton(
                                 onClick = { vm.refreshSource(src) { msg = it } },
                                 enabled = !st.busy
-                            ) { Text("更新") }
+                            ) { Text(stringResource(R.string.update)) }
                             if (!src.builtin) {
                                 TextButton(
                                     onClick = { vm.removeSource(src) { msg = it } },
                                     enabled = !st.busy
-                                ) { Text("移除") }
+                                ) { Text(stringResource(R.string.remove)) }
                             }
                         }
                     }
@@ -225,16 +227,16 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
                     OutlinedButton(
                         onClick = { showAddSource = true },
                         enabled = !st.busy
-                    ) { Text("添加规则源") }
+                    ) { Text(stringResource(R.string.add_source_title)) }
                 }
             }
             // ── 应急通道 ─────────────────────────────────────────
             Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp)) {
-                    Text("应急通道", style = MaterialTheme.typography.titleSmall)
+                    Text(stringResource(R.string.recovery_title), style = MaterialTheme.typography.titleSmall)
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        "UI 无法进入时，可在电脑上执行以下命令清除全部 IFW 规则：",
+                        stringResource(R.string.recovery_desc),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -258,14 +260,14 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
             // ── 关于 ─────────────────────────────────────────────
             Card(Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp)) {
-                    Text("关于", style = MaterialTheme.typography.titleSmall)
+                    Text(stringResource(R.string.about), style = MaterialTheme.typography.titleSmall)
                     Spacer(Modifier.height(4.dp))
                     Text(
                         "Prunoid v${BuildConfig.VERSION_NAME}",
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Text(
-                        "SDK 组件审计工具 · Apache-2.0",
+                        stringResource(R.string.about_line),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -298,16 +300,16 @@ fun AddSourceDialog(onDismiss: () -> Unit, onConfirm: (String, String) -> Unit) 
     var url by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("添加规则源") },
+        title = { Text(stringResource(R.string.add_source_title)) },
         text = {
             Column {
-                Text("格式与内置快照一致（schemaVersion + sdks），多源并集生效")
+                Text(stringResource(R.string.add_source_desc))
                 Spacer(Modifier.height(8.dp))
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
                     singleLine = true,
-                    label = { Text("名称（可选）") }
+                    label = { Text(stringResource(R.string.name_optional)) }
                 )
                 OutlinedTextField(
                     value = url,
@@ -321,8 +323,8 @@ fun AddSourceDialog(onDismiss: () -> Unit, onConfirm: (String, String) -> Unit) 
             TextButton(
                 onClick = { if (url.isNotBlank()) onConfirm(name.trim(), url.trim()) },
                 enabled = url.startsWith("http")
-            ) { Text("添加") }
+            ) { Text(stringResource(R.string.add)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } }
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } }
     )
 }

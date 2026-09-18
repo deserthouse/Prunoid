@@ -1,5 +1,7 @@
 package io.github.deserthouse.prunoid.ui
 
+import androidx.compose.ui.res.stringResource
+import io.github.deserthouse.prunoid.R
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
@@ -54,7 +56,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-// M3E 视觉（"冷静的审计台"）+ 审查清单落地：
+// M3E 视觉（stringResource(R.string.theme_name)）+ 审查清单落地：
 // 应用状态可见 / 手动重扫 / 系统 app 防误操作 / 逐 SDK 勾选 / 量化确认 / busy 态 / 恢复双击确认。
 // 包名/组件名/命令一律等宽；浏览=平铺，聚焦=卡片。
 
@@ -68,18 +70,19 @@ private fun safetyIcon(s: Safety): ImageVectorAlias = when (s) {
 private typealias ImageVectorAlias = androidx.compose.ui.graphics.vector.ImageVector
 
 /** 分类枚举 → 中文（schema 语言不穿透到 UI） */
-fun categoryLabel(c: String): String = when (c) {
-    "ads" -> "广告"
-    "push" -> "推送"
-    "analytics" -> "统计"
-    "quality" -> "质量"
-    "social_or_pay" -> "社媒/支付"
-    "maps" -> "地图"
-    "infra" -> "基础组件"
-    "security" -> "安全"
-    "framework" -> "框架"
-    else -> "其他"
-}
+@Composable
+fun categoryLabel(c: String): String = stringResource(when (c) {
+    "ads" -> R.string.cat_ads
+    "push" -> R.string.cat_push
+    "analytics" -> R.string.cat_analytics
+    "quality" -> R.string.cat_quality
+    "social_or_pay" -> R.string.cat_social
+    "maps" -> R.string.cat_map
+    "infra" -> R.string.cat_basic
+    "security" -> R.string.cat_safety
+    "framework" -> R.string.cat_framework
+    else -> R.string.cat_other
+})
 
 /** SDK monogram 头像（LibChecker tonal avatar 语义）：规则 id 哈希取色，公司名/SDK 名首字母 */
 private val MONOGRAM_COLORS = listOf(
@@ -197,6 +200,8 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
     var query by remember { mutableStateOf("") }
     // 订阅点语义：任一源成功拉取过才亮（sources 注册表默认恒含官方源，不能作为判据）
     val subscribed = st.sources.any { it.lastFetched.isNotBlank() }
+    // semantics{} 非组合上下文，文案先在组合期解析
+    val subDotDesc = if (subscribed) stringResource(R.string.subscribed) else stringResource(R.string.using_snapshot)
 
     SnackbarEffect(snackbar, st.message)
     SnackbarEffect(snackbar, subMsg)
@@ -219,26 +224,26 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
                                     RoundedCornerShape(50)
                                 )
                                 .semantics {
-                                    contentDescription = if (subscribed) "已订阅规则源" else "使用内置快照"
+                                    contentDescription = subDotDesc
                                 }
                         )
                     }
                 },
                 actions = {
                     IconButton(onClick = { vm.rescan() }, enabled = !st.scanning) {
-                        Icon(Icons.Outlined.Refresh, contentDescription = "重新扫描")
+                        Icon(Icons.Outlined.Refresh, contentDescription = stringResource(R.string.rescan))
                     }
                     IconButton(onClick = { showSubscribe = true }) {
-                        Icon(Icons.Outlined.CloudDownload, contentDescription = "规则订阅源")
+                        Icon(Icons.Outlined.CloudDownload, contentDescription = stringResource(R.string.menu_sources))
                     }
                     IconButton(onClick = { showRecovery = true }) {
-                        Icon(Icons.Outlined.HealthAndSafety, contentDescription = "备份与应急恢复")
+                        Icon(Icons.Outlined.HealthAndSafety, contentDescription = stringResource(R.string.menu_recovery))
                     }
                     IconButton(onClick = onOpenLibrary) {
-                        Icon(Icons.Outlined.Apps, contentDescription = "SDK 库")
+                        Icon(Icons.Outlined.Apps, contentDescription = stringResource(R.string.menu_library))
                     }
                     IconButton(onClick = onOpenSettings) {
-                        Icon(Icons.Outlined.Settings, contentDescription = "设置")
+                        Icon(Icons.Outlined.Settings, contentDescription = stringResource(R.string.menu_settings))
                     }
                 }
             )
@@ -248,8 +253,8 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
             val hits = visible.count { it.matchedSdks.isNotEmpty() }
             Surface(tonalElevation = 2.dp) {
                 Text(
-                    if (st.apps.isEmpty()) "正在建立索引…"
-                    else "${visible.size} 个 app · $hits 个命中 SDK",
+                    if (st.apps.isEmpty()) stringResource(R.string.indexing)
+                    else stringResource(R.string.list_summary, visible.size, hits),
                     style = MaterialTheme.typography.labelMedium,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -265,7 +270,7 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
                     contentColor = if (dark) WarnOnContainerDark else WarnOnContainerLight
                 ) {
                     Text(
-                        "未取得 root：扫描可用，禁用操作不可用",
+                        stringResource(R.string.vm_no_root),
                         style = MaterialTheme.typography.labelMedium,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -277,11 +282,11 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
                 value = query,
                 onValueChange = { query = it },
                 singleLine = true,
-                placeholder = { Text("搜索 app / 包名 / SDK") },
+                placeholder = { Text(stringResource(R.string.search_hint)) },
                 leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
                 trailingIcon = {
                     if (query.isNotEmpty()) IconButton(onClick = { query = "" }) {
-                        Icon(Icons.Outlined.Close, contentDescription = "清除搜索")
+                        Icon(Icons.Outlined.Close, contentDescription = stringResource(R.string.clear_search))
                     }
                 },
                 shape = RoundedCornerShape(28.dp),
@@ -304,12 +309,12 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
                 FilterChip(
                     selected = st.showSystem,
                     onClick = { vm.toggleShowSystem() },
-                    label = { Text("含系统 app（只读）") }
+                    label = { Text(stringResource(R.string.chip_show_system)) }
                 )
                 FilterChip(
                     selected = st.hitsOnly,
                     onClick = { vm.toggleHitsOnly() },
-                    label = { Text("仅看命中") }
+                    label = { Text(stringResource(R.string.chip_hits_only)) }
                 )
             }
             if (st.scanning) {
@@ -339,7 +344,7 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
                     )
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        if (query.isBlank()) "没有可显示的 app" else "无匹配结果",
+                        if (query.isBlank()) stringResource(R.string.empty_apps) else stringResource(R.string.empty_no_match),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -371,7 +376,7 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
                                             shape = RoundedCornerShape(50)
                                         ) {
                                             Text(
-                                                if (framework) "框架" else "系统",
+                                                if (framework) stringResource(R.string.badge_framework) else stringResource(R.string.badge_system),
                                                 style = MaterialTheme.typography.labelSmall,
                                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.dp)
                                             )
@@ -381,7 +386,7 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
                                         Spacer(Modifier.width(6.dp))
                                         Icon(
                                             Icons.Outlined.CheckCircle,
-                                            contentDescription = "已应用规则",
+                                            contentDescription = stringResource(R.string.cd_applied),
                                             tint = MaterialTheme.colorScheme.primary,
                                             modifier = Modifier.size(16.dp)
                                         )
@@ -456,10 +461,10 @@ fun SubscribeDialog(initial: String, onDismiss: () -> Unit, onConfirm: (String) 
     var url by remember { mutableStateOf(initial) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("规则订阅源") },
+        title = { Text(stringResource(R.string.menu_sources)) },
         text = {
             Column {
-                Text("格式与内置快照一致（schemaVersion + sdks），支持自建源")
+                Text(stringResource(R.string.dlg_sources_desc))
                 Spacer(Modifier.height(8.dp))
                 OutlinedTextField(
                     value = url,
@@ -472,16 +477,16 @@ fun SubscribeDialog(initial: String, onDismiss: () -> Unit, onConfirm: (String) 
                     onClick = {
                         url = "https://raw.githubusercontent.com/deserthouse/Prunoid-Rules/main/rules/snapshot.json"
                     }
-                ) { Text("填入官方源") }
+                ) { Text(stringResource(R.string.fill_official)) }
             }
         },
         confirmButton = {
             TextButton(
                 onClick = { if (url.isNotBlank()) onConfirm(url.trim()) },
                 enabled = url.startsWith("http")
-            ) { Text("订阅") }
+            ) { Text(stringResource(R.string.subscribe)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } }
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } }
     )
 }
 
@@ -492,13 +497,13 @@ fun RecoveryDialog(vm: AppViewModel, onMessage: (String) -> Unit, onDismiss: () 
     val busy = vm.state.collectAsState().value.busy
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("备份与应急恢复") },
+        title = { Text(stringResource(R.string.menu_recovery)) },
         text = {
             Column {
                 if (backups.isEmpty()) {
-                    Text("暂无备份（应用规则时会自动创建）")
+                    Text(stringResource(R.string.recovery_empty))
                 } else {
-                    Text("恢复点（新→旧）：", style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(R.string.recovery_points), style = MaterialTheme.typography.bodySmall)
                     backups.take(10).forEach { path ->
                         val name = path.substringAfterLast('/')
                         Row(
@@ -538,16 +543,16 @@ fun RecoveryDialog(vm: AppViewModel, onMessage: (String) -> Unit, onDismiss: () 
             Row {
                 // 清除全部 IFW：最高危级 → 倒计时锁定（Thanox 式）
                 CountdownConfirmTextButton(
-                    label = "清除全部 IFW",
-                    armedLabel = "确认清除全部",
+                    label = stringResource(R.string.clear_ifw),
+                    armedLabel = stringResource(R.string.clear_ifw_confirm),
                     enabled = !busy,
                     onConfirm = { vm.clearAllIfw { onMessage(it) } }
                 )
                 Spacer(Modifier.width(4.dp))
                 // 恢复所选：倒计时锁定
                 CountdownConfirmTextButton(
-                    label = "恢复所选",
-                    armedLabel = "确认恢复所选",
+                    label = stringResource(R.string.restore_selected),
+                    armedLabel = stringResource(R.string.restore_selected_confirm),
                     enabled = selected != null && !busy,
                     onConfirm = {
                         selected?.let { p ->
@@ -558,7 +563,7 @@ fun RecoveryDialog(vm: AppViewModel, onMessage: (String) -> Unit, onDismiss: () 
                 )
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("关闭") } }
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.close)) } }
     )
 }
 
@@ -592,7 +597,7 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
         runCatching {
             pm.getPackageInfo(app.packageName, 0).versionName
         }.getOrNull()
-    }.let { if (it.isNullOrBlank()) "无版本号" else it }
+    }.let { if (it.isNullOrBlank()) stringResource(R.string.no_version) else it }
 
     SnackbarEffect(snackbar, msg)
 
@@ -619,7 +624,7 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                 title = { Text(app.label.ifEmpty { app.packageName }) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 }
             )
@@ -630,7 +635,7 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                     if (framework) {
                         // 框架/核心层：安全层硬拦截，永不可操作
                         Text(
-                            "框架/系统核心组件：安全层白名单硬拦截，不可修改（防 bootloop 设计）",
+                            stringResource(R.string.framework_banner),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.error,
                             modifier = Modifier
@@ -639,7 +644,7 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                         )
                     } else if (systemWarn) {
                         Text(
-                            "系统应用：修改可能影响系统功能，操作将被要求二次风险确认",
+                            stringResource(R.string.system_banner),
                             style = MaterialTheme.typography.labelMedium,
                             color = if (isSystemInDarkTheme()) WarnContainerLight else WarnOnContainerLight,
                             modifier = Modifier
@@ -662,13 +667,13 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                 CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
                                 Spacer(Modifier.width(8.dp))
                             }
-                            Text(if (selected.isNotEmpty() && selected != defaultSelected) "应用所选 ${selected.size} 项" else "应用规则")
+                            Text(if (selected.isNotEmpty() && selected != defaultSelected) stringResource(R.string.apply_selected, selected.size) else stringResource(R.string.apply_rules))
                         }
                         OutlinedButton(
                             onClick = { vm.restoreApp(app) { msg = it } },
                             enabled = !framework && !st.busy,
                             modifier = Modifier.weight(1f)
-                        ) { Text("恢复") }
+                        ) { Text(stringResource(R.string.restore)) }
                     }
                 }
             }
@@ -716,7 +721,7 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Text(
-                                    "v$versionName · 命中 ${app.matchedSdks.size} SDK · ${app.matchedSdks.sumOf { it.matchedComponents.size }} 组件",
+                                    stringResource(R.string.detail_summary, versionName, app.matchedSdks.size, app.matchedSdks.sumOf { it.matchedComponents.size }),
                                     style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.primary
                                 )
@@ -793,7 +798,7 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                 )
                                 Spacer(Modifier.width(4.dp))
                                 Text(
-                                    "已应用 ${e.components.size} 组件（${e.engine}）" +
+                                    stringResource(R.string.applied_line, e.components.size, e.engine) +
                                         if (e.at > 0) " · ${fmtTime(e.at)}" else "",
                                     style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.primary
@@ -819,9 +824,9 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                     Spacer(Modifier.height(4.dp))
                     Text(
                         if (st.engine == Engine.IFW)
-                            "IFW：app 无感知、无法自恢复（推荐）"
+                            stringResource(R.string.ifw_desc)
                         else
-                            "pm disable：兼容性好，但 app 可能自行恢复",
+                            stringResource(R.string.pm_desc),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -834,12 +839,12 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                         selected = detailTab == 0,
                         onClick = { detailTab = 0 },
                         shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
-                    ) { Text("SDK 视图") }
+                    ) { Text(stringResource(R.string.view_sdk)) }
                     SegmentedButton(
                         selected = detailTab == 1,
                         onClick = { detailTab = 1 },
                         shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
-                    ) { Text("组件视图") }
+                    ) { Text(stringResource(R.string.view_components)) }
                 }
             }
             if (detailTab == 1) {
@@ -852,9 +857,9 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                         FilterChip(
                             selected = compTypeFilter == null,
                             onClick = { compTypeFilter = null },
-                            label = { Text("全部类型") }
+                            label = { Text(stringResource(R.string.type_all)) }
                         )
-                        listOf("activity" to "界面", "service" to "服务", "receiver" to "广播", "provider" to "提供器").forEach { (t, l) ->
+                        listOf("activity" to stringResource(R.string.type_activity), "service" to stringResource(R.string.type_service), "receiver" to stringResource(R.string.type_receiver), "provider" to stringResource(R.string.type_provider)).forEach { (t, l) ->
                             val has = app.matchedSdks.any { sdk ->
                                 sdk.matchedComponents.any { cn -> (sdk.componentTypes[cn] ?: "") == t }
                             }
@@ -911,7 +916,7 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                             FilterChip(
                                 selected = catFilter == null,
                                 onClick = { catFilter = null },
-                                label = { Text("全部") }
+                                label = { Text(stringResource(R.string.filter_all)) }
                             )
                             categories.forEach { c ->
                                 FilterChip(
@@ -926,7 +931,7 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                "当前显示 ${visibleSdks.size} 个 SDK",
+                                stringResource(R.string.showing_sdks, visibleSdks.size),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.weight(1f)
@@ -934,11 +939,11 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                             TextButton(
                                 onClick = { selected = selected + visibleSdks.map { it.ruleId }.toSet() },
                                 enabled = visibleSdks.isNotEmpty()
-                            ) { Text("全选筛选结果") }
+                            ) { Text(stringResource(R.string.select_all_filtered)) }
                             TextButton(
                                 onClick = { selected = selected - visibleSdks.map { it.ruleId }.toSet() },
                                 enabled = visibleSdks.isNotEmpty()
-                            ) { Text("全不选") }
+                            ) { Text(stringResource(R.string.select_none)) }
                         }
                     }
                 }
@@ -974,7 +979,7 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                         SafetyBadge(hit.safety)
                         Icon(
                             Icons.Outlined.ExpandMore,
-                            contentDescription = "详情",
+                            contentDescription = stringResource(R.string.cd_detail),
                             modifier = Modifier.padding(start = 6.dp)
                         )
                     }
@@ -1003,16 +1008,16 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Column(Modifier.weight(1f)) {
-                                    Text("未识别组件 $total", style = MaterialTheme.typography.titleSmall)
+                                    Text(stringResource(R.string.unmatched_total, total), style = MaterialTheme.typography.titleSmall)
                                     Text(
-                                        "不在规则库中，暂无法禁用；可提交至规则仓库",
+                                        stringResource(R.string.unmatched_desc),
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                                 Icon(
                                     Icons.Outlined.ExpandMore,
-                                    contentDescription = if (unmatchedOpen) "收起" else "展开",
+                                    contentDescription = if (unmatchedOpen) stringResource(R.string.collapse) else stringResource(R.string.expand),
                                     modifier = Modifier
                                         .padding(start = 6.dp)
                                         .rotate(rot)
@@ -1044,7 +1049,7 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                                     shape = RoundedCornerShape(50)
                                                 ) {
                                                 Text(
-                                                    "疑似广告/统计",
+                                                    stringResource(R.string.suspicious),
                                                     style = MaterialTheme.typography.labelSmall,
                                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.dp)
                                                 )
@@ -1090,22 +1095,22 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                     tint = MaterialTheme.colorScheme.error
                 )
             },
-            title = { Text(if (systemWarn) "警告：正在修改系统应用" else "应用规则") },
+            title = { Text(if (systemWarn) stringResource(R.string.sys_dialog_title) else stringResource(R.string.apply_rules)) },
             text = {
                 Column {
                     if (systemWarn) {
                         Text(
-                            "「${app.label}」是系统应用。禁用其组件可能导致该应用甚至系统功能异常。" +
-                                "如出现问题，可在本应用内恢复，或通过备份/应急通道回滚。",
+                            stringResource(R.string.sys_dialog_body, app.label) +
+                                stringResource(R.string.sys_dialog_note),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodyMedium
                         )
                         Spacer(Modifier.height(8.dp))
                     }
                     Text(
-                        "将禁用 ${selHits.size} 个 SDK 的 ${selComponents.size} 个组件" +
-                            (if (excludedRisky > 0) "（已排除 $excludedRisky 个风险项）" else "") +
-                            "，引擎 ${st.engine.name}。操作前自动创建备份。"
+                        stringResource(R.string.confirm_line, selHits.size, selComponents.size) +
+                            (if (excludedRisky > 0) stringResource(R.string.excluded_line, excludedRisky) else "") +
+                            stringResource(R.string.engine_line, st.engine.name)
                     )
                 }
             },
@@ -1115,39 +1120,42 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                     vm.applyRules(app, selected) { msg = it }
                 }) {
                     Text(
-                        if (systemWarn) "我已了解风险，继续" else "应用",
+                        if (systemWarn) stringResource(R.string.risk_continue) else stringResource(R.string.apply),
                         color = if (systemWarn) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
                     )
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showApplyConfirm = false }) { Text("取消") }
+                TextButton(onClick = { showApplyConfirm = false }) { Text(stringResource(R.string.cancel)) }
             }
         )
     }
 }
 
-fun typeLabel(t: String) = when (t) {
-    "activity" -> "界面 activity"
-    "service" -> "后台 service"
-    "receiver" -> "广播 receiver"
-    "provider" -> "provider"
-    else -> "其他组件"
-}
+@Composable
+fun typeLabel(t: String): String = stringResource(when (t) {
+    "activity" -> R.string.comp_activity
+    "service" -> R.string.comp_service
+    "receiver" -> R.string.comp_receiver
+    "provider" -> R.string.comp_other
+    else -> R.string.comp_other
+})
 
-fun confidenceLabel(c: String) = when (c) {
-    "high" -> "高"
-    "medium" -> "中"
-    "low" -> "低"
-    else -> c
-}
+@Composable
+fun confidenceLabel(c: String): String = if (c == "high" || c == "medium" || c == "low")
+    stringResource(when (c) {
+        "high" -> R.string.conf_high
+        "medium" -> R.string.conf_medium
+        else -> R.string.conf_low
+    }) else c
 
-fun safetyLabel(s: Safety) = when (s) {
-    Safety.SAFE -> "可安全禁用"
-    Safety.CAUTION -> "谨慎禁用"
-    Safety.RISKY -> "禁用有风险"
-    Safety.UNKNOWN -> "影响未知"
-}
+@Composable
+fun safetyLabel(s: Safety): String = stringResource(when (s) {
+    Safety.SAFE -> R.string.safe_safe
+    Safety.CAUTION -> R.string.safe_caution
+    Safety.RISKY -> R.string.safe_risky
+    Safety.UNKNOWN -> R.string.safe_unknown
+})
 
 
 /** SDK 档案卡底部弹层（LibChecker 结构 ⊕ Blocker 结构化字段 ⊕ 量化句） */
@@ -1203,17 +1211,17 @@ fun SdkArchiveSheet(
                 Modifier.padding(top = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("纳入禁用选择", style = MaterialTheme.typography.labelMedium)
+                Text(stringResource(R.string.sheet_toggle), style = MaterialTheme.typography.labelMedium)
                 Spacer(Modifier.width(8.dp))
                 Switch(checked = checked, onCheckedChange = onToggle)
             }
             Spacer(Modifier.height(12.dp))
             info?.description?.takeIf { it.isNotBlank() }?.let {
-                ArchiveFieldCard("描述") { Text(it, style = MaterialTheme.typography.bodySmall) }
+                ArchiveFieldCard(stringResource(R.string.sheet_desc_title)) { Text(it, style = MaterialTheme.typography.bodySmall) }
                 Spacer(Modifier.height(8.dp))
             }
             info?.sourceLink?.takeIf { it.isNotBlank() }?.let {
-                ArchiveFieldCard("相关链接") {
+                ArchiveFieldCard(stringResource(R.string.sheet_links)) {
                     Text(
                         it,
                         fontFamily = FontFamily.Monospace,
@@ -1223,38 +1231,38 @@ fun SdkArchiveSheet(
                 }
                 Spacer(Modifier.height(8.dp))
             }
-            ArchiveFieldCard("可安全禁用") {
+            ArchiveFieldCard(stringResource(R.string.sheet_safe)) {
                 Text(
-                    if (info?.safeToBlock == true) "是" else "否（谨慎评估）",
+                    if (info?.safeToBlock == true) stringResource(R.string.yes) else stringResource(R.string.no_caution),
                     style = MaterialTheme.typography.bodySmall
                 )
             }
             Spacer(Modifier.height(8.dp))
-            ArchiveFieldCard("副作用") {
+            ArchiveFieldCard(stringResource(R.string.sheet_sideeffect)) {
                 Text(
                     info?.sideEffect?.takeIf { it.isNotBlank() && !it.equals("unknown", true) && it != "未知" }
-                        ?: "未知",
+                        ?: stringResource(R.string.unknown),
                     style = MaterialTheme.typography.bodySmall
                 )
             }
             Spacer(Modifier.height(8.dp))
-            ArchiveFieldCard("开发者团队 / 置信度") {
+            ArchiveFieldCard(stringResource(R.string.sheet_dev)) {
                 Text(
                     listOf(
                         info?.devTeam?.ifBlank { info?.company }?.takeIf { it.isNotBlank() },
-                        info?.confidence?.let { "置信度 ${confidenceLabel(it)}" }
-                    ).filterNotNull().joinToString(" · ").ifBlank { "未知" },
+                        info?.confidence?.let { stringResource(R.string.conf_label, confidenceLabel(it)) }
+                    ).filterNotNull().joinToString(" · ").ifBlank { stringResource(R.string.unknown) },
                     style = MaterialTheme.typography.bodySmall
                 )
             }
             Spacer(Modifier.height(8.dp))
             info?.contributors?.takeIf { it.isNotEmpty() }?.let { c ->
-                ArchiveFieldCard("规则贡献者") {
+                ArchiveFieldCard(stringResource(R.string.sheet_contributors)) {
                     Text(c.joinToString("、"), style = MaterialTheme.typography.bodySmall)
                 }
                 Spacer(Modifier.height(8.dp))
             }
-            ArchiveFieldCard("命中组件 ${hit.matchedComponents.size}") {
+            ArchiveFieldCard(stringResource(R.string.sheet_matched, hit.matchedComponents.size)) {
                 Column {
                     val typeOrder = listOf("activity", "service", "receiver", "provider", "other")
                     typeOrder.forEach { t ->

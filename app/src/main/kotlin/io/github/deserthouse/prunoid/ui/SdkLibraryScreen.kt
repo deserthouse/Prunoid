@@ -1,5 +1,7 @@
 package io.github.deserthouse.prunoid.ui
 
+import androidx.compose.ui.res.stringResource
+import io.github.deserthouse.prunoid.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -23,7 +25,7 @@ import io.github.deserthouse.prunoid.core.scanner.ScannedApp
 import io.github.deserthouse.prunoid.core.scanner.SdkHit
 
 // SDK 库浏览页（Blocker Found/Not found 模式，#7）：
-// 全量规则库按"在机检出 / 未检出"两段浏览；点入 = SDK 档案卡弹层。
+// 全量规则库按stringResource(R.string.lib_subtitle)两段浏览；点入 = SDK 档案卡弹层。
 // 数据 = 内置快照 + 订阅合并后的全量规则（vm.allRules），命中计数来自最近一次扫描。
 
 private data class LibRow(
@@ -75,10 +77,10 @@ fun SdkLibraryScreen(vm: AppViewModel, onBack: () -> Unit) {
             TopAppBar(
                 title = {
                     Column {
-                        Text("SDK 库", style = MaterialTheme.typography.titleLarge)
+                        Text(stringResource(R.string.lib_title), style = MaterialTheme.typography.titleLarge)
                         Text(
-                            if (st.scanning) "扫描中…（统计暂为上次结果）"
-                            else "在机检出 $foundCount · 全库 ${all.size}",
+                            if (st.scanning) stringResource(R.string.lib_scanning)
+                            else stringResource(R.string.lib_summary, foundCount, all.size),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -86,7 +88,7 @@ fun SdkLibraryScreen(vm: AppViewModel, onBack: () -> Unit) {
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 }
             )
@@ -97,11 +99,11 @@ fun SdkLibraryScreen(vm: AppViewModel, onBack: () -> Unit) {
                 value = query,
                 onValueChange = { query = it },
                 singleLine = true,
-                placeholder = { Text("搜索 SDK 名 / 开发者") },
+                placeholder = { Text(stringResource(R.string.lib_search_hint)) },
                 leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
                 trailingIcon = {
                     if (query.isNotEmpty()) IconButton(onClick = { query = "" }) {
-                        Icon(Icons.Outlined.Close, contentDescription = "清除搜索")
+                        Icon(Icons.Outlined.Close, contentDescription = stringResource(R.string.clear_search))
                     }
                 },
                 shape = RoundedCornerShape(28.dp),
@@ -124,18 +126,18 @@ fun SdkLibraryScreen(vm: AppViewModel, onBack: () -> Unit) {
                 FilterChip(
                     selected = tab == 0,
                     onClick = { tab = 0 },
-                    label = { Text("在机检出 ($foundCount)") }
+                    label = { Text(stringResource(R.string.lib_tab_found, foundCount)) }
                 )
                 FilterChip(
                     selected = tab == 1,
                     onClick = { tab = 1 },
-                    label = { Text("未检出 (${all.size - foundCount})") }
+                    label = { Text(stringResource(R.string.lib_tab_missing, all.size - foundCount)) }
                 )
             }
             if (rows.isEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
-                        "无匹配条目",
+                        stringResource(R.string.lib_empty),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

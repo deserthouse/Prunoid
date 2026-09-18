@@ -77,6 +77,6 @@ M1 最小可用 ──→ M2 规则生态 ──→ M3 自动化与共建
 
 - ✅ M1/M2/M3 complete and verified (rooted emulator, Android 16 baseline)
 - ✅ v0.3.0-alpha: renamed to Prunoid, multi-source subscription, auto-reapply toggle, SDK library browser, archive sheet, component-type grouping, system-app tiers, brand icons (166), rich descriptions (667), unrecognized-components view, countdown confirms
-- ⏭️ Next: stats & global search shipped in 0.4; long-tail icons/descriptions via community contributions; i18n evaluation deferred
+- ⏭️ Next: v0.4.0 (versionCode 5) ships i18n (zh default + en), batch-B polish (async icons, Blocker-aligned motion, stats-card fix), AppChecker study absorbed; long-tail icons/descriptions via community contributions
 
 > 本地维护文档，进度事实源另见 project_status.md 与持久记忆（本文件由仓库同步，Status 段对外可读）。

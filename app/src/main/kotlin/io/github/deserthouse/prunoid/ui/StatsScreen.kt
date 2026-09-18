@@ -1,5 +1,7 @@
 package io.github.deserthouse.prunoid.ui
 
+import androidx.compose.ui.res.stringResource
+import io.github.deserthouse.prunoid.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
@@ -74,9 +76,9 @@ fun StatsScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 listOf(
-                    "已识别 SDK" to "$totalIdentified",
-                    "已禁用组件" to "$totalBlocked",
-                    "扫描应用" to "${st.apps.size}"
+                    stringResource(R.string.stats_identified) to "$totalIdentified",
+                    stringResource(R.string.stats_blocked) to "$totalBlocked",
+                    stringResource(R.string.stats_apps) to "${st.apps.size}"
                 ).forEach { (label, value) ->
                     // weight 均分三格，长标签（已禁用组件）与相邻格保持间距不粘连
                     Column(
@@ -97,7 +99,7 @@ fun StatsScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
         // 分类分布
         Card(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp)) {
-                Text("分类分布（组件数）", style = MaterialTheme.typography.titleSmall)
+                Text(stringResource(R.string.stats_cat_title), style = MaterialTheme.typography.titleSmall)
                 Spacer(Modifier.height(8.dp))
                 catDist.entries.sortedByDescending { it.value }.forEach { (cat, n) ->
                     Row(
@@ -117,7 +119,7 @@ fun StatsScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
         // 在机 SDK 排行
         Card(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp)) {
-                Text("在机 SDK 排行", style = MaterialTheme.typography.titleSmall)
+                Text(stringResource(R.string.stats_rank_title), style = MaterialTheme.typography.titleSmall)
                 Spacer(Modifier.height(8.dp))
                 rows.take(10).forEachIndexed { i, row ->
                     Row(
