@@ -52,6 +52,8 @@ See every SDK embedded in your apps, and decide which components to block
   <img src="docs/screenshots/archive_sheet.png" width="270" alt="SDK archive sheet"/>
   <img src="docs/screenshots/library.png" width="270" alt="SDK library"/>
   <img src="docs/screenshots/settings.png" width="270" alt="Settings"/>
+  <img src="docs/screenshots/stats.png" width="270" alt="Stats"/>
+  <img src="docs/screenshots/about.png" width="270" alt="About"/>
 </p>
 
 ## 🚀 Getting started

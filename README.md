@@ -52,6 +52,8 @@
   <img src="docs/screenshots/archive_sheet.png" width="270" alt="SDK 档案卡"/>
   <img src="docs/screenshots/library.png" width="270" alt="SDK 库"/>
   <img src="docs/screenshots/settings.png" width="270" alt="设置"/>
+  <img src="docs/screenshots/stats.png" width="270" alt="统计"/>
+  <img src="docs/screenshots/about.png" width="270" alt="关于"/>
 </p>
 
 ## 🚀 安装使用
