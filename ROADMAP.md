@@ -75,8 +75,8 @@ M1 最小可用 ──→ M2 规则生态 ──→ M3 自动化与共建
 
 ## Status
 
-- ✅ M1 complete: scan, dual engine (IFW + pm), safety layer, M3E UI — verified end-to-end on rooted emulator (block A/B: result 102 vs 0)
-- ✅ M2 complete: rule subscription (official source live), engine switching
-- ✅ M3 core: auto reapply after app updates (incremental, verified)
-- ✅ Rules repo live: [sdk-pruner-rules](https://github.com/deserthouse/Prunoid-Rules)
-- ⏭️ Next: hardening from real-world feedback
+- ✅ M1/M2/M3 complete and verified (rooted emulator, Android 16 baseline)
+- ✅ v0.3.0-alpha: renamed to Prunoid, multi-source subscription, auto-reapply toggle, SDK library browser, archive sheet, component-type grouping, system-app tiers, brand icons (166), rich descriptions (667), unrecognized-components view, countdown confirms
+- ⏭️ Next: stats & global search shipped in 0.4; long-tail icons/descriptions via community contributions; i18n evaluation deferred
+
+> 本地维护文档，进度事实源另见 project_status.md 与持久记忆（本文件由仓库同步，Status 段对外可读）。
