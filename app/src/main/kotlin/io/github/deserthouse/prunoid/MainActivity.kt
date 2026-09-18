@@ -33,7 +33,7 @@ import io.github.deserthouse.prunoid.ui.AppViewModel
 import io.github.deserthouse.prunoid.ui.SdkLibraryScreen
 import io.github.deserthouse.prunoid.ui.SdkPrunerTheme
 import io.github.deserthouse.prunoid.ui.SettingsScreen
-import io.github.deserthouse.prunoid.ui.StatsScreenPlaceholder
+import io.github.deserthouse.prunoid.ui.StatsScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -115,7 +115,7 @@ fun SdkPrunerApp() {
                         onOpenLibrary = { tab = 1 }
                     )
                     1 -> SdkLibraryScreen(vm, onBack = { tab = 0 })
-                    else -> StatsScreenPlaceholder(vm)
+                    else -> StatsScreen(vm)
                 }
             }
         }
