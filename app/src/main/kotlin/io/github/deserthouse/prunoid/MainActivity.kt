@@ -15,12 +15,25 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.first
 import io.github.deserthouse.prunoid.core.engine.RuleGuardService
 import io.github.deserthouse.prunoid.core.scanner.ScannedApp
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material.icons.Icons
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.outlined.Apps
+import androidx.compose.material.icons.outlined.BarChart
+import androidx.compose.material.icons.outlined.LibraryBooks
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.ui.Modifier
 import io.github.deserthouse.prunoid.ui.AppDetailScreen
 import io.github.deserthouse.prunoid.ui.AppListScreen
 import io.github.deserthouse.prunoid.ui.AppViewModel
 import io.github.deserthouse.prunoid.ui.SdkLibraryScreen
 import io.github.deserthouse.prunoid.ui.SdkPrunerTheme
 import io.github.deserthouse.prunoid.ui.SettingsScreen
+import io.github.deserthouse.prunoid.ui.StatsScreenPlaceholder
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -61,24 +74,50 @@ fun SdkPrunerApp() {
     val vm: AppViewModel = viewModel()
     var selected by remember { mutableStateOf<ScannedApp?>(null) }
     var inSettings by remember { mutableStateOf(false) }
-    var inLibrary by remember { mutableStateOf(false) }
-    // 详情/设置/SDK 库屏系统返回 = 回上级，不退出 app
-    BackHandler(enabled = selected != null || inSettings || inLibrary) {
-        when {
-            inSettings -> inSettings = false
-            inLibrary -> inLibrary = false
-            else -> selected = null
-        }
+    var tab by remember { mutableStateOf(0) }   // 0=应用 1=SDK 库 2=统计
+    // 详情/设置屏系统返回 = 回上级，不退出 app
+    BackHandler(enabled = selected != null || inSettings) {
+        if (inSettings) inSettings = false else selected = null
     }
     when {
         inSettings -> SettingsScreen(vm, onBack = { inSettings = false })
-        inLibrary -> SdkLibraryScreen(vm, onBack = { inLibrary = false })
-        selected == null -> AppListScreen(
-            vm,
-            onOpen = { selected = it },
-            onOpenSettings = { inSettings = true },
-            onOpenLibrary = { inLibrary = true }
-        )
-        else -> AppDetailScreen(selected!!, vm, onBack = { selected = null })
+        selected != null -> AppDetailScreen(selected!!, vm, onBack = { selected = null })
+        else -> Scaffold(
+            bottomBar = {
+                NavigationBar {
+                    NavigationBarItem(
+                        selected = tab == 0,
+                        onClick = { tab = 0 },
+                        icon = { Icon(Icons.Outlined.Apps, contentDescription = null) },
+                        label = { Text("应用") }
+                    )
+                    NavigationBarItem(
+                        selected = tab == 1,
+                        onClick = { tab = 1 },
+                        icon = { Icon(Icons.Outlined.LibraryBooks, contentDescription = null) },
+                        label = { Text("SDK 库") }
+                    )
+                    NavigationBarItem(
+                        selected = tab == 2,
+                        onClick = { tab = 2 },
+                        icon = { Icon(Icons.Outlined.BarChart, contentDescription = null) },
+                        label = { Text("统计") }
+                    )
+                }
+            }
+        ) { padding ->
+            Box(Modifier.padding(padding)) {
+                when (tab) {
+                    0 -> AppListScreen(
+                        vm,
+                        onOpen = { selected = it },
+                        onOpenSettings = { inSettings = true },
+                        onOpenLibrary = { tab = 1 }
+                    )
+                    1 -> SdkLibraryScreen(vm, onBack = { tab = 0 })
+                    else -> StatsScreenPlaceholder(vm)
+                }
+            }
+        }
     }
 }
