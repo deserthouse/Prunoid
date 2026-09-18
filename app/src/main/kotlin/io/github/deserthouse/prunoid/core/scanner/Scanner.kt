@@ -12,6 +12,9 @@ data class ScannedApp(
     val label: String,
     val isSystem: Boolean,
     val matchedSdks: List<SdkHit>,
+    val targetSdk: Int = 0,
+    val firstInstallTime: Long = 0L,
+    val lastUpdateTime: Long = 0L,
     // 未被任何规则识别的组件：按 Java 包前缀聚类（LibChecker "Unmarked library" 语义），
     // suspicious = 前缀/类名含广告统计类特征词（仅提示，永不参与自动禁用）
     val unmatched: List<UnmatchedGroup> = emptyList()
@@ -136,6 +139,9 @@ class Scanner(
             packageName = app.packageName,
             label = app.loadLabel(pm).toString(),
             isSystem = (app.flags and ApplicationInfo.FLAG_SYSTEM) != 0,
+            targetSdk = app.targetSdkVersion,
+            firstInstallTime = runCatching { pm.getPackageInfo(app.packageName, 0).firstInstallTime }.getOrDefault(0L),
+            lastUpdateTime = runCatching { pm.getPackageInfo(app.packageName, 0).lastUpdateTime }.getOrDefault(0L),
             matchedSdks = hits.values.sortedWith(
                 compareBy<SdkHit> { it.safety.ordinal }.thenByDescending { it.matchedComponents.size }
             ),

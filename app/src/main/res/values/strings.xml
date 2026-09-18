@@ -126,13 +126,20 @@
     <string name="stats_apps">扫描应用</string>
     <string name="stats_cat_title">分类分布（组件数）</string>
     <string name="stats_rank_title">在机 SDK 排行</string>
+    <string name="stats_api_title">Target API 分布</string>
+    <string name="stats_api_label">API %1$d</string>
+    <string name="stats_api_count">%1$d 个 app · %2$s%%</string>
+    <string name="installed_at">安装于 %1$s</string>
+    <string name="updated_at">更新于 %1$s</string>
     <!-- 设置页 -->
     <string name="settings_title">设置</string>
     <string name="engines_title">两种禁用引擎的区别</string>
     <string name="engine_ifw_title">IFW（意图防火墙，无感知）</string>
+    <string name="engine_ifw_short">IFW（无感知）</string>
+    <string name="engine_pm_title">pm disable（组件停用，跨更新）</string>
+    <string name="engine_pm_short">pm disable（跨更新）</string>
     <string name="engine_ifw_body1">向 /data/system/ifw/ 写入拦截规则，在系统框架层拦下组件的启动请求。</string>
     <string name="engine_ifw_body2">应用完全感知不到，也无法自行恢复；规则文件独立于 APK，应用更新后依然生效。推荐日常使用。</string>
-    <string name="engine_pm_title">pm disable（组件停用，跨更新）</string>
     <string name="engine_pm_body1">把组件置为系统级“已停用”状态。兼容性好、状态可查，但应用能检测到组件被禁并可能自行恢复；</string>
     <string name="engine_pm_body2">停用状态同样跨应用更新保留。适合排查 IFW 行为异常的兼容性场景。</string>
     <string name="engines_note">两种引擎都只针对第三方应用组件，操作前自动备份；恢复入口在列表页应急菜单。</string>

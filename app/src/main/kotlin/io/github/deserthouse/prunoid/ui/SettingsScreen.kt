@@ -135,7 +135,7 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
                                 selected = st.engine == e,
                                 onClick = { vm.setDefaultEngine(e.name) },
                                 shape = SegmentedButtonDefaults.itemShape(index = i, count = Engine.entries.size)
-                            ) { Text(e.label) }
+                            ) { Text(engineLabel(e)) }
                         }
                     }
                     Spacer(Modifier.height(4.dp))

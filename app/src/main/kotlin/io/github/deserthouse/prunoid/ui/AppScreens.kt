@@ -742,6 +742,21 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
+                                // 安装/更新时间行（AppChecker 走查吸收点；数据取自扫描结果）
+                                if (app.lastUpdateTime > 0L) {
+                                    val fmt = remember { java.text.DateFormat.getDateTimeInstance(java.text.DateFormat.SHORT, java.text.DateFormat.SHORT) }
+                                    Text(
+                                        buildString {
+                                            append(stringResource(R.string.installed_at, fmt.format(java.util.Date(app.firstInstallTime))))
+                                            if (app.lastUpdateTime != app.firstInstallTime) {
+                                                append(" · ")
+                                                append(stringResource(R.string.updated_at, fmt.format(java.util.Date(app.lastUpdateTime))))
+                                            }
+                                        },
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
                             }
                         }
                         // 安全分布 mini-dots + 已应用状态行
@@ -818,7 +833,7 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                 shape = SegmentedButtonDefaults.itemShape(
                                     index = i, count = Engine.entries.size
                                 )
-                            ) { Text(e.label) }
+                            ) { Text(engineLabel(e)) }
                         }
                     }
                     Spacer(Modifier.height(4.dp))
@@ -1131,6 +1146,10 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
         )
     }
 }
+
+/** 引擎显示名（资源化，非组合上下文不可用 label） */
+@Composable
+fun engineLabel(e: Engine): String = stringResource(if (e == Engine.IFW) R.string.engine_ifw_short else R.string.engine_pm_short)
 
 @Composable
 fun typeLabel(t: String): String = stringResource(when (t) {

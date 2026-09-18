@@ -63,6 +63,12 @@ fun StatsScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
     }
     val totalBlocked = remember(st.applied) { st.applied.values.sumOf { it.components.size } }
     val totalIdentified = remember(st.apps) { st.apps.sumOf { it.matchedSdks.size } }
+    // Target API 分布（AppChecker 走查吸收点）：按 targetSdk 聚合在机应用
+    val apiDist = remember(st.apps) {
+        st.apps.filter { it.targetSdk > 0 }.groupBy { it.targetSdk }
+            .map { (api, list) -> api to list.size }.sortedByDescending { it.second }
+    }
+    val apiTotal = apiDist.sumOf { it.second }
 
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp),
@@ -91,6 +97,37 @@ fun StatsScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 1
+                        )
+                    }
+                }
+            }
+        }
+        // Target API 分布（AppChecker 吸收：N Apps + 占比 + 进度条）
+        if (apiDist.isNotEmpty()) {
+            Card(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(16.dp)) {
+                    Text(stringResource(R.string.stats_api_title), style = MaterialTheme.typography.titleSmall)
+                    Spacer(Modifier.height(8.dp))
+                    apiDist.forEach { (api, n) ->
+                        val pct = if (apiTotal > 0) n * 100f / apiTotal else 0f
+                        Row(
+                            Modifier.fillMaxWidth().padding(top = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                stringResource(R.string.stats_api_label, api),
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Text(
+                                stringResource(R.string.stats_api_count, n, "%.1f".format(pct)),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        LinearProgressIndicator(
+                            progress = { pct / 100f },
+                            modifier = Modifier.fillMaxWidth().padding(top = 2.dp, bottom = 4.dp)
                         )
                     }
                 }
