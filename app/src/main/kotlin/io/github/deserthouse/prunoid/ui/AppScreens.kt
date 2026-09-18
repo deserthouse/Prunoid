@@ -533,9 +533,9 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
     val st by vm.state.collectAsState()
     val pm = LocalContext.current.packageManager
     // 逐 SDK 勾选：默认勾选 SAFE/CAUTION（RISKY/UNKNOWN 需显式加选）
+    // 批I：默认只勾 SAFE——CAUTION 及以上由用户显式选择（默认全勾过于激进）
     val defaultSelected = remember(app.packageName) {
-        app.matchedSdks.filter { it.safety == Safety.SAFE || it.safety == Safety.CAUTION }
-            .map { it.ruleId }.toSet()
+        app.matchedSdks.filter { it.safety == Safety.SAFE }.map { it.ruleId }.toSet()
     }
     var selected by remember(app.packageName) { mutableStateOf(defaultSelected) }
     // 分类筛选：null = 全部
@@ -1167,7 +1167,10 @@ fun SdkArchiveSheet(
     appliedEntry: AppliedRulesStore.AppliedEntry?,
     checked: Boolean,
     onToggle: (Boolean) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    libraryContext: Boolean = false,
+    libraryApps: Int = 0,
+    onDisableEverywhere: (() -> Unit)? = null
 ) {
     val info = remember(hit.ruleId) { vm.ruleInfo(hit.ruleId) }
     // 量化句：N matched / N blocked（blocked = 已应用记录中命中的组件数）
@@ -1202,7 +1205,7 @@ fun SdkArchiveSheet(
             )
             Spacer(Modifier.height(8.dp))
             Text(
-                "${hit.matchedComponents.size} matched, $blocked blocked.",
+                stringResource(R.string.sheet_matched_line, hit.matchedComponents.size, blocked),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -1213,6 +1216,23 @@ fun SdkArchiveSheet(
                 Text(stringResource(R.string.sheet_toggle), style = MaterialTheme.typography.labelMedium)
                 Spacer(Modifier.width(8.dp))
                 Switch(checked = checked, onCheckedChange = onToggle)
+            }
+            if (libraryContext && onDisableEverywhere != null && libraryApps > 0) {
+                // 批I：库上下文专属——跨应用统一禁用该 SDK（IFW，对所有命中应用生效）
+                Button(
+                    onClick = onDisableEverywhere,
+                    enabled = !vm.state.value.busy,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(stringResource(R.string.disable_everywhere_btn, libraryApps))
+                }
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    stringResource(R.string.disable_everywhere_hint),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.height(8.dp))
             }
             Spacer(Modifier.height(12.dp))
             info?.description?.takeIf { it.isNotBlank() }?.let {

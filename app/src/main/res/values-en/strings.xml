@@ -125,7 +125,7 @@
     <string name="engine_pm_short">pm disable</string>
     <string name="engine_pm_body1">Marks components as system-level “disabled”. Good compatibility and inspectable, but the app can detect it and may self-recover;</string>
     <string name="engine_pm_body2">the disabled state also survives app updates. Useful for debugging IFW compatibility issues.</string>
-    <string name="engines_note">Both engines only touch third-party app components and back up automatically; recovery lives in the list recovery menu.</string>
+    <string name="engines_note">Both engines only touch third-party app components and back up automatically; recovery lives in the Recovery section of these settings.</string>
     <string name="auto_title">Auto re-apply</string>
     <string name="auto_summary">Re-disable SDK components after app install/update (foreground service + persistent notification)</string>
     <string name="auto_off_note1">Off: the foreground service is stopped. On Android 15+ the system skips install/update broadcasts to background apps,</string>
@@ -217,4 +217,9 @@
     <string name="easter_ai_note" formatted="false">Prunoid isn\'t my first project, but it\'s the first one I\'ve ever shipped. I\'m a hardcore Android enthusiast — call me a geek and I\'ll own it without blushing. I\'ve just never considered myself a qualified developer, for one simple reason: I can\'t read a single line of code. This project is, in essence, 100% AI and 0% human. Feel free to voice any feedback — whether it gets done is another matter. I genuinely can\'t, not just won\'t.</string>
     <string name="easter_extra_line" formatted="false">Wait — that last line was written by me personally, so the human ratio might grudgingly climb to 1%?</string>
     <string name="easter_dry" formatted="false">Stop tapping — there\'s not a single drop left 😭</string>
+    <string name="vm_sdk_everywhere_ok">%1$s: written to %2$d of %3$d matching apps, %4$d component rules each</string>
+    <string name="disable_everywhere_btn">Disable this SDK on %1$d apps</string>
+    <string name="disable_everywhere_hint">Writes IFW rules to every matching app (covers future updates); restore via the detail page of each app.</string>
+    <string name="lang_section">语言 / Language</string>
+    <string name="sheet_matched_line">%1$d matched, %2$d blocked</string>
 </resources>

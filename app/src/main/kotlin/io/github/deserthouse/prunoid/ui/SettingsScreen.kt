@@ -55,6 +55,7 @@ private fun fmtFetched(iso: String): String = runCatching {
 @Composable
 fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
     val st by vm.state.collectAsState()
+    val ctx = LocalContext.current
     val snackbar = rememberSnackbar()
     var msg by remember { mutableStateOf<String?>(null) }
     var showAddSource by remember { mutableStateOf(false) }
@@ -86,6 +87,29 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Spacer(Modifier.height(4.dp))
+
+            // ── 语言（批I：手动覆盖，立即 recreate 生效） ──
+            SectionTitle(stringResource(R.string.lang_section))
+            SettingsCard {
+                Column(Modifier.padding(16.dp)) {
+                    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                        val opts = listOf("" to "System", "zh-CN" to "中文", "en" to "English")
+                        opts.forEachIndexed { i, (tag, label) ->
+                            SegmentedButton(
+                                selected = st.language == tag,
+                                onClick = {
+                                    if (st.language != tag) {
+                                        vm.setLanguage(tag) {
+                                            (ctx as? android.app.Activity)?.recreate()
+                                        }
+                                    }
+                                },
+                                shape = SegmentedButtonDefaults.itemShape(index = i, count = opts.size)
+                            ) { Text(label) }
+                        }
+                    }
+                }
+            }
 
             // ── 禁用引擎 ──
             SectionTitle(stringResource(R.string.sec_engine))
@@ -187,6 +211,7 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
                             Modifier.fillMaxWidth().padding(vertical = 2.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
+                            val srcCtx = LocalContext.current
                             Column(Modifier.weight(1f)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(src.name, style = MaterialTheme.typography.bodyLarge)
@@ -199,18 +224,41 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
                                         )
                                     }
                                 }
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        src.url,
+                                        fontFamily = FontFamily.Monospace,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.weight(1f, fill = false)
+                                    )
+                                    Spacer(Modifier.width(4.dp))
+                                    Icon(
+                                        Icons.Outlined.Launch,
+                                        contentDescription = null,
+                                        Modifier.size(12.dp),
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
                                 Text(
-                                    src.url + "  ·  " + (
-                                        if (src.lastFetched.isBlank()) stringResource(R.string.not_fetched)
-                                        else stringResource(R.string.fetched_at) + " " + fmtFetched(src.lastFetched)
-                                    ),
-                                    fontFamily = FontFamily.Monospace,
+                                    if (src.lastFetched.isBlank()) stringResource(R.string.not_fetched)
+                                    else stringResource(R.string.fetched_at) + " " + fmtFetched(src.lastFetched),
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
+                            Text(
+                                " ",
+                                modifier = Modifier.clickable {
+                                    runCatching {
+                                        srcCtx.startActivity(
+                                            android.content.Intent(android.content.Intent.ACTION_VIEW, src.url.toUri())
+                                        )
+                                    }
+                                }
+                            )
                             if (st.busy) {
                                 Box(Modifier.size(40.dp), contentAlignment = Alignment.Center) {
                                     CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
@@ -295,7 +343,6 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
 
             // ── 关于（对齐 OptIcon：整卡=彩蛋按钮；GitHub 行子消费点击） ──
             SectionTitle(stringResource(R.string.sec_about))
-            val ctx = LocalContext.current
             Card(
                 onClick = { vm.onAboutCardTapped() },
                 shape = RoundedCornerShape(24.dp),
@@ -475,16 +522,31 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
                     }
                 }
             }
-            // ── 致谢 / AI 声明 / 免责（独立合规卡，不参与彩蛋） ──
+            // ── 致谢（对齐 OptIcon CreditEntry：项目+描述+可点链接） ──
+            SectionTitle(stringResource(R.string.about_ack_title))
             SettingsCard {
                 Column(Modifier.padding(vertical = 4.dp)) {
-                    SettingRow(
-                        icon = Icons.Outlined.Redeem,
-                        title = stringResource(R.string.about_ack_title),
-                        subtitle = stringResource(R.string.about_ack_body),
-                        subtitleMaxLines = 3
+                    CreditEntry(
+                        "LibChecker-Rules / LibChecker-Rules-Bundle",
+                        "Apache-2.0 · SDK 识别锚点 / 品牌图标 / 富描述",
+                        "https://github.com/libchecker/LibChecker-Rules"
                     )
-                    HorizontalDivider()
+                    CreditEntry(
+                        "blocker-general-rules",
+                        "Apache-2.0 · SDK 禁用规则与安全标注正源",
+                        "https://github.com/lihenggui/blocker-general-rules"
+                    )
+                    CreditEntry(
+                        "libsu",
+                        "Apache-2.0 · root shell 框架",
+                        "https://github.com/topjohnwu/libsu"
+                    )
+                }
+            }
+
+            // ── AI 声明 / 免责（独立合规卡，不参与彩蛋） ──
+            SettingsCard {
+                Column(Modifier.padding(vertical = 4.dp)) {
                     SettingRow(
                         icon = Icons.Outlined.SmartToy,
                         title = stringResource(R.string.about_ai_title),
@@ -520,6 +582,37 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
                 vm.addSource(name, url) { msg = it }
             }
         )
+    }
+}
+
+/** OptIcon 同款致谢条目：项目名 + 描述 + 可点链接 */
+@Composable
+private fun CreditEntry(project: String, description: String, url: String) {
+    val ctx = LocalContext.current
+    Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+        Text(project, style = MaterialTheme.typography.bodyLarge)
+        Text(
+            description,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Row(
+            Modifier
+                .clip(RoundedCornerShape(8.dp))
+                .clickable {
+                    runCatching {
+                        ctx.startActivity(
+                            android.content.Intent(android.content.Intent.ACTION_VIEW, url.toUri())
+                        )
+                    }
+                }
+                .padding(vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(url.removePrefix("https://"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+            Spacer(Modifier.width(4.dp))
+            Icon(Icons.Outlined.Launch, contentDescription = null, Modifier.size(12.dp), tint = MaterialTheme.colorScheme.primary)
+        }
     }
 }
 

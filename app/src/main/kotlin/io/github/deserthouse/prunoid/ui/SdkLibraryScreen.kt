@@ -35,7 +35,8 @@ import io.github.deserthouse.prunoid.core.scanner.SdkHit
 private data class LibRow(
     val rule: SdkRule,
     val hitApps: Int,
-    val hitComponents: Int
+    val hitComponents: Int,
+    val hitApps3p: Int   // 第三方命中应用数（白名单系统应用不计入可禁用目标）
 )
 
 @Composable
@@ -44,15 +45,17 @@ fun SdkLibraryScreen(vm: AppViewModel, onBack: () -> Unit) {
     val snackbar = rememberSnackbar()
     var query by remember { mutableStateOf("") }
     var tab by remember { mutableStateOf(0) }   // 0 = 在机检出, 1 = 未检出
-    var sheetRule by remember { mutableStateOf<SdkHit?>(null) }
+    var sheetRow by remember { mutableStateOf<LibRow?>(null) }
+    var sheetMsg by remember { mutableStateOf<String?>(null) }
 
     // ruleId → (命中 app 数, 命中组件数)
     val hitMap = remember(st.apps) {
         val m = HashMap<String, IntArray>()
         st.apps.forEach { app ->
+            val eligible = !io.github.deserthouse.prunoid.core.engine.DisableEngine.isForbidden(app.packageName)
             app.matchedSdks.forEach { hit ->
                 val a = m.getOrPut(hit.ruleId) { IntArray(2) }
-                a[0] += 1
+                if (eligible) a[0] += 1
                 a[1] += hit.matchedComponents.size
             }
         }
@@ -62,6 +65,7 @@ fun SdkLibraryScreen(vm: AppViewModel, onBack: () -> Unit) {
     val foundCount = remember(all, hitMap) { all.count { (hitMap[it.id] ?: IntArray(2))[0] > 0 } }
 
     SnackbarEffect(snackbar, st.message)
+    SnackbarEffect(snackbar, sheetMsg)
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },
@@ -157,7 +161,7 @@ fun SdkLibraryScreen(vm: AppViewModel, onBack: () -> Unit) {
             val rows = remember(all, hitMap, tab, query, libCat, libSortByName) {
                 all.map { r ->
                     val h = hitMap[r.id] ?: IntArray(2)
-                    LibRow(r, h[0], h[1])
+                    LibRow(r, h[0], h[1], h[0])
                 }
                     .filter { if (tab == 0) it.hitApps > 0 else it.hitApps == 0 }
                     .filter { libCat.isEmpty() || it.rule.category in libCat }
@@ -214,15 +218,7 @@ fun SdkLibraryScreen(vm: AppViewModel, onBack: () -> Unit) {
                             },
                             modifier = Modifier.clickable {
                                 // 构造档案卡所需的 SdkHit 视图（锚点即全量组件类名）
-                                sheetRule = SdkHit(
-                                    ruleId = row.rule.id,
-                                    name = row.rule.name,
-                                    category = row.rule.category,
-                                    // 库页无 app 上下文，四级安全派生与详情页一致（R1-P1⑦ 补修）
-                                    safety = row.rule.safety(),
-                                    matchedComponents = row.rule.components.map { it.`class` },
-                                    componentTypes = row.rule.components.associate { it.`class` to it.type }
-                                )
+                                sheetRow = row
                             }
                         )
                     }
@@ -231,9 +227,19 @@ fun SdkLibraryScreen(vm: AppViewModel, onBack: () -> Unit) {
         }
     }
 
-    sheetRule?.let { pseudoHit ->
+    sheetRow?.let { row ->
         SdkArchiveSheet(
-            hit = pseudoHit,
+            hit = SdkHit(
+                ruleId = row.rule.id,
+                name = row.rule.name,
+                category = row.rule.category,
+                // 库页无 app 上下文，四级安全派生与详情页一致（R1-P1⑦ 补修）
+                safety = row.rule.safety(),
+                matchedComponents = row.rule.components.map { it.`class` },
+                componentTypes = row.rule.components.associate { it.`class` to it.type }
+            ),
+            // 跨应用禁用入口暂缓发布：sheet 内点击命中待查（后端 disableSdkEverywhere 已就绪）
+            libraryContext = false,
             app = ScannedApp(
                 packageName = "", label = "", isSystem = false, matchedSdks = emptyList()
             ),
@@ -241,7 +247,7 @@ fun SdkLibraryScreen(vm: AppViewModel, onBack: () -> Unit) {
             appliedEntry = null,
             checked = false,
             onToggle = { },
-            onDismiss = { sheetRule = null }
+            onDismiss = { sheetRow = null }
         )
     }
 }

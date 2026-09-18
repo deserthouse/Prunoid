@@ -139,7 +139,7 @@
     <string name="engine_ifw_body2">应用完全感知不到，也无法自行恢复；规则文件独立于 APK，应用更新后依然生效。推荐日常使用。</string>
     <string name="engine_pm_body1">把组件置为系统级“已停用”状态。兼容性好、状态可查，但应用能检测到组件被禁并可能自行恢复；</string>
     <string name="engine_pm_body2">停用状态同样跨应用更新保留。适合排查 IFW 行为异常的兼容性场景。</string>
-    <string name="engines_note">两种引擎都只针对第三方应用组件，操作前自动备份；恢复入口在列表页应急菜单。</string>
+    <string name="engines_note">两种引擎都只针对第三方应用组件，操作前自动备份；恢复入口在本页「应急通道」。</string>
     <string name="auto_title">自动重应用</string>
     <string name="auto_summary">应用安装/更新后自动重新禁用其 SDK 组件（后台常驻服务 + 常驻通知）</string>
     <string name="auto_off_note1">已关闭：后台服务已停止。Android 15+ 系统会跳过对后台应用的安装/更新广播，</string>
@@ -233,4 +233,9 @@
     <string name="easter_ai_note" formatted="false">Prunoid 不是我的第一个项目，但是第一个真正发布出去的。我是重度 Android 爱好者——说我是个极客我认，我不脸红。我从没觉得自己是个合格的开发者，原因很简单：我一行代码都看不懂。这个项目本质上 100% AI + 0% 人类。欢迎提需求——做不做得成另说，反正我是真的不会，不是不肯。</string>
     <string name="easter_extra_line">等等——上一行是我本人亲手写的，所以人类占比也许勉强能涨到 1%？</string>
     <string name="easter_dry">别点了——一滴也没有了 😭</string>
+    <string name="vm_sdk_everywhere_ok">%1$s：已在 %2$d/%3$d 个命中应用写入 %4$d 条组件规则</string>
+    <string name="disable_everywhere_btn">在 %1$d 个应用中禁用此 SDK</string>
+    <string name="disable_everywhere_hint">写 IFW 规则到所有命中应用（含未来更新自动覆盖）；恢复走各应用详情页。</string>
+    <string name="lang_section">语言 / Language</string>
+    <string name="sheet_matched_line">命中 %1$d，已禁用 %2$d</string>
 </resources>

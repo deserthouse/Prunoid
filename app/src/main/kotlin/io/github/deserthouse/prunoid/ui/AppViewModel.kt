@@ -42,7 +42,8 @@ data class AppUiState(
     // 批H 彩蛋（对齐 OptIcon）：About 卡整体可点，🐾×7 解锁作者块（持久化）；碎碎念 🍆×6→💦 烧断
     val easterUnlocked: Boolean = false,
     val easterExpanded: Boolean = false,
-    val easterRambleBurned: Boolean = false
+    val easterRambleBurned: Boolean = false,
+    val language: String = ""
 )
 
 class AppViewModel(app: Application) : AndroidViewModel(app) {
@@ -80,6 +81,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                         autoReapply = s.autoReapply,
                         easterUnlocked = s.easterUnlocked,
                         easterRambleBurned = s.easterRambleBurned,
+                        language = s.language,
                         sources = s.sources,
                         // 用户本次会话未手动切引擎时，跟随设置的默认引擎
                         engine = if (!userTouchedEngine) Engine.entries.first { it.name == s.defaultEngine } else st.engine
@@ -111,6 +113,61 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             settings.setEasterUnlocked(true)
             _state.update { it.copy(easterUnlocked = true, easterExpanded = true, message = "🐺") }
+        }
+    }
+
+    /** 批I：手动语言（"" = 跟随系统）；落盘完成后 UI 再 recreate，避免竞态读旧值 */
+    fun setLanguage(v: String, onDone: () -> Unit = {}) {
+        viewModelScope.launch {
+            settings.setLanguage(v)
+            onDone()
+        }
+    }
+
+    /** 批I：跨应用统一禁用某 SDK——对规则库中命中该 SDK 的所有已安装应用写 IFW（组件取规则全量，覆盖未来更新） */
+    fun disableSdkEverywhere(ruleId: String, onDone: (String) -> Unit) {
+        viewModelScope.launch {
+            _state.update { it.copy(busy = true) }
+            val msg = withContext(Dispatchers.IO) {
+                if (!engine.rootAvailable()) return@withContext appCtx.getString(R.string.vm_need_root)
+                val rule = rules.rule(ruleId) ?: return@withContext appCtx.getString(R.string.vm_no_targets)
+                val components = rule.components.map { it.`class` }
+                val byType = rule.components.groupBy({ it.type }, { it.`class` })
+                    .mapValues { it.value }
+                    .filterKeys { it != "native" }
+                if (byType.isEmpty()) return@withContext appCtx.getString(R.string.vm_no_targets)
+                // 白名单（系统/框架）应用一律跳过——安全层语义，不做半写
+                val targets = _state.value.apps
+                    .filter { a -> a.matchedSdks.any { it.ruleId == ruleId } }
+                    .filter { !DisableEngine.isForbidden(it.packageName) }
+                if (targets.isEmpty()) return@withContext appCtx.getString(R.string.vm_no_targets)
+                engine.backup(_state.value.backupKeep).getOrNull()
+                var ok = 0
+                val touched = mutableListOf<String>()
+                targets.forEach { a ->
+                    val r = engine.applyIfw(a.packageName, byType)
+                    if (r.isSuccess) {
+                        ok++
+                        touched.add(a.packageName)
+                        applied.record(
+                            a.packageName, Engine.IFW.name, components,
+                            byType.entries.flatMap { (t, cs) -> cs.map { it to t } }.toMap()
+                        )
+                    }
+                }
+                // 批G：批量写入后统一重读现场
+                val live = engine.readLiveDisabled(touched).first
+                _state.update {
+                    it.copy(
+                        applied = applied.all(),
+                        liveDisabled = it.liveDisabled + live.mapValues { e -> e.value.toSet() }
+                    )
+                }
+                appCtx.getString(R.string.vm_sdk_everywhere_ok, rule.name, ok, targets.size,
+                    components.size)
+            }
+            _state.update { it.copy(busy = false) }
+            onDone(msg)
         }
     }
 
