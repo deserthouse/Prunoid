@@ -125,10 +125,13 @@ fun SdkMonogram(ruleId: String, name: String, modifier: Modifier = Modifier, ico
             }.getOrNull()
         }
     }
+    val hasBrand = !iconUrl.isNullOrBlank() || iconRes != null
+    // 品牌矢量分支对齐上游 LibChecker：中性浅底 + 原色渲染（tint 会把多色路径染成单色）
+    val brandBg = MaterialTheme.colorScheme.surfaceContainerHighest
     Box(
         modifier
             .size(32.dp)
-            .background(bgC, RoundedCornerShape(50)),
+            .background(if (hasBrand) brandBg else bgC, RoundedCornerShape(50)),
         contentAlignment = Alignment.Center
     ) {
         when {
@@ -141,7 +144,8 @@ fun SdkMonogram(ruleId: String, name: String, modifier: Modifier = Modifier, ico
             iconRes != null -> Icon(
                 painterResource(iconRes),
                 contentDescription = null,
-                modifier = Modifier.size(22.dp)
+                modifier = Modifier.size(22.dp),
+                tint = Color.Unspecified
             )
             else -> Text(
                 name.firstOrNull()?.uppercase() ?: "?",
