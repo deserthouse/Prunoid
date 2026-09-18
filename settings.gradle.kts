@@ -20,5 +20,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "SDK-Pruner"
+rootProject.name = "Prunoid"
 include(":app")

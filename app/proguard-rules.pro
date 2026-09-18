@@ -1,4 +1,4 @@
-# SDK-Pruner ProGuard/R8 rules
+# Prunoid ProGuard/R8 rules
 
 # kotlinx-serialization: keep serializers of rule models
 -keepattributes *Annotation*, InnerClasses

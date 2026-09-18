@@ -1,4 +1,4 @@
-// SDK-Pruner — Root build script | Gradle 9.5.1 + AGP 9.2.1 + compileSdk 37
+// Prunoid — Root build script | Gradle 9.5.1 + AGP 9.2.1 + compileSdk 37
 // Root-permission SDK component auditor (IFW primary + pm disable secondary)
 
 plugins {
