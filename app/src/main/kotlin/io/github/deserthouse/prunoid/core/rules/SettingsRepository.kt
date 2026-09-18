@@ -35,7 +35,7 @@ class SettingsRepository(private val context: Context) {
 
     companion object {
         const val OFFICIAL_URL =
-            "https://raw.githubusercontent.com/deserthouse/prunoid-rules/main/rules/snapshot.json"
+            "https://raw.githubusercontent.com/deserthouse/Prunoid-Rules/main/rules/snapshot.json"
         val OFFICIAL_SOURCE = SubSource(
             id = "official", name = "官方规则源", url = OFFICIAL_URL, builtin = true
         )

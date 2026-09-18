@@ -9,7 +9,7 @@ Open-source Android SDK component auditor. Identifies embedded ad/analytics/push
 - **Scan** — enumerate every third-party app's activities/services/receivers/providers and match them against a 1,900+ SDK ruleset (package prefixes + exact component anchors), with 4-level safety grading
 - **Dual engine** — Intent Firewall (app never sees it, cannot self-recover) as primary, `pm disable` (survives updates) as secondary; switchable per action
 - **Safety first** — mandatory pre-apply backup, one-tap restore, system-package whitelist hard-block, atomic rule writes
-- **Rule subscription** — point the app at any snapshot-format URL (self-hosted or the official [sdk-pruner-rules](https://github.com/deserthouse/prunoid-rules) repo); subscribed entries override the built-in snapshot by id
+- **Rule subscription** — point the app at any snapshot-format URL (self-hosted or the official [sdk-pruner-rules](https://github.com/deserthouse/Prunoid-Rules) repo); subscribed entries override the built-in snapshot by id
 - **Auto reapply** — a foreground guard service re-applies your selected rules after app updates, picking up newly added components incrementally
 - **Material 3 Expressive** UI, minSdk 31 (Android 12) → targetSdk 37
 
@@ -23,7 +23,7 @@ Toolchain: Gradle 9.5.1 / AGP 9.2.1 / Kotlin 2.2.10 / JDK 21.
 
 ## Rules
 
-The ruleset lives in the companion repo [sdk-pruner-rules](https://github.com/deserthouse/prunoid-rules) — PRs welcome. Every rule carries `sources[]` attribution and a confidence level.
+The ruleset lives in the companion repo [sdk-pruner-rules](https://github.com/deserthouse/Prunoid-Rules) — PRs welcome. Every rule carries `sources[]` attribution and a confidence level.
 
 ## Safety & recovery
 
@@ -39,7 +39,7 @@ The whitelist hard-blocks system packages; the tool only ever touches third-part
 
 ## License
 
-Apache-2.0. Attributions for inherited datasets are listed in the rules repo's [NOTICE](https://github.com/deserthouse/prunoid-rules/blob/main/NOTICE).
+Apache-2.0. Attributions for inherited datasets are listed in the rules repo's [NOTICE](https://github.com/deserthouse/Prunoid-Rules/blob/main/NOTICE).
 
 ## AI usage & Disclaimer
 

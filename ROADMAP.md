@@ -78,5 +78,5 @@ M1 最小可用 ──→ M2 规则生态 ──→ M3 自动化与共建
 - ✅ M1 complete: scan, dual engine (IFW + pm), safety layer, M3E UI — verified end-to-end on rooted emulator (block A/B: result 102 vs 0)
 - ✅ M2 complete: rule subscription (official source live), engine switching
 - ✅ M3 core: auto reapply after app updates (incremental, verified)
-- ✅ Rules repo live: [sdk-pruner-rules](https://github.com/deserthouse/prunoid-rules)
+- ✅ Rules repo live: [sdk-pruner-rules](https://github.com/deserthouse/Prunoid-Rules)
 - ⏭️ Next: hardening from real-world feedback
