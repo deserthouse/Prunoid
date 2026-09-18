@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 资源收缩白名单：SDK 品牌矢量图标仅经运行时 getIdentifier 查找（assets/icons/lib_icons.json），
+     静态引用为零，必须显式 keep，否则 release 裁光（v0.4.0/v0.4.1 实证缺陷）。 -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/ic_lib_*" />

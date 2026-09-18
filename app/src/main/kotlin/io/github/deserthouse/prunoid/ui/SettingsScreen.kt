@@ -71,7 +71,8 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
                     Text(stringResource(R.string.engine_ifw_title), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                     Spacer(Modifier.height(2.dp))
                     Text(
-                        stringResource(R.string.engine_ifw_body1) +
+                        // aapt2 会剥资源字符串尾部空格，拼接空格只能在这里补
+                        stringResource(R.string.engine_ifw_body1) + " " +
                             stringResource(R.string.engine_ifw_body2),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -80,7 +81,7 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
                     Text(stringResource(R.string.engine_pm_title), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                     Spacer(Modifier.height(2.dp))
                     Text(
-                        stringResource(R.string.engine_pm_body1) +
+                        stringResource(R.string.engine_pm_body1) + " " +
                             stringResource(R.string.engine_pm_body2),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
