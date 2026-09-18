@@ -582,6 +582,8 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
     var catFilter by remember(app.packageName) { mutableStateOf<String?>(null) }
     // SDK 档案卡弹层（Blocker/LibChecker 模式）：点卡片打开
     var sheetFor by remember { mutableStateOf<SdkHit?>(null) }
+    var detailTab by remember { mutableStateOf(0) }   // 0=SDK 视图 1=组件视图
+    var compTypeFilter by remember { mutableStateOf<String?>(null) }  // 组件视图类型过滤
     val appliedEntry = st.applied[app.packageName]
     // 安全分层：白名单命中（框架/核心）= 硬拦截；其余系统 app = 警告后可操作
     val framework = DisableEngine.isForbidden(app.packageName)
@@ -673,6 +675,21 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
             }
         }
     ) { padding ->
+        val compRows = remember(app, compTypeFilter) {
+            app.matchedSdks.flatMap { sdk ->
+                sdk.matchedComponents.mapNotNull { cn ->
+                    val t = sdk.componentTypes[cn]
+                        ?: when {
+                            cn.endsWith("Activity") -> "activity"
+                            cn.endsWith("Service") -> "service"
+                            cn.endsWith("Receiver") -> "receiver"
+                            cn.endsWith("Provider") -> "provider"
+                            else -> "other"
+                        }
+                    if (compTypeFilter == null || t == compTypeFilter) Triple(cn, t, sdk) else null
+                }
+            }.sortedBy { it.first }
+        }
         LazyColumn(
             Modifier.padding(padding).fillMaxSize(),
             contentPadding = PaddingValues(16.dp),
@@ -706,6 +723,23 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                     style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.primary
                                 )
+                                // 大头部补充行（LibChecker 式）：Target/Min/Size
+                                val appInfo = remember(app.packageName) {
+                                    runCatching { pm.getApplicationInfo(app.packageName, 0) }.getOrNull()
+                                }
+                                val apkSizeMb = remember(app.packageName) {
+                                    appInfo?.sourceDir?.let {
+                                        runCatching { java.io.File(it).length() / 1048576 }.getOrNull()
+                                    }
+                                }
+                                Text(
+                                    buildString {
+                                        append("Target ${appInfo?.targetSdkVersion ?: "?"} · Min ${appInfo?.minSdkVersion ?: "?"}")
+                                        if (apkSizeMb != null) append(" · ${apkSizeMb} MB")
+                                    },
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             }
                         }
                         // 安全分布 mini-dots + 已应用状态行
@@ -735,10 +769,18 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                 Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                app.matchedSdks.forEach { hit ->
+                                app.matchedSdks.take(10).forEach { hit ->
                                     SdkMonogram(
                                         hit.ruleId, hit.name,
                                         Modifier.clickable { sheetFor = hit }
+                                    )
+                                }
+                                val rest = app.matchedSdks.size - 10
+                                if (rest > 0) {
+                                    Text(
+                                        "+$rest",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                             }
@@ -789,7 +831,78 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                 }
             }
             // 分类筛选：按 category 过滤 + 批量勾选操作
-            if (categories.isNotEmpty()) {
+            item {
+                SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                    SegmentedButton(
+                        selected = detailTab == 0,
+                        onClick = { detailTab = 0 },
+                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
+                    ) { Text("SDK 视图") }
+                    SegmentedButton(
+                        selected = detailTab == 1,
+                        onClick = { detailTab = 1 },
+                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
+                    ) { Text("组件视图") }
+                }
+            }
+            if (detailTab == 1) {
+                item {
+                    // 组件视图类型过滤
+                    Row(
+                        Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        FilterChip(
+                            selected = compTypeFilter == null,
+                            onClick = { compTypeFilter = null },
+                            label = { Text("全部类型") }
+                        )
+                        listOf("activity" to "界面", "service" to "服务", "receiver" to "广播", "provider" to "提供器").forEach { (t, l) ->
+                            val has = app.matchedSdks.any { sdk ->
+                                sdk.matchedComponents.any { cn -> (sdk.componentTypes[cn] ?: "") == t }
+                            }
+                            if (has) FilterChip(
+                                selected = compTypeFilter == t,
+                                onClick = { compTypeFilter = if (compTypeFilter == t) null else t },
+                                label = { Text(l) }
+                            )
+                        }
+                    }
+                }
+                items(compRows, key = { it.first + it.third.ruleId }) { (cn, t, sdk) ->
+                    ListItem(
+                        headlineContent = {
+                            Text(cn.substringAfterLast('.'), style = MaterialTheme.typography.bodyMedium)
+                        },
+                        supportingContent = {
+                            Text(
+                                cn,
+                                fontFamily = FontFamily.Monospace,
+                                style = MaterialTheme.typography.labelSmall,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        },
+                        leadingContent = {
+                            Surface(
+                                color = MaterialTheme.colorScheme.secondaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                                shape = RoundedCornerShape(50)
+                            ) {
+                                Text(
+                                    typeLabel(t),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                        },
+                        trailingContent = {
+                            SdkMonogram(sdk.ruleId, sdk.name)
+                        }
+                    )
+                }
+            }
+            if (detailTab == 0 && categories.isNotEmpty()) {
                 item {
                     Column {
                         Row(
@@ -833,7 +946,7 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                     }
                 }
             }
-            items(visibleSdks, key = { it.ruleId }) { hit ->
+            if (detailTab == 0) items(visibleSdks, key = { it.ruleId }) { hit ->
                 val checked = hit.ruleId in selected
                 // 整卡 = 打开 SDK 档案卡弹层；仅左侧复选框独立点选
                 Card(
@@ -871,7 +984,7 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                 }
             }
             // 未识别组件（LibChecker "Unmarked library" 语义）：只读展示，供人审与规则仓 PR
-            if (app.unmatched.isNotEmpty()) {
+            if (detailTab == 0 && app.unmatched.isNotEmpty()) {
                 item {
                     var unmatchedOpen by remember { mutableStateOf(false) }
                     val total = app.unmatched.sumOf { it.count }
