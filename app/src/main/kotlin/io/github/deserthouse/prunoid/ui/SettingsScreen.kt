@@ -270,7 +270,7 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        "github.com/deserthouse/prunoid",
+                        "github.com/deserthouse/Prunoid",
                         fontFamily = FontFamily.Monospace,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant

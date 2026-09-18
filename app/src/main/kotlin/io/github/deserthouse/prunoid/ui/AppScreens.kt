@@ -470,7 +470,7 @@ fun SubscribeDialog(initial: String, onDismiss: () -> Unit, onConfirm: (String) 
                 Spacer(Modifier.height(4.dp))
                 TextButton(
                     onClick = {
-                        url = "https://raw.githubusercontent.com/deserthouse/prunoid-rules/main/rules/snapshot.json"
+                        url = "https://raw.githubusercontent.com/deserthouse/Prunoid-Rules/main/rules/snapshot.json"
                     }
                 ) { Text("填入官方源") }
             }
