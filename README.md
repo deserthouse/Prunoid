@@ -120,7 +120,6 @@ Prunoid 的规则冷启动合并了 blocker-general-rules（Apache-2.0）与 Lib
 - **[LibChecker / LibChecker-Rules / LibChecker-Rules-Bundle](https://github.com/LibChecker)** —— 组件识别锚点、SDK 品牌图标与中英描述资产（Apache-2.0），本项目规则库与档案卡的地基
 - **[lihenggui / blocker-general-rules](https://github.com/lihenggui/blocker-general-rules)** —— 467 条禁用规则与 safeToBlock/sideEffect 标注（Apache-2.0）
 - **[topjohnwu / libsu](https://github.com/topjohnwu/libsu)** —— root shell（Apache-2.0）
-- **[topjohnwu / Magisk](https://github.com/topjohnwu/Magisk)** —— 验证环境的基石
 
 ## 🔐 权限说明（QUERY_ALL_PACKAGES 豁免声明 / Permission Disclosure）
 
