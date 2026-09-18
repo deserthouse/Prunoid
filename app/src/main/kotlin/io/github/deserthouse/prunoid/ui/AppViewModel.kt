@@ -38,7 +38,11 @@ data class AppUiState(
     val icons: Map<String, android.graphics.drawable.Drawable> = emptyMap(), // 扫描后后台预载，列表/详情零主线程 binder 调用
     // 批G：现场禁用集（包名→组件类名）。展示层以现场为准；applied 记账只喂恢复。
     val liveDisabled: Map<String, Set<String>> = emptyMap(),
-    val ifwTotal: Int = 0
+    val ifwTotal: Int = 0,
+    // 批H 彩蛋（对齐 OptIcon）：About 卡整体可点，🐾×7 解锁作者块（持久化）；碎碎念 🍆×6→💦 烧断
+    val easterUnlocked: Boolean = false,
+    val easterExpanded: Boolean = false,
+    val easterRambleBurned: Boolean = false
 )
 
 class AppViewModel(app: Application) : AndroidViewModel(app) {
@@ -74,6 +78,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     st.copy(
                         backupKeep = s.backupKeep,
                         autoReapply = s.autoReapply,
+                        easterUnlocked = s.easterUnlocked,
+                        easterRambleBurned = s.easterRambleBurned,
                         sources = s.sources,
                         // 用户本次会话未手动切引擎时，跟随设置的默认引擎
                         engine = if (!userTouchedEngine) Engine.entries.first { it.name == s.defaultEngine } else st.engine
@@ -86,6 +92,44 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private var userTouchedEngine = false
+
+    // ── 彩蛋（对齐 OptIcon）：tap 计数仅存内存，解锁持久化 ──
+    private var aboutTapCount = 0
+    private var rambleTapCount = 0
+
+    fun onAboutCardTapped() {
+        if (_state.value.easterUnlocked) {
+            _state.update { it.copy(easterExpanded = !it.easterExpanded) }
+            return
+        }
+        aboutTapCount++
+        if (aboutTapCount < 7) {
+            _state.update { it.copy(message = "🐾".repeat(aboutTapCount)) }
+            return
+        }
+        aboutTapCount = 0
+        viewModelScope.launch {
+            settings.setEasterUnlocked(true)
+            _state.update { it.copy(easterUnlocked = true, easterExpanded = true, message = "🐺") }
+        }
+    }
+
+    fun onRambleTapped() {
+        if (_state.value.easterRambleBurned) {
+            _state.update { it.copy(message = appCtx.getString(R.string.easter_dry)) }
+            return
+        }
+        rambleTapCount++
+        if (rambleTapCount < 7) {
+            _state.update { it.copy(message = "🍆".repeat(rambleTapCount)) }
+            return
+        }
+        rambleTapCount = 0
+        viewModelScope.launch {
+            settings.setEasterRambleBurned(true)
+            _state.update { it.copy(easterRambleBurned = true, message = "💦") }
+        }
+    }
 
     fun rescan() {
         viewModelScope.launch {

@@ -21,6 +21,8 @@ class SettingsRepository(private val context: Context) {
         val defaultEngine: String = "IFW",
         val backupKeep: Int = 10,
         val autoReapply: Boolean = true,
+        val easterUnlocked: Boolean = false,
+        val easterRambleBurned: Boolean = false,
         val sources: List<SubSource> = listOf(OFFICIAL_SOURCE)
     )
 
@@ -42,6 +44,8 @@ class SettingsRepository(private val context: Context) {
         private val KEY_ENGINE = stringPreferencesKey("default_engine")
         private val KEY_BACKUP_KEEP = intPreferencesKey("backup_keep")
         private val KEY_AUTO_REAPPLY = booleanPreferencesKey("auto_reapply")
+        private val KEY_EASTER_UNLOCKED = booleanPreferencesKey("easter_unlocked")
+        private val KEY_EASTER_RAMBLE = booleanPreferencesKey("easter_ramble_burned")
         private val KEY_SOURCES = stringPreferencesKey("sub_sources")
         private val json = Json { ignoreUnknownKeys = true }
     }
@@ -51,6 +55,8 @@ class SettingsRepository(private val context: Context) {
             defaultEngine = p[KEY_ENGINE] ?: "IFW",
             backupKeep = p[KEY_BACKUP_KEEP] ?: 10,
             autoReapply = p[KEY_AUTO_REAPPLY] ?: true,
+            easterUnlocked = p[KEY_EASTER_UNLOCKED] ?: false,
+            easterRambleBurned = p[KEY_EASTER_RAMBLE] ?: false,
             sources = p[KEY_SOURCES]?.let {
                 runCatching { json.decodeFromString<List<SubSource>>(it) }.getOrNull()
             } ?: listOf(OFFICIAL_SOURCE)
@@ -62,11 +68,19 @@ class SettingsRepository(private val context: Context) {
     }
 
     suspend fun setBackupKeep(v: Int) {
-        context.dataStore.edit { it[KEY_BACKUP_KEEP] = v.coerceIn(3, 30) }
+        context.dataStore.edit { it[KEY_BACKUP_KEEP] = v.coerceIn(1, 99999) }
     }
 
     suspend fun setAutoReapply(v: Boolean) {
         context.dataStore.edit { it[KEY_AUTO_REAPPLY] = v }
+    }
+
+    suspend fun setEasterUnlocked(v: Boolean) {
+        context.dataStore.edit { it[KEY_EASTER_UNLOCKED] = v }
+    }
+
+    suspend fun setEasterRambleBurned(v: Boolean) {
+        context.dataStore.edit { it[KEY_EASTER_RAMBLE] = v }
     }
 
     suspend fun setSources(list: List<SubSource>) {

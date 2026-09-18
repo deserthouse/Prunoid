@@ -960,29 +960,16 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                         SdkMonogram(hit.ruleId, hit.name, Modifier.padding(end = 8.dp), vm.ruleInfo(hit.ruleId)?.iconUrl)
                         Column(Modifier.weight(1f)) {
                             Text(hit.name, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            val liveSet = st.liveDisabled[app.packageName]
+                            val disN = liveSet?.count { c ->
+                                hit.matchedComponents.any { it == c || (app.packageName + "/" + it) == c }
+                            } ?: 0
                             Text(
-                                categoryLabel(hit.category),
+                                if (disN > 0) categoryLabel(hit.category) + " · " + stringResource(R.string.disabled_count, disN)
+                                else categoryLabel(hit.category),
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = if (disN > 0) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                        }
-                        val liveSet = st.liveDisabled[app.packageName]
-                        val disN = liveSet?.count { c ->
-                            hit.matchedComponents.any { it == c || (app.packageName + "/" + it) == c }
-                        } ?: -1
-                        if (disN > 0) {
-                            Surface(
-                                color = MaterialTheme.colorScheme.tertiaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                                shape = RoundedCornerShape(50),
-                                modifier = Modifier.padding(end = 6.dp)
-                            ) {
-                                Text(
-                                    stringResource(R.string.disabled_count, disN),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                                )
-                            }
                         }
                         SafetyBadge(hit.safety)
                         Icon(

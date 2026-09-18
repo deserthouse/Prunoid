@@ -1,5 +1,8 @@
 package io.github.deserthouse.prunoid.ui
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -126,6 +129,12 @@ fun StatsScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
                 Spacer(Modifier.height(12.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.size(148.dp), contentAlignment = Alignment.Center) {
+                        // M3E：入场弧线扫入（克制单段 tween）
+                        val sweepIn by animateFloatAsState(
+                            targetValue = if (catTotal > 0) 1f else 0f,
+                            animationSpec = tween(600, easing = FastOutSlowInEasing),
+                            label = "donutSweep"
+                        )
                         Canvas(Modifier.fillMaxSize()) {
                             val stroke = 26.dp.toPx()
                             val inset = stroke / 2
@@ -133,7 +142,7 @@ fun StatsScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
                             var start = -90f
                             if (catTotal > 0) {
                                 catDist.forEach { (cat, n) ->
-                                    val sweep = n.toFloat() / catTotal * 360f
+                                    val sweep = n.toFloat() / catTotal * 360f * sweepIn
                                     drawArc(
                                         color = categoryColor(cat, dark),
                                         startAngle = start,

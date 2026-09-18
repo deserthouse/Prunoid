@@ -208,4 +208,13 @@
     <string name="cd_disabled">Disabled</string>
     <string name="disabled_count">%1$d disabled</string>
     <string name="recovery_ifw_count">Current IFW rules: %1$d (incl. other tools)</string>
+    <string name="about_desc">Root SDK component auditor · Android 12+</string>
+    <string name="easter_author_name">澪狼</string>
+    <string name="easter_author_handle">@deserthouse</string>
+    <string name="easter_author_en">Ling the Wolp</string>
+    <string name="easter_vibe_line">If programmers can call themselves coders, can those of us doing vibe coding call ourselves vibrators?</string>
+    <string name="easter_card_title">Some musings on vibe coding</string>
+    <string name="easter_ai_note" formatted="false">Prunoid isn\'t my first project, but it\'s the first one I\'ve ever shipped. I\'m a hardcore Android enthusiast — call me a geek and I\'ll own it without blushing. I\'ve just never considered myself a qualified developer, for one simple reason: I can\'t read a single line of code. This project is, in essence, 100% AI and 0% human. Feel free to voice any feedback — whether it gets done is another matter. I genuinely can\'t, not just won\'t.</string>
+    <string name="easter_extra_line" formatted="false">Wait — that last line was written by me personally, so the human ratio might grudgingly climb to 1%?</string>
+    <string name="easter_dry" formatted="false">Stop tapping — there\'s not a single drop left 😭</string>
 </resources>

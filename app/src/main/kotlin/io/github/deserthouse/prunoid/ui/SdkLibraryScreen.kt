@@ -19,6 +19,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.deserthouse.prunoid.core.rules.Safety
@@ -68,7 +69,7 @@ fun SdkLibraryScreen(vm: AppViewModel, onBack: () -> Unit) {
             TopAppBar(
                 title = {
                     Column {
-                        Text(stringResource(R.string.lib_title), style = MaterialTheme.typography.titleLarge)
+                        Text(stringResource(R.string.lib_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Medium)
                         Text(
                             if (st.scanning) stringResource(R.string.lib_scanning)
                             else stringResource(R.string.lib_summary, foundCount, all.size),

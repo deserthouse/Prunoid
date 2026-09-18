@@ -1,5 +1,17 @@
 package io.github.deserthouse.prunoid.ui
 
+import androidx.compose.material.icons.outlined.Launch
+import androidx.compose.material.icons.outlined.ExpandLess
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.Image
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Sync
@@ -23,6 +35,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.core.net.toUri
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.deserthouse.prunoid.core.engine.Engine
@@ -54,7 +67,7 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.settings_title), style = MaterialTheme.typography.titleLarge) },
+                title = { Text(stringResource(R.string.settings_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Medium) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
@@ -280,33 +293,191 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
                 }
             }
 
-            // ── 关于 ──
+            // ── 关于（对齐 OptIcon：整卡=彩蛋按钮；GitHub 行子消费点击） ──
             SectionTitle(stringResource(R.string.sec_about))
-            SettingsCard {
-                Column(Modifier.padding(vertical = 4.dp)) {
-                    val ctx = LocalContext.current
-                    SettingRow(
-                        icon = Icons.Outlined.Info,
-                        title = "Prunoid",
-                        subtitle = "v" + BuildConfig.VERSION_NAME + " · " + stringResource(R.string.about_line)
-                    )
-                    HorizontalDivider()
-                    SettingRow(
-                        icon = Icons.Outlined.Code,
-                        title = stringResource(R.string.about_github),
-                        subtitle = "github.com/deserthouse/Prunoid",
-                        onClick = {
-                            runCatching {
-                                ctx.startActivity(
-                                    android.content.Intent(
-                                        android.content.Intent.ACTION_VIEW,
-                                        "https://github.com/deserthouse/Prunoid".toUri()
+            val ctx = LocalContext.current
+            Card(
+                onClick = { vm.onAboutCardTapped() },
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+                modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)
+            ) {
+                Column(Modifier.padding(horizontal = 16.dp, vertical = 6.dp)) {
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Outlined.Info,
+                            contentDescription = null,
+                            modifier = Modifier.padding(end = 12.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Column(Modifier.weight(1f)) {
+                            Text("Prunoid", style = MaterialTheme.typography.bodyLarge)
+                            Text(
+                                "v" + BuildConfig.VERSION_NAME + " · " + stringResource(R.string.about_desc),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        if (st.easterUnlocked) {
+                            Icon(
+                                if (st.easterExpanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                                contentDescription = null,
+                                modifier = Modifier.padding(start = 8.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                    // 项目主页行：子 clickable 自消费，不喂彩蛋计数
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .clickable {
+                                runCatching {
+                                    ctx.startActivity(
+                                        android.content.Intent(
+                                            android.content.Intent.ACTION_VIEW,
+                                            "https://github.com/deserthouse/Prunoid".toUri()
+                                        )
                                     )
+                                }
+                            }
+                            .padding(vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            stringResource(R.string.about_github),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            "github.com/deserthouse/Prunoid",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(Modifier.weight(1f))
+                        Icon(
+                            Icons.Outlined.Launch,
+                            contentDescription = null,
+                            Modifier.size(14.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    // 解锁后的作者块（二级：碎碎念块 🍆×6→💦→烧断）
+                    androidx.compose.animation.AnimatedVisibility(
+                        visible = st.easterExpanded,
+                        enter = androidx.compose.animation.expandVertically() + androidx.compose.animation.fadeIn(),
+                        exit = androidx.compose.animation.shrinkVertically() + androidx.compose.animation.fadeOut()
+                    ) {
+                        Column(Modifier.fillMaxWidth().padding(top = 6.dp, bottom = 12.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Image(
+                                    painter = painterResource(R.drawable.avatar_deserthouse),
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .clip(androidx.compose.foundation.shape.CircleShape)
+                                )
+                                Spacer(Modifier.width(14.dp))
+                                Column {
+                                    Row(verticalAlignment = Alignment.Bottom) {
+                                        Text(
+                                            stringResource(R.string.easter_author_name),
+                                            style = MaterialTheme.typography.bodyLarge
+                                        )
+                                        Spacer(Modifier.width(6.dp))
+                                        Text(
+                                            stringResource(R.string.easter_author_handle),
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                    Text(
+                                        stringResource(R.string.easter_author_en),
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                            Spacer(Modifier.height(12.dp))
+                            Text(
+                                stringResource(R.string.easter_vibe_line),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                lineHeight = 18.sp
+                            )
+                            Spacer(Modifier.height(8.dp))
+                            Row(
+                                Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .clickable {
+                                        runCatching {
+                                            ctx.startActivity(
+                                                android.content.Intent(
+                                                    android.content.Intent.ACTION_VIEW,
+                                                    "https://github.com/deserthouse".toUri()
+                                                )
+                                            )
+                                        }
+                                    }
+                                    .padding(vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    "github.com/deserthouse",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Spacer(Modifier.width(4.dp))
+                                Icon(
+                                    Icons.Outlined.Launch,
+                                    contentDescription = null,
+                                    Modifier.size(14.dp),
+                                    tint = MaterialTheme.colorScheme.primary
                                 )
                             }
+                            Spacer(Modifier.height(14.dp))
+                            Column(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .clickable { vm.onRambleTapped() }
+                                    .padding(horizontal = 4.dp, vertical = 10.dp)
+                            ) {
+                                Text(
+                                    stringResource(R.string.easter_card_title),
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Spacer(Modifier.height(8.dp))
+                                Text(
+                                    stringResource(R.string.easter_ai_note),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    lineHeight = 18.sp
+                                )
+                                androidx.compose.animation.AnimatedVisibility(
+                                    visible = st.easterRambleBurned,
+                                    enter = androidx.compose.animation.expandVertically() + androidx.compose.animation.fadeIn(),
+                                    exit = androidx.compose.animation.shrinkVertically() + androidx.compose.animation.fadeOut()
+                                ) {
+                                    Text(
+                                        stringResource(R.string.easter_extra_line),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        lineHeight = 18.sp,
+                                        modifier = Modifier.padding(top = 10.dp)
+                                    )
+                                }
+                            }
                         }
-                    )
-                    HorizontalDivider()
+                    }
+                }
+            }
+            // ── 致谢 / AI 声明 / 免责（独立合规卡，不参与彩蛋） ──
+            SettingsCard {
+                Column(Modifier.padding(vertical = 4.dp)) {
                     SettingRow(
                         icon = Icons.Outlined.Redeem,
                         title = stringResource(R.string.about_ack_title),
