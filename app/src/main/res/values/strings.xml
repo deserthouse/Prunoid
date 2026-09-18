@@ -124,11 +124,8 @@
     <string name="stats_identified">已识别 SDK</string>
     <string name="stats_blocked">已禁用组件</string>
     <string name="stats_apps">扫描应用</string>
-    <string name="stats_cat_title">分类分布（组件数）</string>
+    <string name="stats_cat_title">SDK 分类分布</string>
     <string name="stats_rank_title">在机 SDK 排行</string>
-    <string name="stats_api_title">Target API 分布</string>
-    <string name="stats_api_label">API %1$d</string>
-    <string name="stats_api_count">%1$s%%</string>
     <string name="installed_at">安装于 %1$s</string>
     <string name="updated_at">更新于 %1$s</string>
     <!-- 设置页 -->
@@ -186,4 +183,29 @@
     <string name="vm_fail_suffix"> — 失败：%1$s</string>
     <string name="vm_restore_ok">已恢复（IFW 规则移除 + pm 组件重启用）</string>
     <string name="vm_restore_fail">失败：%1$s</string>
+    <string name="chip_applied">已应用</string>
+    <string name="filter_safety">安全等级</string>
+    <string name="filter_clear">重置</string>
+    <string name="sort_label">排序</string>
+    <string name="sort_default">默认</string>
+    <string name="sort_sdk_desc">按 SDK 数 ↓</string>
+    <string name="sort_comp_desc">按组件数 ↓</string>
+    <string name="sort_recent">最近安装</string>
+    <string name="sort_name">名称 A→Z</string>
+    <string name="sec_engine">禁用引擎</string>
+    <string name="sec_auto">自动化与备份</string>
+    <string name="sec_sub">规则订阅</string>
+    <string name="sec_recovery">应急通道</string>
+    <string name="sec_about">关于</string>
+    <string name="stats_cat_center">已识别 SDK</string>
+    <string name="stats_prefix_title">未识别组件前缀 Top 5</string>
+    <string name="stats_prefix_hint">不在规则库中、无法禁用；欢迎向规则仓库提交规则</string>
+    <string name="stats_prefix_count">%1$d 组件</string>
+    <string name="about_github">GitHub 项目主页</string>
+    <string name="about_ack_title">致谢与开源许可</string>
+    <string name="about_ack_body">Apache-2.0：LibChecker-Rules / LibChecker-Rules-Bundle / blocker-general-rules / libsu；Fuck.AD 与 oF2pks 仅作事实参考</string>
+    <string name="about_ai_title">AI 使用声明</string>
+    <string name="about_ai_body">本应用由 AI 在人类指导下开发，并经人工审查验收</string>
+    <string name="about_disclaimer_title">免责声明</string>
+    <string name="about_disclaimer_body">按“现状”提供，不附带任何担保；root 操作风险自担；与任何商标持有方无关联</string>
 </resources>

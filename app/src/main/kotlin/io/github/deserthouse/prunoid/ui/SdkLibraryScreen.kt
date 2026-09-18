@@ -1,5 +1,7 @@
 package io.github.deserthouse.prunoid.ui
 
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.ui.res.stringResource
 import io.github.deserthouse.prunoid.R
 import androidx.compose.foundation.background
@@ -20,6 +22,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.deserthouse.prunoid.core.rules.Safety
+import io.github.deserthouse.prunoid.core.rules.safety
 import io.github.deserthouse.prunoid.core.rules.SdkRule
 import io.github.deserthouse.prunoid.core.scanner.ScannedApp
 import io.github.deserthouse.prunoid.core.scanner.SdkHit
@@ -55,18 +58,6 @@ fun SdkLibraryScreen(vm: AppViewModel, onBack: () -> Unit) {
         m
     }
     val all = remember(st.sources) { vm.allRules() }
-    val rows = remember(all, hitMap, tab, query) {
-        all.map { r ->
-            val h = hitMap[r.id] ?: IntArray(2)
-            LibRow(r, h[0], h[1])
-        }
-            .filter { if (tab == 0) it.hitApps > 0 else it.hitApps == 0 }
-            .filter {
-                query.isBlank() || it.rule.name.contains(query, true) ||
-                    it.rule.company.contains(query, true)
-            }
-            .sortedWith(compareByDescending<LibRow> { it.hitApps }.thenBy { it.rule.name })
-    }
     val foundCount = remember(all, hitMap) { all.count { (hitMap[it.id] ?: IntArray(2))[0] > 0 } }
 
     SnackbarEffect(snackbar, st.message)
@@ -134,6 +125,50 @@ fun SdkLibraryScreen(vm: AppViewModel, onBack: () -> Unit) {
                     label = { Text(stringResource(R.string.lib_tab_missing, all.size - foundCount)) }
                 )
             }
+            // E1 查找力批：分类筛选 + 排序
+            var libCat by remember { mutableStateOf(setOf<String>()) }
+            var libSortByName by remember { mutableStateOf(false) }
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                listOf("ads", "push", "analytics", "quality", "social_or_pay", "maps", "infra", "security", "framework", "other").forEach { c ->
+                    FilterChip(
+                        selected = c in libCat,
+                        onClick = { libCat = if (c in libCat) libCat - c else libCat + c },
+                        label = { Text(categoryLabel(c)) }
+                    )
+                }
+                FilterChip(
+                    selected = libSortByName,
+                    onClick = { libSortByName = !libSortByName },
+                    label = { Text(stringResource(R.string.sort_name)) }
+                )
+                if (libCat.isNotEmpty() || libSortByName) {
+                    TextButton(onClick = { libCat = emptySet(); libSortByName = false }) {
+                        Text(stringResource(R.string.filter_clear))
+                    }
+                }
+            }
+            val rows = remember(all, hitMap, tab, query, libCat, libSortByName) {
+                all.map { r ->
+                    val h = hitMap[r.id] ?: IntArray(2)
+                    LibRow(r, h[0], h[1])
+                }
+                    .filter { if (tab == 0) it.hitApps > 0 else it.hitApps == 0 }
+                    .filter { libCat.isEmpty() || it.rule.category in libCat }
+                    .filter {
+                        query.isBlank() || it.rule.name.contains(query, true) ||
+                            it.rule.company.contains(query, true)
+                    }
+                    .let { l ->
+                        if (libSortByName) l.sortedBy { it.rule.name.lowercase() }
+                        else l.sortedWith(compareByDescending<LibRow> { it.hitApps }.thenBy { it.rule.name })
+                    }
+            }
             if (rows.isEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
@@ -182,7 +217,8 @@ fun SdkLibraryScreen(vm: AppViewModel, onBack: () -> Unit) {
                                     ruleId = row.rule.id,
                                     name = row.rule.name,
                                     category = row.rule.category,
-                                    safety = if (row.rule.safeToBlock) Safety.SAFE else Safety.CAUTION,
+                                    // 库页无 app 上下文，四级安全派生与详情页一致（R1-P1⑦ 补修）
+                                    safety = row.rule.safety(),
                                     matchedComponents = row.rule.components.map { it.`class` },
                                     componentTypes = row.rule.components.associate { it.`class` to it.type }
                                 )

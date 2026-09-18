@@ -1,29 +1,30 @@
 package io.github.deserthouse.prunoid.ui
 
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
-import io.github.deserthouse.prunoid.R
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import io.github.deserthouse.prunoid.R
 import io.github.deserthouse.prunoid.core.rules.Safety
 import io.github.deserthouse.prunoid.core.rules.SdkRule
+import androidx.compose.ui.res.stringResource
 
-// 统计页（批 2 实装）：在机 SDK 排行榜 / 分类分布 / 禁用与识别总量。
-// 数据全部来自现有扫描结果聚合，零额外扫描成本。
+// 统计页（E2 重组）：SDK 分类统计为主角——总量卡 → 分类环形图（中央总数+图例）→ 在机排行 → 未识别前缀 Top。
+// Target API 分布已撤（2026-09-19 用户拍板：非本工具焦点，AppChecker 吸收时的判断偏差）。
 
 private data class StatsRow(val rule: SdkRule, val hitApps: Int, val hitComponents: Int)
 
@@ -32,7 +33,12 @@ private fun categoryColor(c: String, dark: Boolean): Color = when (c) {
     "push" -> if (dark) Color(0xFFFFCC80) else Color(0xFFE65100)
     "analytics" -> if (dark) Color(0xFFA5D6A7) else Color(0xFF2E7D32)
     "framework" -> if (dark) Color(0xFF90CAF9) else Color(0xFF1565C0)
-    else -> if (dark) Color(0xFFCE93D8) else Color(0xFF6A1B9A)
+    "maps" -> if (dark) Color(0xFF80DEEA) else Color(0xFF00838F)
+    "social_or_pay" -> if (dark) Color(0xFFCE93D8) else Color(0xFF6A1B9A)
+    "quality" -> if (dark) Color(0xFFF48FB1) else Color(0xFFAD1457)
+    "infra" -> if (dark) Color(0xFFFFAB91) else Color(0xFFBF360C)
+    "security" -> if (dark) Color(0xFFFFF59D) else Color(0xFFF9A825)
+    else -> if (dark) Color(0xFFB0BEC5) else Color(0xFF546E7A)
 }
 
 @Composable
@@ -40,7 +46,6 @@ fun StatsScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
     val st by vm.state.collectAsState()
     val dark = isSystemInDarkTheme()
 
-    // ruleId → 规则对象
     val ruleById = remember(st.sources) { vm.allRules().associateBy { it.id } }
     // 聚合：每规则命中应用数/组件数
     val rows = remember(st.apps, st.sources) {
@@ -56,23 +61,35 @@ fun StatsScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
             StatsRow(ruleById[id] ?: SdkRule(id = id, name = id), arr[0], arr[1])
         }.sortedByDescending { it.hitApps }
     }
-    // 分类分布
+    // 分类分布（环形图主角）
     val catDist = remember(st.apps) {
-        val m = HashMap<String, Int>()
+        val m = LinkedHashMap<String, Int>()
         st.apps.forEach { app -> app.matchedSdks.forEach { hit -> m[hit.category] = (m[hit.category] ?: 0) + 1 } }
-        m
+        m.entries.sortedByDescending { it.value }
+    }
+    val catTotal = catDist.sumOf { it.value }
+    // 图例占比整数化（最大余数法恒和 100）
+    val catPct = remember(catDist) {
+        val exact = catDist.map { (c, n) -> c to n * 100.0 / catTotal.coerceAtLeast(1) }
+        val floors = exact.map { (c, p) -> Triple(c, kotlin.math.floor(p).toInt(), p - kotlin.math.floor(p)) }
+        val remainder = 100 - floors.sumOf { it.second }
+        val bump = floors.sortedByDescending { it.third }.take(remainder.coerceAtLeast(0)).map { it.first }.toSet()
+        floors.map { (c, f, _) -> c to f + if (c in bump) 1 else 0 }.toMap()
     }
     val totalBlocked = remember(st.applied) { st.applied.values.sumOf { it.components.size } }
     val totalIdentified = remember(st.apps) { st.apps.sumOf { it.matchedSdks.size } }
-    // Target API 分布（AppChecker 走查吸收点）：按 targetSdk 聚合在机应用
-    val apiDist = remember(st.apps) {
-        st.apps.filter { it.targetSdk > 0 }.groupBy { it.targetSdk }
-            .map { (api, list) -> api to list.size }.sortedByDescending { it.second }
+    // 未识别组件前缀 Top（跨 app 聚合，接规则仓贡献引导）
+    val prefixTop = remember(st.apps) {
+        val m = HashMap<String, Int>()
+        st.apps.forEach { app -> app.unmatched.forEach { u -> m[u.prefix] = (m[u.prefix] ?: 0) + u.count } }
+        m.entries.sortedByDescending { it.value }.take(5)
     }
-    val apiTotal = apiDist.sumOf { it.second }
 
     Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         // 总量卡
@@ -87,7 +104,6 @@ fun StatsScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
                     stringResource(R.string.stats_blocked) to "$totalBlocked",
                     stringResource(R.string.stats_apps) to "${st.apps.size}"
                 ).forEach { (label, value) ->
-                    // weight 均分三格，长标签（已禁用组件）与相邻格保持间距不粘连
                     Column(
                         Modifier.weight(1f),
                         horizontalAlignment = Alignment.CenterHorizontally
@@ -103,68 +119,70 @@ fun StatsScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
                 }
             }
         }
-        // Target API 分布（AppChecker 吸收：N Apps + 占比 + 进度条）
-        // 最大余数法取整：占比显示值合计恒为 100.0%，避免逐项四舍五入漂移
-        fun floorOf(x: Double): Int = kotlin.math.floor(x * 10).toInt()
-        val pctRounded = remember(apiDist) {
-            val exact = apiDist.map { (api, n) -> api to (if (apiTotal > 0) n * 100.0 / apiTotal else 0.0) }
-            // 精度=0.1%（总 1000 份）：floor 到 0.1%，余数逐份分给小数部分最大者
-            val floors = exact.map { (api, p) -> Triple(api, floorOf(p), p * 10 - floorOf(p)) }
-            val remainder = 1000 - floors.sumOf { it.second }
-            val bump = floors.sortedByDescending { it.third }.take(remainder).map { it.first }.toSet()
-            floors.map { (api, f, _) -> api to (f + if (api in bump) 1 else 0) }.toMap()
-        }
-        if (apiDist.isNotEmpty()) {
-            Card(Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(16.dp)) {
-                    Text(stringResource(R.string.stats_api_title), style = MaterialTheme.typography.titleSmall)
-                    Spacer(Modifier.height(8.dp))
-                    apiDist.forEach { (api, n) ->
-                        val pct = (pctRounded[api] ?: 0) / 10f
-                        Row(
-                            Modifier.fillMaxWidth().padding(top = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
+        // 分类环形图（SDK 分类统计为主角）
+        Card(Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(16.dp)) {
+                Text(stringResource(R.string.stats_cat_title), style = MaterialTheme.typography.titleSmall)
+                Spacer(Modifier.height(12.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.size(148.dp), contentAlignment = Alignment.Center) {
+                        Canvas(Modifier.fillMaxSize()) {
+                            val stroke = 26.dp.toPx()
+                            val inset = stroke / 2
+                            val arcSize = Size(size.width - stroke, size.height - stroke)
+                            var start = -90f
+                            if (catTotal > 0) {
+                                catDist.forEach { (cat, n) ->
+                                    val sweep = n.toFloat() / catTotal * 360f
+                                    drawArc(
+                                        color = categoryColor(cat, dark),
+                                        startAngle = start,
+                                        sweepAngle = sweep,
+                                        useCenter = false,
+                                        topLeft = Offset(inset, inset),
+                                        size = arcSize,
+                                        style = Stroke(width = stroke)
+                                    )
+                                    start += sweep
+                                }
+                            } else {
+                                drawArc(
+                                    color = Color.Gray.copy(alpha = 0.2f),
+                                    startAngle = 0f, sweepAngle = 360f, useCenter = false,
+                                    topLeft = Offset(inset, inset), size = arcSize,
+                                    style = Stroke(width = stroke)
+                                )
+                            }
+                        }
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("$catTotal", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary)
                             Text(
-                                stringResource(R.string.stats_api_label, api),
-                                style = MaterialTheme.typography.bodySmall,
-                                modifier = Modifier.weight(1f)
-                            )
-                            Text(
-                                pluralStringResource(R.plurals.stats_api_apps, n, n),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                "  " + stringResource(R.string.stats_api_count, "%.1f".format(pct)),
+                                stringResource(R.string.stats_cat_center),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                        LinearProgressIndicator(
-                            progress = { pct / 100f },
-                            modifier = Modifier.fillMaxWidth().padding(top = 2.dp, bottom = 4.dp)
-                        )
                     }
-                }
-            }
-        }
-        // 分类分布
-        Card(Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(16.dp)) {
-                Text(stringResource(R.string.stats_cat_title), style = MaterialTheme.typography.titleSmall)
-                Spacer(Modifier.height(8.dp))
-                catDist.entries.sortedByDescending { it.value }.forEach { (cat, n) ->
-                    Row(
-                        Modifier.fillMaxWidth().padding(vertical = 2.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            Modifier.size(8.dp).background(categoryColor(cat, dark), RoundedCornerShape(50))
-                        )
-                        Spacer(Modifier.width(6.dp))
-                        Text(categoryLabel(cat), style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
-                        Text("$n", style = MaterialTheme.typography.labelMedium)
+                    Spacer(Modifier.width(16.dp))
+                    // 图例
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        catDist.forEach { (cat, n) ->
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(Modifier.size(9.dp).background(categoryColor(cat, dark), RoundedCornerShape(50)))
+                                Spacer(Modifier.width(6.dp))
+                                Text(
+                                    categoryLabel(cat),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                Text(
+                                    "$n · ${catPct[cat] ?: 0}%",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontFamily = FontFamily.Monospace,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -196,6 +214,41 @@ fun StatsScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
                                 "${row.hitApps} app",
                                 style = MaterialTheme.typography.labelSmall,
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+        // 未识别前缀 Top（跨 app 聚合；引导提交规则仓）
+        if (prefixTop.isNotEmpty()) {
+            Card(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(16.dp)) {
+                    Text(stringResource(R.string.stats_prefix_title), style = MaterialTheme.typography.titleSmall)
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        stringResource(R.string.stats_prefix_hint),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    prefixTop.forEach { (prefix, n) ->
+                        Row(
+                            Modifier.fillMaxWidth().padding(vertical = 3.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                prefix,
+                                style = MaterialTheme.typography.bodySmall,
+                                fontFamily = FontFamily.Monospace,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Text(
+                                stringResource(R.string.stats_prefix_count, n),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }

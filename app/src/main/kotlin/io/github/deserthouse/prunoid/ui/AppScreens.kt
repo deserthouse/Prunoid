@@ -30,6 +30,7 @@ import androidx.compose.material.icons.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.Sort
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.*
@@ -68,6 +69,15 @@ private fun safetyIcon(s: Safety): ImageVectorAlias = when (s) {
 }
 
 private typealias ImageVectorAlias = androidx.compose.ui.graphics.vector.ImageVector
+
+/** 列表排序模式（E1 查找力批） */
+enum class AppSort(val labelRes: Int) {
+    DEFAULT(R.string.sort_default),
+    SDK_DESC(R.string.sort_sdk_desc),
+    COMPONENT_DESC(R.string.sort_comp_desc),
+    RECENT(R.string.sort_recent),
+    NAME(R.string.sort_name)
+}
 
 /** 分类枚举 → 中文（schema 语言不穿透到 UI） */
 @Composable
@@ -210,6 +220,34 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
     SnackbarEffect(snackbar, st.message)
     SnackbarEffect(snackbar, subMsg)
 
+    // E1 查找力：筛选/排序状态与结果列表提升到 Scaffold 之上，bottomBar 汇总与列表共用同一份
+    var catSel by remember { mutableStateOf(setOf<String>()) }
+    var safetySel by remember { mutableStateOf<Safety?>(null) }
+    var appliedOnly by remember { mutableStateOf(false) }
+    var sortMode by remember { mutableStateOf(AppSort.DEFAULT) }
+    val apps = remember(st.apps, st.showSystem, st.hitsOnly, query, catSel, safetySel, appliedOnly, sortMode, st.applied) {
+        st.apps
+            .filter { st.showSystem || !it.isSystem }
+            .filter { !st.hitsOnly || it.matchedSdks.isNotEmpty() }
+            .filter { !appliedOnly || st.applied.containsKey(it.packageName) }
+            .filter { catSel.isEmpty() || it.matchedSdks.any { m -> m.category in catSel } }
+            .filter { safetySel == null || it.matchedSdks.any { m -> m.safety == safetySel } }
+            .filter {
+                query.isBlank() || it.label.contains(query, true) ||
+                    it.packageName.contains(query, true) ||
+                    it.matchedSdks.any { s -> s.name.contains(query, true) }
+            }
+            .let { list ->
+                when (sortMode) {
+                    AppSort.DEFAULT -> list
+                    AppSort.SDK_DESC -> list.sortedByDescending { it.matchedSdks.size }
+                    AppSort.COMPONENT_DESC -> list.sortedByDescending { app -> app.matchedSdks.sumOf { it.matchedComponents.size } }
+                    AppSort.RECENT -> list.sortedByDescending { it.lastUpdateTime }
+                    AppSort.NAME -> list.sortedBy { it.label.lowercase() }
+                }
+            }
+    }
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
@@ -253,12 +291,11 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
             )
         },
         bottomBar = {
-            val visible = st.apps.filter { st.showSystem || !it.isSystem }
-            val hits = visible.count { it.matchedSdks.isNotEmpty() }
+            val hits = apps.count { it.matchedSdks.isNotEmpty() }
             Surface(tonalElevation = 2.dp) {
                 Text(
                     if (st.apps.isEmpty()) stringResource(R.string.indexing)
-                    else stringResource(R.string.list_summary, visible.size, hits),
+                    else stringResource(R.string.list_summary, apps.size, hits),
                     style = MaterialTheme.typography.labelMedium,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -304,35 +341,81 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp)
             )
+            // 查找力批（E1）：筛选 chips 横滚行 + 排序菜单（不挤顶栏）；状态提升在 Scaffold 之上
+            var safetyMenu by remember { mutableStateOf(false) }
+            var sortMenu by remember { mutableStateOf(false) }
             Row(
                 Modifier
                     .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
                     .padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                FilterChip(
+                    selected = st.hitsOnly,
+                    onClick = { vm.toggleHitsOnly() },
+                    label = { Text(stringResource(R.string.chip_hits_only)) }
+                )
                 FilterChip(
                     selected = st.showSystem,
                     onClick = { vm.toggleShowSystem() },
                     label = { Text(stringResource(R.string.chip_show_system)) }
                 )
                 FilterChip(
-                    selected = st.hitsOnly,
-                    onClick = { vm.toggleHitsOnly() },
-                    label = { Text(stringResource(R.string.chip_hits_only)) }
+                    selected = appliedOnly,
+                    onClick = { appliedOnly = !appliedOnly },
+                    label = { Text(stringResource(R.string.chip_applied)) }
                 )
+                listOf("ads", "push", "analytics", "quality", "social_or_pay", "maps", "infra", "security", "framework", "other").forEach { c ->
+                    FilterChip(
+                        selected = c in catSel,
+                        onClick = { catSel = if (c in catSel) catSel - c else catSel + c },
+                        label = { Text(categoryLabel(c)) }
+                    )
+                }
+                Box {
+                    FilterChip(
+                        selected = safetySel != null,
+                        onClick = { safetyMenu = true },
+                        label = { Text(safetySel?.let { safetyLabel(it) } ?: stringResource(R.string.filter_safety)) }
+                    )
+                    DropdownMenu(expanded = safetyMenu, onDismissRequest = { safetyMenu = false }) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.filter_all)) },
+                            onClick = { safetySel = null; safetyMenu = false }
+                        )
+                        Safety.entries.forEach { s ->
+                            DropdownMenuItem(
+                                text = { Text(safetyLabel(s)) },
+                                onClick = { safetySel = s; safetyMenu = false }
+                            )
+                        }
+                    }
+                }
+                Box {
+                    FilterChip(
+                        selected = sortMode != AppSort.DEFAULT,
+                        onClick = { sortMenu = true },
+                        label = { Text(stringResource(R.string.sort_label)) },
+                        leadingIcon = { Icon(Icons.Outlined.Sort, contentDescription = null, modifier = Modifier.size(18.dp)) }
+                    )
+                    DropdownMenu(expanded = sortMenu, onDismissRequest = { sortMenu = false }) {
+                        AppSort.entries.forEach { m ->
+                            DropdownMenuItem(
+                                text = { Text(stringResource(m.labelRes)) },
+                                onClick = { sortMode = m; sortMenu = false }
+                            )
+                        }
+                    }
+                }
+                if (catSel.isNotEmpty() || safetySel != null || appliedOnly || sortMode != AppSort.DEFAULT) {
+                    TextButton(onClick = {
+                        catSel = emptySet(); safetySel = null; appliedOnly = false; sortMode = AppSort.DEFAULT
+                    }) { Text(stringResource(R.string.filter_clear)) }
+                }
             }
             if (st.scanning) {
                 LinearWavyProgressIndicator(Modifier.padding(horizontal = 16.dp, vertical = 6.dp))
-            }
-            val apps = remember(st.apps, st.showSystem, st.hitsOnly, query) {
-                st.apps
-                    .filter { st.showSystem || !it.isSystem }
-                    .filter { !st.hitsOnly || it.matchedSdks.isNotEmpty() }
-                    .filter {
-                        query.isBlank() || it.label.contains(query, true) ||
-                            it.packageName.contains(query, true) ||
-                            it.matchedSdks.any { s -> s.name.contains(query, true) }
-                    }
             }
             if (apps.isEmpty() && !st.scanning) {
                 Column(
