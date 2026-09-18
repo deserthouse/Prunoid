@@ -11,8 +11,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import io.github.deserthouse.prunoid.core.engine.RuleGuardService
 import io.github.deserthouse.prunoid.core.scanner.ScannedApp
 import androidx.compose.foundation.layout.Box
@@ -60,11 +62,12 @@ class MainActivity : ComponentActivity() {
             requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 1)
         }
         // 自动重应用开关（设置）：关=不启动规则守护（A15+ 收不到包事件，需手动重扫）
-        val autoOn = kotlinx.coroutines.runBlocking {
-            io.github.deserthouse.prunoid.core.rules.SettingsRepository(this@MainActivity)
+        // 异步读 DataStore（不阻塞主线程冷启动）；启动前短暂空窗可接受——服务自身幂等
+        lifecycleScope.launch {
+            val autoOn = io.github.deserthouse.prunoid.core.rules.SettingsRepository(this@MainActivity)
                 .settings.first().autoReapply
+            if (autoOn) startForegroundService(Intent(this@MainActivity, RuleGuardService::class.java))
         }
-        if (autoOn) startForegroundService(Intent(this, RuleGuardService::class.java))
     }
 }
 

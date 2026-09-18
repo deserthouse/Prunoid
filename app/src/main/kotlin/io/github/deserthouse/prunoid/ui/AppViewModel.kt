@@ -33,7 +33,8 @@ data class AppUiState(
     val autoReapply: Boolean = true,   // 自动重应用总开关（控制 RuleGuardService）
     val sources: List<SettingsRepository.SubSource> = listOf(SettingsRepository.OFFICIAL_SOURCE),
     val applied: Map<String, AppliedRulesStore.AppliedEntry> = emptyMap(), // 包名 -> 已应用记录
-    val backupKeep: Int = 10           // 备份保留份数（设置页可调）
+    val backupKeep: Int = 10,          // 备份保留份数（设置页可调）
+    val icons: Map<String, android.graphics.drawable.Drawable> = emptyMap() // 扫描后后台预载，列表/详情零主线程 binder 调用
 )
 
 class AppViewModel(app: Application) : AndroidViewModel(app) {
@@ -93,6 +94,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             }
             android.util.Log.d("SdkPruner", "scan done: ${apps.size} apps, ${apps.sumOf { it.matchedSdks.size }} hits")
             _state.update { it.copy(scanning = false, apps = apps, applied = withContext(Dispatchers.IO) { applied.all() }) }
+            // 图标后台预载（getApplicationIcon 是 binder 调用，100+ app 不能放组合期主线程）
+            viewModelScope.launch(Dispatchers.IO) {
+                val pm = getApplication<Application>().packageManager
+                val icons = apps.associate { a ->
+                    a.packageName to (runCatching { pm.getApplicationIcon(a.packageName) }.getOrNull())
+                }.filterValues { it != null }.mapValues { it.value!! }
+                _state.update { it.copy(icons = icons) }
+            }
         }
     }
 

@@ -78,9 +78,18 @@ fun StatsScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
                     "已禁用组件" to "$totalBlocked",
                     "扫描应用" to "${st.apps.size}"
                 ).forEach { (label, value) ->
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    // weight 均分三格，长标签（已禁用组件）与相邻格保持间距不粘连
+                    Column(
+                        Modifier.weight(1f),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
                         Text(value, style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary)
-                        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(
+                            label,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1
+                        )
                     }
                 }
             }

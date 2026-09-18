@@ -1,7 +1,9 @@
 package io.github.deserthouse.prunoid.ui
 
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -193,7 +195,6 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
     var showRecovery by remember { mutableStateOf(false) }
     var subMsg by remember { mutableStateOf<String?>(null) }
     var query by remember { mutableStateOf("") }
-    val pm = LocalContext.current.packageManager
     // 订阅点语义：任一源成功拉取过才亮（sources 注册表默认恒含官方源，不能作为判据）
     val subscribed = st.sources.any { it.lastFetched.isNotBlank() }
 
@@ -349,9 +350,7 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
                     contentPadding = PaddingValues(bottom = 8.dp)
                 ) {
                     items(apps, key = { it.packageName }) { app ->
-                        val icon = remember(app.packageName) {
-                            runCatching { pm.getApplicationIcon(app.packageName) }.getOrNull()
-                        }
+                        val icon = st.icons[app.packageName]
                         val appliedEntry = st.applied[app.packageName]
                         // 命中集最严重风险级 → 徽标色点（RISKY > UNKNOWN > CAUTION > SAFE）
                         val worst = listOf(Safety.RISKY, Safety.UNKNOWN, Safety.CAUTION, Safety.SAFE)
@@ -702,9 +701,7 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            val icon = remember(app.packageName) {
-                                runCatching { pm.getApplicationIcon(app.packageName) }.getOrNull()
-                            }
+                            val icon = st.icons[app.packageName]
                             coil.compose.AsyncImage(
                                 model = icon,
                                 contentDescription = null,
@@ -987,12 +984,18 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
             if (detailTab == 0 && app.unmatched.isNotEmpty()) {
                 item {
                     var unmatchedOpen by remember { mutableStateOf(false) }
+                    // 动效对齐 Blocker 克制区间（tween 100~200ms，FastOutSlowIn）
+                    val rot by animateFloatAsState(
+                        targetValue = if (unmatchedOpen) 180f else 0f,
+                        animationSpec = tween(150, easing = FastOutSlowInEasing),
+                        label = "unmatchedArrow"
+                    )
                     val total = app.unmatched.sumOf { it.count }
                     Card(
                         onClick = { unmatchedOpen = !unmatchedOpen },
                         Modifier
                             .fillMaxWidth()
-                            .animateContentSize()
+                            .animateContentSize(tween(150, easing = FastOutSlowInEasing))
                     ) {
                         Column(Modifier.padding(14.dp)) {
                             Row(
@@ -1012,7 +1015,7 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                     contentDescription = if (unmatchedOpen) "收起" else "展开",
                                     modifier = Modifier
                                         .padding(start = 6.dp)
-                                        .rotate(if (unmatchedOpen) 180f else 0f)
+                                        .rotate(rot)
                                 )
                             }
                             if (unmatchedOpen) {
