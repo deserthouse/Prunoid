@@ -23,7 +23,9 @@ data class ScannedApp(
 data class UnmatchedGroup(
     val prefix: String,
     val count: Int,
-    val suspicious: Boolean
+    val suspicious: Boolean,
+    val components: List<String> = emptyList(),          // 批L4：组内全类名（可禁用）
+    val componentTypes: Map<String, String> = emptyMap() // 类名 -> activity/service/...
 )
 
 // 启发式特征词（小写匹配）：只用于"疑似"标注，来源 oF2pks/AdClose 拆解经验
@@ -124,12 +126,16 @@ class Scanner(
         // 未识别组件：按 Java 包前缀聚类 + 启发式疑似标注（只展示，不参与禁用）
         val unmatched = components.asSequence()
             .filterNot { (cn, _) -> cn in matchedCns }
-            .groupBy({ it.first.substringBeforeLast('.') }, { it.second })
-            .map { (prefix, types) ->
+            .groupBy({ it.first.substringBeforeLast('.') }, { it })
+            .map { (prefix, entries) ->
+                val comps = entries.map { it.first }
+                val types = entries.associate { (cn, t) -> cn to t }
                 UnmatchedGroup(
                     prefix = prefix,
-                    count = types.size,
-                    suspicious = SUSPICIOUS_KEYWORDS.any { kw -> prefix.lowercase().contains(kw) }
+                    count = comps.size,
+                    suspicious = SUSPICIOUS_KEYWORDS.any { kw -> prefix.lowercase().contains(kw) },
+                    components = comps,
+                    componentTypes = types
                 )
             }
             .sortedByDescending { it.count }

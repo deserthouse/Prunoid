@@ -1,5 +1,14 @@
 package io.github.deserthouse.prunoid.ui
 
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material.icons.outlined.FilterList
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.ui.res.stringResource
 import io.github.deserthouse.prunoid.R
 import androidx.compose.animation.animateContentSize
@@ -13,6 +22,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -71,6 +81,17 @@ private fun safetyIcon(s: Safety): ImageVectorAlias = when (s) {
 }
 
 private typealias ImageVectorAlias = androidx.compose.ui.graphics.vector.ImageVector
+
+
+/** 批L2：滚动方向判定（首个可见项索引/偏移回落 = 向上） */
+private val androidx.compose.foundation.lazy.LazyListState.scrollingUp: Boolean
+    get() {
+        val now = firstVisibleItemIndex to firstVisibleItemScrollOffset
+        val prev = taggedScroll.getOrDefault(this.hashCode(), now)
+        taggedScroll[this.hashCode()] = now
+        return now.first < prev.first || (now.first == prev.first && now.second < prev.second)
+    }
+private val taggedScroll = java.util.concurrent.ConcurrentHashMap<Int, Pair<Int, Int>>()
 
 /** 列表排序模式（E1 查找力批） */
 enum class AppSort(val labelRes: Int) {
@@ -206,6 +227,7 @@ private fun fmtTime(epochMs: Long): String = if (epochMs <= 0) "" else
 // ─────────────────────────── 列表屏 ───────────────────────────
 
 @Composable
+@OptIn(ExperimentalMaterial3Api::class)
 fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings: () -> Unit, onOpenLibrary: () -> Unit) {
     val st by vm.state.collectAsState()
     val dark = isSystemInDarkTheme()
@@ -225,6 +247,7 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
     var safetySel by remember { mutableStateOf<Safety?>(null) }
     var appliedOnly by remember { mutableStateOf(false) }
     var sortMode by remember { mutableStateOf(AppSort.DEFAULT) }
+    var showFilterSheet by remember { mutableStateOf(false) }
     val apps = remember(st.apps, st.showSystem, st.hitsOnly, query, catSel, safetySel, appliedOnly, sortMode, st.applied) {
         st.apps
             .filter { st.showSystem || !it.isSystem }
@@ -314,6 +337,16 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
                     )
                 }
             }
+            // 批L2：滚动收起搜索区（上滑即回，OptIcon 同款语义）
+            val listState = rememberLazyListState()
+            val scrollUp by remember { derivedStateOf { listState.scrollingUp } }
+            val headerVisible by remember { derivedStateOf { listState.firstVisibleItemIndex == 0 || scrollUp } }
+            AnimatedVisibility(
+                visible = headerVisible,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                Column {
             OutlinedTextField(
                 value = query,
                 onValueChange = { query = it },
@@ -336,64 +369,26 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp)
             )
-            // 查找力批（E1）：筛选 chips 横滚行 + 排序菜单（不挤顶栏）；状态提升在 Scaffold 之上
-            var safetyMenu by remember { mutableStateOf(false) }
+            // 批L1：筛选收敛为两入口——Filter（sheet）+ Sort（menu），不再横滚找排序
             var sortMenu by remember { mutableStateOf(false) }
+            val activeFilterCount = catSel.size + (if (safetySel != null) 1 else 0) + (if (appliedOnly) 1 else 0) +
+                (if (st.hitsOnly) 1 else 0) + (if (st.showSystem) 1 else 0)
             Row(
-                Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp),
+                Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                FilterChip(
-                    selected = st.hitsOnly,
-                    onClick = { vm.toggleHitsOnly() },
-                    label = { Text(stringResource(R.string.chip_hits_only)) }
-                )
-                FilterChip(
-                    selected = st.showSystem,
-                    onClick = { vm.toggleShowSystem() },
-                    label = { Text(stringResource(R.string.chip_show_system)) }
-                )
-                FilterChip(
-                    selected = appliedOnly,
-                    onClick = { appliedOnly = !appliedOnly },
-                    label = { Text(stringResource(R.string.chip_applied)) }
-                )
-                listOf("ads", "push", "analytics", "quality", "social_or_pay", "maps", "infra", "security", "framework", "other").forEach { c ->
-                    FilterChip(
-                        selected = c in catSel,
-                        onClick = { catSel = if (c in catSel) catSel - c else catSel + c },
-                        label = { Text(categoryLabel(c)) }
-                    )
+                FilledTonalButton(onClick = { showFilterSheet = true }, modifier = Modifier.weight(1f)) {
+                    Icon(Icons.Outlined.FilterList, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(if (activeFilterCount > 0) stringResource(R.string.filter_label_n, activeFilterCount)
+                         else stringResource(R.string.filter_label))
                 }
-                Box {
-                    FilterChip(
-                        selected = safetySel != null,
-                        onClick = { safetyMenu = true },
-                        label = { Text(safetySel?.let { safetyLabel(it) } ?: stringResource(R.string.filter_safety)) }
-                    )
-                    DropdownMenu(expanded = safetyMenu, onDismissRequest = { safetyMenu = false }) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.filter_all)) },
-                            onClick = { safetySel = null; safetyMenu = false }
-                        )
-                        Safety.entries.forEach { s ->
-                            DropdownMenuItem(
-                                text = { Text(safetyLabel(s)) },
-                                onClick = { safetySel = s; safetyMenu = false }
-                            )
-                        }
+                Box(Modifier.weight(1f)) {
+                    FilledTonalButton(onClick = { sortMenu = true }, modifier = Modifier.fillMaxWidth()) {
+                        Icon(Icons.Outlined.Sort, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text(stringResource(sortMode.labelRes), maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
-                }
-                Box {
-                    FilterChip(
-                        selected = sortMode != AppSort.DEFAULT,
-                        onClick = { sortMenu = true },
-                        label = { Text(stringResource(R.string.sort_label)) },
-                        leadingIcon = { Icon(Icons.Outlined.Sort, contentDescription = null, modifier = Modifier.size(18.dp)) }
-                    )
                     DropdownMenu(expanded = sortMenu, onDismissRequest = { sortMenu = false }) {
                         AppSort.entries.forEach { m ->
                             DropdownMenuItem(
@@ -403,10 +398,49 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
                         }
                     }
                 }
-                if (catSel.isNotEmpty() || safetySel != null || appliedOnly || sortMode != AppSort.DEFAULT) {
-                    TextButton(onClick = {
-                        catSel = emptySet(); safetySel = null; appliedOnly = false; sortMode = AppSort.DEFAULT
-                    }) { Text(stringResource(R.string.filter_clear)) }
+            }
+            }  // AnimatedVisibility Column end（批L2）
+            }  // AnimatedVisibility end（批L2）
+            if (showFilterSheet) {
+                ModalBottomSheet(onDismissRequest = { showFilterSheet = false }) {
+                    Column(Modifier.padding(horizontal = 20.dp).padding(bottom = 28.dp).verticalScroll(rememberScrollState())) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(stringResource(R.string.filter_label), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                            TextButton(onClick = {
+                                catSel = emptySet(); safetySel = null; appliedOnly = false
+                                if (st.hitsOnly) vm.toggleHitsOnly()
+                                if (st.showSystem) vm.toggleShowSystem()
+                            }) { Text(stringResource(R.string.filter_clear)) }
+                        }
+                        Text(stringResource(R.string.filter_scope), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(vertical = 6.dp)) {
+                            FilterChip(selected = st.hitsOnly, onClick = { vm.toggleHitsOnly() }, label = { Text(stringResource(R.string.chip_hits_only)) })
+                            FilterChip(selected = st.showSystem, onClick = { vm.toggleShowSystem() }, label = { Text(stringResource(R.string.chip_show_system)) })
+                            FilterChip(selected = appliedOnly, onClick = { appliedOnly = !appliedOnly }, label = { Text(stringResource(R.string.chip_applied)) })
+                        }
+                        Spacer(Modifier.height(8.dp))
+                        Text(stringResource(R.string.filter_safety), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(vertical = 6.dp)) {
+                            Safety.entries.forEach { sf ->
+                                FilterChip(
+                                    selected = safetySel == sf,
+                                    onClick = { safetySel = if (safetySel == sf) null else sf },
+                                    label = { Text(safetyLabel(sf)) }
+                                )
+                            }
+                        }
+                        Spacer(Modifier.height(8.dp))
+                        Text(stringResource(R.string.filter_category), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(vertical = 6.dp)) {
+                            listOf("ads", "push", "analytics", "quality", "social_or_pay", "maps", "infra", "security", "framework", "other").forEach { c ->
+                                FilterChip(
+                                    selected = c in catSel,
+                                    onClick = { catSel = if (c in catSel) catSel - c else catSel + c },
+                                    label = { Text(categoryLabel(c)) }
+                                )
+                            }
+                        }
+                    }
                 }
             }
             if (st.scanning) {
@@ -433,7 +467,8 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
                 }
             } else {
                 LazyColumn(
-                    Modifier.fillMaxSize(),
+                    state = listState,
+                    modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(bottom = 8.dp)
                 ) {
                     items(apps, key = { it.packageName }) { app ->
@@ -557,10 +592,12 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
 
     SnackbarEffect(snackbar, msg)
 
-    // 分类筛选后的可见 SDK 与勾选摘要
-    val visibleSdks = remember(app.matchedSdks, catFilter) {
-        if (catFilter == null) app.matchedSdks
-        else app.matchedSdks.filter { it.category == catFilter }
+    // 分类筛选后的可见 SDK 与勾选摘要（批L3：加视图内搜索）
+    var sdkQuery by remember(app.packageName) { mutableStateOf("") }
+    val visibleSdks = remember(app.matchedSdks, catFilter, sdkQuery) {
+        app.matchedSdks
+            .let { l -> if (catFilter == null) l else l.filter { it.category == catFilter } }
+            .filter { sdkQuery.isBlank() || it.name.contains(sdkQuery, true) }
     }
     val categories = remember(app.matchedSdks) {
         app.matchedSdks.map { it.category }.distinct()
@@ -635,7 +672,8 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
             }
         }
     ) { padding ->
-        val compRows = remember(app, compTypeFilter) {
+        var compQuery by remember(app.packageName) { mutableStateOf("") }
+        val compRows = remember(app, compTypeFilter, compQuery) {
             app.matchedSdks.flatMap { sdk ->
                 sdk.matchedComponents.mapNotNull { cn ->
                     val t = sdk.componentTypes[cn]
@@ -646,7 +684,9 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                             cn.endsWith("Provider") -> "provider"
                             else -> "other"
                         }
-                    if (compTypeFilter == null || t == compTypeFilter) Triple(cn, t, sdk) else null
+                    if (compTypeFilter != null && t != compTypeFilter) return@mapNotNull null
+                    if (compQuery.isNotBlank() && !cn.contains(compQuery, true) && !sdk.name.contains(compQuery, true)) return@mapNotNull null
+                    Triple(cn, t, sdk)
                 }
             }.sortedBy { it.first }
         }
@@ -837,6 +877,31 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                     ) { Text(stringResource(R.string.view_components)) }
                 }
             }
+            if (detailTab == 0) {
+                item {
+                    // 批L3：SDK 视图搜索
+                    OutlinedTextField(
+                        value = sdkQuery,
+                        onValueChange = { sdkQuery = it },
+                        singleLine = true,
+                        placeholder = { Text(stringResource(R.string.search_hint)) },
+                        leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
+                        trailingIcon = {
+                            if (sdkQuery.isNotEmpty()) IconButton(onClick = { sdkQuery = "" }) {
+                                Icon(Icons.Outlined.Close, contentDescription = stringResource(R.string.clear_search))
+                            }
+                        },
+                        shape = RoundedCornerShape(28.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            unfocusedBorderColor = Color.Transparent,
+                            focusedBorderColor = MaterialTheme.colorScheme.primary
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
             if (detailTab == 1) {
                 item {
                     // 组件视图类型过滤
@@ -860,6 +925,29 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                             )
                         }
                     }
+                }
+                item {
+                    // 批L3：组件视图搜索
+                    OutlinedTextField(
+                        value = compQuery,
+                        onValueChange = { compQuery = it },
+                        singleLine = true,
+                        placeholder = { Text(stringResource(R.string.search_comp_hint)) },
+                        leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
+                        trailingIcon = {
+                            if (compQuery.isNotEmpty()) IconButton(onClick = { compQuery = "" }) {
+                                Icon(Icons.Outlined.Close, contentDescription = stringResource(R.string.clear_search))
+                            }
+                        },
+                        shape = RoundedCornerShape(28.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            unfocusedBorderColor = Color.Transparent,
+                            focusedBorderColor = MaterialTheme.colorScheme.primary
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
                 items(compRows, key = { it.first + it.third.ruleId }) { (cn, t, sdk) ->
                     ListItem(
@@ -1022,13 +1110,47 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                 Spacer(Modifier.height(8.dp))
                                 HorizontalDivider()
                                 Spacer(Modifier.height(8.dp))
-                                app.unmatched.forEach { g ->
+                                // 批L4：搜索 + 疑似筛选 + 可勾选禁用（默认全不选——未验证组件人拍板）
+                                var unmatchedQuery by remember { mutableStateOf("") }
+                                var suspiciousOnly by remember { mutableStateOf(false) }
+                                val unmatchedSel = remember(app.packageName) { mutableStateMapOf<String, Boolean>() }
+                                val visibleGroups = app.unmatched.filter { g ->
+                                    (unmatchedQuery.isBlank() || g.prefix.contains(unmatchedQuery, true)) &&
+                                        (!suspiciousOnly || g.suspicious)
+                                }
+                                OutlinedTextField(
+                                    value = unmatchedQuery,
+                                    onValueChange = { unmatchedQuery = it },
+                                    singleLine = true,
+                                    placeholder = { Text(stringResource(R.string.search_hint)) },
+                                    leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
+                                    shape = RoundedCornerShape(28.dp),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                        unfocusedBorderColor = Color.Transparent,
+                                        focusedBorderColor = MaterialTheme.colorScheme.primary
+                                    ),
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                Row(Modifier.padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    FilterChip(
+                                        selected = suspiciousOnly,
+                                        onClick = { suspiciousOnly = !suspiciousOnly },
+                                        label = { Text(stringResource(R.string.suspicious)) }
+                                    )
+                                }
+                                visibleGroups.forEach { g ->
                                     Row(
                                         Modifier
                                             .fillMaxWidth()
                                             .padding(vertical = 2.dp),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
+                                        Checkbox(
+                                            checked = unmatchedSel[g.prefix] == true,
+                                            onCheckedChange = { unmatchedSel[g.prefix] = it }
+                                        )
                                         Text(
                                             g.prefix,
                                             fontFamily = FontFamily.Monospace,
@@ -1050,13 +1172,35 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                                 )
                                             }
                                         }
-                                        Spacer(Modifier.width(8.dp))
                                         Text(
-                                            "${g.count}",
-                                            style = MaterialTheme.typography.labelMedium,
+                                            " · " + g.count,
+                                            style = MaterialTheme.typography.labelSmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                     }
+                                }
+                                // 批L4：勾选了组 → 禁用所选（IFW，按组件类型分组）
+                                val selGroups = app.unmatched.filter { unmatchedSel[it.prefix] == true }
+                                if (selGroups.isNotEmpty()) {
+                                    val selComps = selGroups.flatMap { it.components }
+                                    Button(
+                                        onClick = {
+                                            val byType = selGroups.flatMap { g ->
+                                                g.componentTypes.entries.map { (cn, t) -> t to cn }
+                                            }.groupBy({ it.first }, { it.second })
+                                            vm.disableUnmatched(app.packageName, byType) { msg = it }
+                                        },
+                                        enabled = !st.busy && selComps.isNotEmpty(),
+                                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                                    ) {
+                                        Text(stringResource(R.string.disable_unmatched, selComps.size))
+                                    }
+                                    Text(
+                                        stringResource(R.string.unverified_note),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier.padding(top = 4.dp)
+                                    )
                                 }
                             }
                         }
@@ -1209,30 +1353,87 @@ fun SdkArchiveSheet(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.primary
             )
-            Row(
-                Modifier.padding(top = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(stringResource(R.string.sheet_toggle), style = MaterialTheme.typography.labelMedium)
-                Spacer(Modifier.width(8.dp))
-                Switch(checked = checked, onCheckedChange = onToggle)
-            }
-            if (libraryContext && onDisableEverywhere != null && libraryApps > 0) {
-                // 批I：库上下文专属——跨应用统一禁用该 SDK（IFW，对所有命中应用生效）
-                Button(
-                    onClick = onDisableEverywhere,
-                    enabled = !vm.state.value.busy,
-                    modifier = Modifier.fillMaxWidth()
+            if (!libraryContext) {
+                Row(
+                    Modifier.padding(top = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(stringResource(R.string.disable_everywhere_btn, libraryApps))
+                    Text(stringResource(R.string.sheet_toggle), style = MaterialTheme.typography.labelMedium)
+                    Spacer(Modifier.width(8.dp))
+                    Switch(checked = checked, onCheckedChange = onToggle)
                 }
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    stringResource(R.string.disable_everywhere_hint),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(Modifier.height(8.dp))
+            } else {
+                // 批M1：库上下文——使用此 SDK 的应用清单（各应用禁用状态，等待用户调整）
+                Spacer(Modifier.height(12.dp))
+                val st0 = vm.state.collectAsState().value
+                val liveSet0 = st0.liveDisabled
+                val userApps = st0.apps.filter { a -> a.matchedSdks.any { it.ruleId == hit.ruleId } }
+                // 批M3：sheet 内嵌状态行（Snackbar 在 sheet 之下会被遮挡，改本地呈现）
+                var sheetStatus by remember { mutableStateOf<String?>(null) }
+                sheetStatus?.let {
+                    Surface(
+                        color = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                    ) {
+                        Text(it, style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(8.dp))
+                    }
+                }
+                if (userApps.isEmpty()) {
+                    Text(
+                        stringResource(R.string.sheet_no_apps),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                } else {
+                    Text(
+                        stringResource(R.string.sheet_apps_title, userApps.size),
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    userApps.take(30).forEach { a ->
+                        val disN = liveSet0[a.packageName]?.count { c ->
+                            a.matchedSdks.filter { it.ruleId == hit.ruleId }.any { h ->
+                                h.matchedComponents.any { it == c || (a.packageName + "/" + it) == c }
+                            }
+                        } ?: 0
+                        val total = a.matchedSdks.first { it.ruleId == hit.ruleId }.matchedComponents.size
+                        Row(
+                            Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(Modifier.weight(1f)) {
+                                Text(a.label.ifEmpty { a.packageName }, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                Text(
+                                    if (disN > 0) stringResource(R.string.sheet_app_disabled, disN, total)
+                                    else stringResource(R.string.sheet_app_pending),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = if (disN > 0) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Switch(
+                                checked = disN > 0,
+                                onCheckedChange = { on ->
+                                    if (on) {
+                                        vm.disableSdkEverywhere(hit.ruleId) { sheetStatus = it }
+                                    } else {
+                                        // 关 = 该 app 恢复（IFW 移除 + pm 重启用）
+                                        vm.restoreApp(a) { sheetStatus = it }
+                                    }
+                                },
+                                enabled = !st0.busy
+                            )
+                        }
+                    }
+                    if (userApps.size > 30) {
+                        Text(
+                            stringResource(R.string.sheet_apps_more, userApps.size - 30),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
             Spacer(Modifier.height(12.dp))
             info?.description?.takeIf { it.isNotBlank() }?.let {

@@ -171,6 +171,35 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    /** 批L4：禁用勾选的未识别组件（IFW 按类型分组；记 applied 供恢复） */
+    fun disableUnmatched(pkg: String, byType: Map<String, List<String>>, onDone: (String) -> Unit) {
+        viewModelScope.launch {
+            _state.update { it.copy(busy = true) }
+            val msg = withContext(Dispatchers.IO) {
+                if (!engine.rootAvailable()) return@withContext appCtx.getString(R.string.vm_need_root)
+                if (DisableEngine.isForbidden(pkg)) return@withContext appCtx.getString(R.string.vm_forbidden)
+                val comps = byType.values.flatten()
+                if (comps.isEmpty()) return@withContext appCtx.getString(R.string.vm_no_targets)
+                engine.backup(_state.value.backupKeep).getOrNull()
+                val r = engine.applyIfw(pkg, byType)
+                if (r.isSuccess) {
+                    applied.record(pkg, Engine.IFW.name, comps,
+                        byType.entries.flatMap { (t, cs) -> cs.map { it to t } }.toMap())
+                }
+                val liveAfter = if (r.isSuccess) engine.readLiveDisabled(listOf(pkg)).first else null
+                _state.update {
+                    it.copy(
+                        applied = applied.all(),
+                        liveDisabled = liveAfter?.let { l -> it.liveDisabled + (pkg to (l[pkg] ?: emptySet())) } ?: it.liveDisabled
+                    )
+                }
+                appCtx.getString(R.string.vm_apply_ok, "IFW", r.getOrDefault(0))
+            }
+            _state.update { it.copy(busy = false) }
+            onDone(msg)
+        }
+    }
+
     fun onRambleTapped() {
         if (_state.value.easterRambleBurned) {
             _state.update { it.copy(message = appCtx.getString(R.string.easter_dry)) }

@@ -222,4 +222,16 @@
     <string name="disable_everywhere_hint">Writes IFW rules to every matching app (covers future updates); restore via the detail page of each app.</string>
     <string name="lang_section">语言 / Language</string>
     <string name="sheet_matched_line">%1$d matched, %2$d blocked</string>
+    <string name="filter_label">Filter</string>
+    <string name="filter_label_n">Filter (%1$d)</string>
+    <string name="filter_scope">Scope</string>
+    <string name="filter_category">SDK category</string>
+    <string name="search_comp_hint">Search component / SDK</string>
+    <string name="disable_unmatched">Disable selected (%1$d components)</string>
+    <string name="unverified_note">Unverified components: none pre-selected; disable at your own risk — consider contributing rules</string>
+    <string name="sheet_no_apps">Not detected in any installed app</string>
+    <string name="sheet_apps_title">Apps using this SDK (%1$d)</string>
+    <string name="sheet_app_disabled">%1$d/%2$d components disabled</string>
+    <string name="sheet_app_pending">Not disabled</string>
+    <string name="sheet_apps_more">…%1$d more apps not listed</string>
 </resources>
