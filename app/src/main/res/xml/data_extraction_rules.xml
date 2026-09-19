@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 云备份/换机迁移策略（2026-09-19 拍板）：
+     带走 DataStore 偏好、规则订阅缓存、applied 记录（换机即续力）；
+     排除 backups/（IFW+pm 时点快照属设备现场，跨机无意义）。 -->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="file" path="." />
+        <include domain="database" path="." />
+        <include domain="sharedpref" path="." />
+        <exclude domain="file" path="backups/" />
+        <exclude domain="file" path="cache/" />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="file" path="." />
+        <include domain="database" path="." />
+        <include domain="sharedpref" path="." />
+        <exclude domain="file" path="backups/" />
+        <exclude domain="file" path="cache/" />
+    </device-transfer>
+</data-extraction-rules>

@@ -61,7 +61,12 @@ class RuleGuardService : Service() {
             IntentFilter(RecoveryReceiver.ACTION),
             Context.RECEIVER_EXPORTED
         )
-        startForeground(NOTIFY_ID, buildNotification())
+        // API 34+ 规范：显式声明与 manifest 一致的 FGS 类型
+        if (android.os.Build.VERSION.SDK_INT >= 34) {
+            startForeground(NOTIFY_ID, buildNotification(), android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
+        } else {
+            startForeground(NOTIFY_ID, buildNotification())
+        }
     }
 
     private fun buildNotification(): Notification {

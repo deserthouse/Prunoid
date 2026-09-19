@@ -238,8 +238,11 @@ fun SdkLibraryScreen(vm: AppViewModel, onBack: () -> Unit) {
                 matchedComponents = row.rule.components.map { it.`class` },
                 componentTypes = row.rule.components.associate { it.`class` to it.type }
             ),
-            // 跨应用禁用入口暂缓发布：sheet 内点击命中待查（后端 disableSdkEverywhere 已就绪）
-            libraryContext = false,
+            libraryContext = true,
+            libraryApps = row.hitApps3p,
+            onDisableEverywhere = {
+                vm.disableSdkEverywhere(row.rule.id) { sheetMsg = it }
+            },
             app = ScannedApp(
                 packageName = "", label = "", isSystem = false, matchedSdks = emptyList()
             ),

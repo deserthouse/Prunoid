@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- API ≤30 传统自动备份策略（与 data_extraction_rules 同口径） -->
+<full-backup-content>
+    <include domain="file" path="." />
+    <include domain="database" path="." />
+    <include domain="sharedpref" path="." />
+    <exclude domain="file" path="backups/" />
+    <exclude domain="file" path="cache/" />
+</full-backup-content>
