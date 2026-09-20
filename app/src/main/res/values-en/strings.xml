@@ -234,4 +234,15 @@
     <string name="sheet_app_disabled">%1$d/%2$d components disabled</string>
     <string name="sheet_app_pending">Not disabled</string>
     <string name="sheet_apps_more">…%1$d more apps not listed</string>
+    <string name="vm_reconcile_gap">Reconcile: %1$d applied components not in effect on device (new components from updates?) — re-apply from the detail page</string>
+    <string name="sec_workmode">Working mode</string>
+    <string name="wm_root">Root</string>
+    <string name="wm_audit">Audit only</string>
+    <string name="wm_root_desc">Writes disable rules directly (IFW / pm). Full capability. Default.</string>
+    <string name="wm_audit_desc">Read-only auditing: scan/identify/stats available; disable actions unavailable (no root, or just inspecting).</string>
+    <string name="reapply_open">On open</string>
+    <string name="reapply_realtime">Realtime</string>
+    <string name="reapply_realtime_desc">Persistent foreground service; re-applies immediately on install/update (uses a persistent notification).</string>
+    <string name="reapply_open_desc">Reconciles once when Prunoid opens, prompting for gaps; no resident service (default).</string>
+    <string name="backup_off_sub">Backup off (optional; tap to manage)</string>
 </resources>

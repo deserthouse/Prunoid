@@ -111,7 +111,31 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
                 }
             }
 
-            // ── 禁用引擎 ──
+            // ── 工作方式（批N 一级）──
+            SectionTitle(stringResource(R.string.sec_workmode))
+            SettingsCard {
+                Column(Modifier.padding(16.dp)) {
+                    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                        listOf("root" to stringResource(R.string.wm_root), "audit" to stringResource(R.string.wm_audit)).forEachIndexed { i, (tag, label) ->
+                            SegmentedButton(
+                                selected = (st.workMode.id.name == "ROOT") == (tag == "root"),
+                                onClick = { vm.setWorkMode(tag) },
+                                shape = SegmentedButtonDefaults.itemShape(index = i, count = 2)
+                            ) { Text(label) }
+                        }
+                    }
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        if (st.workMode.id.name == "ROOT") stringResource(R.string.wm_root_desc)
+                        else stringResource(R.string.wm_audit_desc),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            // ── 禁用引擎（批N：仅 root 模式显示，二级级联） ──
+            if (st.workMode.id.name == "ROOT") {
             SectionTitle(stringResource(R.string.sec_engine))
             SettingsCard {
                 Column(Modifier.padding(16.dp)) {
@@ -164,7 +188,10 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
                 }
             }
 
-            // ── 自动化与备份 ──
+            }
+
+            // ── 自动化与备份（批N：仅 root 模式） ──
+            if (st.workMode.id.name == "ROOT") {
             SectionTitle(stringResource(R.string.sec_auto))
             SettingsCard {
                 Column(Modifier.padding(vertical = 4.dp)) {
@@ -174,6 +201,27 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
                         subtitle = stringResource(R.string.auto_summary)
                     ) {
                         Switch(checked = st.autoReapply, onCheckedChange = { vm.setAutoReapply(it) })
+                    }
+                    if (st.autoReapply) {
+                        // 批N：重应用档位（realtime=常驻服务/open=启动对账，默认 open）
+                        Row(Modifier.padding(start = 56.dp), verticalAlignment = Alignment.CenterVertically) {
+                            SingleChoiceSegmentedButtonRow {
+                                listOf("open" to stringResource(R.string.reapply_open), "realtime" to stringResource(R.string.reapply_realtime)).forEachIndexed { i, (tag, label) ->
+                                    SegmentedButton(
+                                        selected = st.reapplyMode == tag,
+                                        onClick = { vm.setReapplyMode(tag) },
+                                        shape = SegmentedButtonDefaults.itemShape(index = i, count = 2)
+                                    ) { Text(label, style = MaterialTheme.typography.labelSmall) }
+                                }
+                            }
+                        }
+                        Text(
+                            if (st.reapplyMode == "realtime") stringResource(R.string.reapply_realtime_desc)
+                            else stringResource(R.string.reapply_open_desc),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(start = 56.dp)
+                        )
                     }
                     if (!st.autoReapply) {
                         Text(
@@ -185,14 +233,19 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
                         )
                     }
                     HorizontalDivider(Modifier.padding(vertical = 4.dp))
-                    // F3：备份降级为可选机制——入口行 + 二级对话框披露路径/用法/份数自由填写
+                    // 批N：备份默认关闭——开关行 + 入口行（开关开后 apply 前才 tar）
                     SettingRow(
                         icon = Icons.Outlined.Shield,
                         title = stringResource(R.string.backup_entry_title),
-                        subtitle = stringResource(R.string.backup_entry_sub, st.backupKeep),
+                        subtitle = if (st.backupEnabled) stringResource(R.string.backup_entry_sub, st.backupKeep)
+                                   else stringResource(R.string.backup_off_sub),
                         onClick = { showBackup = true }
-                    )
+                    ) {
+                        Switch(checked = st.backupEnabled, onCheckedChange = { vm.setBackupEnabled(it) })
+                    }
                 }
+            }
+
             }
 
             // ── 规则订阅 ──

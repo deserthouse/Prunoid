@@ -250,4 +250,15 @@
     <string name="sheet_app_disabled">已禁用 %1$d/%2$d 组件</string>
     <string name="sheet_app_pending">未禁用</string>
     <string name="sheet_apps_more">…还有 %1$d 个应用未列出</string>
+    <string name="vm_reconcile_gap">对账：%1$d 个已应用组件在现场未生效（应用更新引入新组件？），可到详情页重新应用</string>
+    <string name="sec_workmode">工作方式</string>
+    <string name="wm_root">Root</string>
+    <string name="wm_audit">审计模式</string>
+    <string name="wm_root_desc">直写系统禁用规则（IFW / pm），全能力。默认方式。</string>
+    <string name="wm_audit_desc">只读审计：扫描/识别/统计可用，禁用操作不可用（无 root 或只想查看时选择）。</string>
+    <string name="reapply_open">打开时</string>
+    <string name="reapply_realtime">实时</string>
+    <string name="reapply_realtime_desc">常驻前台服务，应用装/更即时重应用（占用一条常驻通知）。</string>
+    <string name="reapply_open_desc">启动 Prunoid 时对账一次，缺口提示补齐；无常驻服务（默认）。</string>
+    <string name="backup_off_sub">备份已关闭（可选功能，点开管理）</string>
 </resources>

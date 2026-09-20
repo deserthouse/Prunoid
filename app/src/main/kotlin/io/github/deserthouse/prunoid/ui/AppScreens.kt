@@ -653,7 +653,8 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                     ) {
                         Button(
                             onClick = { showApplyConfirm = true },
-                            enabled = !framework && !st.busy && selected.isNotEmpty(),
+                            enabled = !framework && !st.busy && selected.isNotEmpty()
+                                && st.workMode.capabilities.disablePerApp && st.rootGranted,
                             modifier = Modifier.weight(1f)
                         ) {
                             if (st.busy) {
@@ -664,7 +665,8 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                         }
                         OutlinedButton(
                             onClick = { vm.restoreApp(app) { msg = it } },
-                            enabled = !framework && !st.busy,
+                            enabled = !framework && !st.busy
+                                && st.workMode.capabilities.disablePerApp && st.rootGranted,
                             modifier = Modifier.weight(1f)
                         ) { Text(stringResource(R.string.restore)) }
                     }
@@ -1190,7 +1192,8 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                             }.groupBy({ it.first }, { it.second })
                                             vm.disableUnmatched(app.packageName, byType) { msg = it }
                                         },
-                                        enabled = !st.busy && selComps.isNotEmpty(),
+                                        enabled = !st.busy && selComps.isNotEmpty()
+                                            && st.workMode.capabilities.disablePerApp && st.rootGranted,
                                         modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                                     ) {
                                         Text(stringResource(R.string.disable_unmatched, selComps.size))
@@ -1422,7 +1425,7 @@ fun SdkArchiveSheet(
                                         vm.restoreApp(a) { sheetStatus = it }
                                     }
                                 },
-                                enabled = !st0.busy
+                                enabled = !st0.busy && st0.workMode.capabilities.disablePerApp && st0.rootGranted
                             )
                         }
                     }

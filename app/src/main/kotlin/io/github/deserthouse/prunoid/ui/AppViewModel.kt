@@ -43,7 +43,12 @@ data class AppUiState(
     val easterUnlocked: Boolean = false,
     val easterExpanded: Boolean = false,
     val easterRambleBurned: Boolean = false,
-    val language: String = ""
+    val language: String = "",
+    // 批N：工作方式与档位（audit=只读审计；reapply open=启动对账/realtime=常驻）
+    val workMode: io.github.deserthouse.prunoid.core.engine.WorkModeInfo =
+        io.github.deserthouse.prunoid.core.engine.WorkModeInfo.ROOT,
+    val reapplyMode: String = "open",
+    val backupEnabled: Boolean = false
 )
 
 class AppViewModel(app: Application) : AndroidViewModel(app) {
@@ -82,6 +87,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                         easterUnlocked = s.easterUnlocked,
                         easterRambleBurned = s.easterRambleBurned,
                         language = s.language,
+                        workMode = io.github.deserthouse.prunoid.core.engine.WorkModeInfo.fromTag(s.workMode),
+                        reapplyMode = s.reapplyMode,
+                        backupEnabled = s.backupEnabled,
                         sources = s.sources,
                         // 用户本次会话未手动切引擎时，跟随设置的默认引擎
                         engine = if (!userTouchedEngine) Engine.entries.first { it.name == s.defaultEngine } else st.engine
@@ -91,9 +99,41 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             }
         }
         rescan()
+        // 批N：open 档启动对账——applied 记录 vs IFW 现场，缺口提示
+        viewModelScope.launch {
+            settings.settings.collect { s ->
+                if (s.reapplyMode == "open" && s.workMode == "root") {
+                    kotlinx.coroutines.delay(2500)
+                    reconcileApplied()
+                }
+            }
+        }
+    }
+
+    /** 对账：applied 记录组件 vs 现场禁用集，缺口 = 未覆盖组件数 */
+    private suspend fun reconcileApplied() {
+        val st = _state.value
+        if (!st.rootGranted || st.apps.isEmpty() || st.liveDisabled.isEmpty()) return
+        val live = st.liveDisabled
+        val gap = st.applied.entries.sumOf { (pkg, e) ->
+            val liveSet = live[pkg] ?: return@sumOf 0
+            e.components.count { c -> c !in liveSet && c.substringAfterLast('/') !in liveSet }
+        }
+        if (gap > 0) {
+            _state.update { it.copy(message = appCtx.getString(R.string.vm_reconcile_gap, gap)) }
+        }
     }
 
     private var userTouchedEngine = false
+
+    /** 批N：root 类操作统一闸门——非 ROOT 模式一律拒绝（UI 层已禁灰，此处安全兜底） */
+    private fun rootGate(): Boolean =
+        _state.value.workMode.id == io.github.deserthouse.prunoid.core.engine.WorkModeId.ROOT &&
+            _state.value.rootGranted
+
+    fun setWorkMode(tag: String) { viewModelScope.launch { settings.setWorkMode(tag) } }
+    fun setReapplyMode(tag: String) { viewModelScope.launch { settings.setReapplyMode(tag) } }
+    fun setBackupEnabled(on: Boolean) { viewModelScope.launch { settings.setBackupEnabled(on) } }
 
     // ── 彩蛋（对齐 OptIcon）：tap 计数仅存内存，解锁持久化 ──
     private var aboutTapCount = 0
@@ -129,7 +169,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             _state.update { it.copy(busy = true) }
             val msg = withContext(Dispatchers.IO) {
-                if (!engine.rootAvailable()) return@withContext appCtx.getString(R.string.vm_need_root)
+                if (!rootGate()) return@withContext appCtx.getString(R.string.vm_need_root)
                 val rule = rules.rule(ruleId) ?: return@withContext appCtx.getString(R.string.vm_no_targets)
                 val components = rule.components.map { it.`class` }
                 val byType = rule.components.groupBy({ it.type }, { it.`class` })
@@ -141,7 +181,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     .filter { a -> a.matchedSdks.any { it.ruleId == ruleId } }
                     .filter { !DisableEngine.isForbidden(it.packageName) }
                 if (targets.isEmpty()) return@withContext appCtx.getString(R.string.vm_no_targets)
-                engine.backup(_state.value.backupKeep).getOrNull()
+                if (_state.value.backupEnabled) engine.backup(_state.value.backupKeep).getOrNull() else null
                 var ok = 0
                 val touched = mutableListOf<String>()
                 targets.forEach { a ->
@@ -176,11 +216,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             _state.update { it.copy(busy = true) }
             val msg = withContext(Dispatchers.IO) {
-                if (!engine.rootAvailable()) return@withContext appCtx.getString(R.string.vm_need_root)
+                if (!rootGate()) return@withContext appCtx.getString(R.string.vm_need_root)
                 if (DisableEngine.isForbidden(pkg)) return@withContext appCtx.getString(R.string.vm_forbidden)
                 val comps = byType.values.flatten()
                 if (comps.isEmpty()) return@withContext appCtx.getString(R.string.vm_no_targets)
-                engine.backup(_state.value.backupKeep).getOrNull()
+                if (_state.value.backupEnabled) engine.backup(_state.value.backupKeep).getOrNull() else null
                 val r = engine.applyIfw(pkg, byType)
                 if (r.isSuccess) {
                     applied.record(pkg, Engine.IFW.name, comps,
@@ -378,12 +418,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             _state.update { it.copy(busy = true) }
             val msg = withContext(Dispatchers.IO) {
-                if (!engine.rootAvailable()) return@withContext appCtx.getString(R.string.vm_need_root)
+                if (!rootGate()) return@withContext appCtx.getString(R.string.vm_need_root)
                 if (DisableEngine.isForbidden(scanned.packageName)) return@withContext appCtx.getString(R.string.vm_forbidden)
                 val selected = scanned.matchedSdks.filter { it.ruleId in selectedRuleIds }
                 val targets = selected.flatMap { it.matchedComponents }
                 if (targets.isEmpty()) return@withContext appCtx.getString(R.string.vm_no_targets)
-                val backup = engine.backup(_state.value.backupKeep).getOrNull()
+                val backup = if (_state.value.backupEnabled) engine.backup(_state.value.backupKeep).getOrNull() else null
                 val byType = byTypeFor(scanned, selectedRuleIds)
                 val r = when (_state.value.engine) {
                     Engine.IFW -> engine.applyIfw(scanned.packageName, byType)

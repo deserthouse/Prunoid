@@ -24,6 +24,10 @@ class SettingsRepository(private val context: Context) {
         val easterUnlocked: Boolean = false,
         val easterRambleBurned: Boolean = false,
         val language: String = "",
+        // 批N：一级工作方式（root=全能力；audit=只读审计）+ IFW 重应用两档（open=启动对账/realtime=常驻服务）
+        val workMode: String = "root",
+        val reapplyMode: String = "open",
+        val backupEnabled: Boolean = false,
         val sources: List<SubSource> = listOf(OFFICIAL_SOURCE)
     )
 
@@ -48,6 +52,9 @@ class SettingsRepository(private val context: Context) {
         private val KEY_EASTER_UNLOCKED = booleanPreferencesKey("easter_unlocked")
         private val KEY_EASTER_RAMBLE = booleanPreferencesKey("easter_ramble_burned")
         private val KEY_LANGUAGE = stringPreferencesKey("language")
+        private val KEY_WORK_MODE = stringPreferencesKey("work_mode")
+        private val KEY_REAPPLY_MODE = stringPreferencesKey("reapply_mode")
+        private val KEY_BACKUP_ENABLED = booleanPreferencesKey("backup_enabled")
         private val KEY_SOURCES = stringPreferencesKey("sub_sources")
         private val json = Json { ignoreUnknownKeys = true }
     }
@@ -60,6 +67,9 @@ class SettingsRepository(private val context: Context) {
             easterUnlocked = p[KEY_EASTER_UNLOCKED] ?: false,
             easterRambleBurned = p[KEY_EASTER_RAMBLE] ?: false,
             language = p[KEY_LANGUAGE] ?: "",
+            workMode = p[KEY_WORK_MODE] ?: "root",
+            reapplyMode = p[KEY_REAPPLY_MODE] ?: "open",
+            backupEnabled = p[KEY_BACKUP_ENABLED] ?: false,
             sources = p[KEY_SOURCES]?.let {
                 runCatching { json.decodeFromString<List<SubSource>>(it) }.getOrNull()
             } ?: listOf(OFFICIAL_SOURCE)
@@ -84,6 +94,18 @@ class SettingsRepository(private val context: Context) {
 
     suspend fun setEasterRambleBurned(v: Boolean) {
         context.dataStore.edit { it[KEY_EASTER_RAMBLE] = v }
+    }
+
+    suspend fun setWorkMode(v: String) {
+        context.dataStore.edit { it[KEY_WORK_MODE] = v }
+    }
+
+    suspend fun setReapplyMode(v: String) {
+        context.dataStore.edit { it[KEY_REAPPLY_MODE] = v }
+    }
+
+    suspend fun setBackupEnabled(v: Boolean) {
+        context.dataStore.edit { it[KEY_BACKUP_ENABLED] = v }
     }
 
     /** "" = 跟随系统；"zh-CN" / "en" 手动覆盖 */
