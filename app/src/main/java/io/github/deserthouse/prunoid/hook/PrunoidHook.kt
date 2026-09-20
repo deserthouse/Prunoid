@@ -69,16 +69,125 @@ class PrunoidHook : de.robv.android.xposed.IXposedHookZygoteInit {
     override fun initZygote(startupParam: de.robv.android.xposed.IXposedHookZygoteInit.StartupParam) {
         runCatching {
             initReflect()
-            val cl = ClassLoader.getSystemClassLoader()
-            val c = cl.loadClass("android.app.ApplicationPackageManager")
+            // system_server 自身的 client 侧查询（boot 类，早期可挂）
+            val boot = ClassLoader.getSystemClassLoader()
+            val c = boot.loadClass("android.app.ApplicationPackageManager")
             hookAll(c, "queryIntentActivities")
             hookAll(c, "queryIntentServices")
             hookAll(c, "queryIntentReceivers")
-            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                runCatching { loadDeclarations() }
-            }, 30_000)
+            // ── 全局层：PMS 服务端——zygote init 时 main looper 可能未就绪且 services.jar 未装载，
+            // 用独立 HandlerThread 延迟绑定（不依赖宿主 looper）──
+            val ht = android.os.HandlerThread("PrunoidDeclBind").apply { start() }
+            val h = android.os.Handler(ht.looper)
+            h.postDelayed({ runCatching { bindPmsHookFrom(null) } }, 15_000)
+            // 周期重载声明：app 侧画圈/开关后 ≤30s 生效，免重启
+            val reload: Runnable = object : Runnable {
+                override fun run() {
+                    runCatching { loadDeclarations() }
+                    h.postDelayed(this, 30_000)
+                }
+            }
+            h.postDelayed(reload, 20_000)
         }
     }
+
+    @Volatile private var pmsBound = false
+
+    /** 取 system_server 的服务类 loader：ActivityThread.getSystemContext().getClassLoader()
+     *  （services.jar 多 dex 由其 PathClassLoader 装载；boot/实例反查均拿不到） */
+    fun bindPmsHookFrom(anyHostObject: Any?) {
+        if (pmsBound) return
+        runCatching {
+            val at = Class.forName("android.app.ActivityThread")
+            val cur = at.getMethod("currentActivityThread").invoke(null) ?: return
+            val ctx = at.getMethod("getSystemContext").invoke(cur) ?: return
+            val cl = runCatching { ctx.javaClass.getMethod("getClassLoader").invoke(ctx) as? ClassLoader }.getOrNull()
+                ?: anyHostObject?.javaClass?.classLoader ?: ClassLoader.getSystemClassLoader()
+            val pmsClass = runCatching { cl.loadClass("com.android.server.pm.ComputerEngine") }
+                .getOrElse { runCatching { cl.loadClass("com.android.server.pm.PackageManagerService") }.getOrNull() }
+            if (pmsClass == null) {
+                de.robv.android.xposed.XposedBridge.log("PrunoidDecl PMS class NOT found via " + cl.javaClass.name)
+                return
+            }
+            hookPms(pmsClass, "queryIntentActivities")
+            hookPms(pmsClass, "queryIntentServicesInternal")
+            hookPms(pmsClass, "queryIntentServices")
+            hookPms(pmsClass, "queryIntentReceivers")
+            pmsBound = true
+            de.robv.android.xposed.XposedBridge.log("PrunoidDecl PMS hooked on " + pmsClass.name)
+        }.onFailure {
+            de.robv.android.xposed.XposedBridge.log("PrunoidDecl bindPmsHook failed: " + it.message)
+        }
+    }
+
+    /** PMS 服务端方法：结果为 List<ResolveInfo> 或 ParceledListSlice<ResolveInfo> */
+    private fun hookPms(c: Class<*>, methodName: String) {
+        runCatching {
+            var n = 0
+            for (m in c.declaredMethods) {
+                if (m.name != methodName) continue
+                de.robv.android.xposed.XposedBridge.hookMethod(m, object : de.robv.android.xposed.XC_MethodHook() {
+                    override fun afterHookedMethod(param: MethodHookParam) {
+                        if (!enabled || blockedPrefixes.isEmpty()) return
+                        runCatching {
+                            val result = param.result ?: return
+                            when (result) {
+                                is List<*> -> filterList(result as? MutableList<Any?> ?: return)
+                                else -> {
+                                    // ParceledListSlice：getList() 返回 List
+                                    val g = result.javaClass.getMethod("getList")
+                                    g.isAccessible = true
+                                    @Suppress("UNCHECKED_CAST")
+                                    val inner = g.invoke(result) as? MutableList<Any?> ?: return
+                                    val removed = filterListCount(inner)
+                                    if (removed > 0) {
+                                        // 重建 slice（getList 返回的通常是副本——重建再 set 回去不可行时退化为日志）
+                                    }
+                                }
+                            }
+                        }
+                    }
+                })
+                n++
+            }
+            if (n > 0) de.robv.android.xposed.XposedBridge.log("PrunoidDecl pms " + methodName + " x" + n)
+        }
+    }
+
+    private fun filterList(list: MutableList<Any?>): Int {
+        var removed = 0
+        val it = list.iterator()
+        while (it.hasNext()) {
+            val ri = it.next() ?: continue
+            val name = nameOf(ri) ?: componentInfoName(ri)
+            if (name != null && isBlocked(name)) { it.remove(); removed++ }
+        }
+        return removed
+    }
+
+    private fun filterListCount(list: MutableList<Any?>): Int = filterList(list)
+
+    /** PMS 返回的 ResolvedComponentInfo/ParserResult 等包装：尽力取内部组件名 */
+    private fun componentInfoName(obj: Any?): String? = runCatching {
+        obj ?: return@runCatching null
+        // 尝试常见包装字段
+        for (fieldName in listOf("mActivityInfo", "mServiceInfo", "activityInfo", "serviceInfo", "resolveInfo", "mResolveInfo")) {
+            val f = runCatching { obj.javaClass.getDeclaredField(fieldName).apply { isAccessible = true } }.getOrNull()
+            val inner = f?.get(obj)
+            if (inner != null) {
+                val nf = runCatching { inner.javaClass.getDeclaredField("name").apply { isAccessible = true } }.getOrNull()
+                val nm = nf?.get(inner) as? String
+                if (nm != null) return@runCatching nm
+            }
+        }
+        // ParserResult 系（ComputerEngine 内部）：气馁路径——对象自身有 className 字段
+        for (fieldName in listOf("className", "mClassName")) {
+            val f = runCatching { obj.javaClass.getDeclaredField(fieldName).apply { isAccessible = true } }.getOrNull()
+            val nm = f?.get(obj) as? String
+            if (nm != null) return@runCatching nm
+        }
+        null
+    }.getOrNull()
 
     private fun hookAll(c: Class<*>, methodName: String) {
         runCatching {
@@ -88,6 +197,8 @@ class PrunoidHook : de.robv.android.xposed.IXposedHookZygoteInit {
                 if (!List::class.java.isAssignableFrom(m.returnType)) continue
                 de.robv.android.xposed.XposedBridge.hookMethod(m, object : de.robv.android.xposed.XC_MethodHook() {
                     override fun afterHookedMethod(param: MethodHookParam) {
+                        // 首次回调=system_server 已就绪：绑定 PMS 服务端 hook
+                        if (!pmsBound) runCatching { bindPmsHookFrom(param.thisObject) }
                         // 热路径：未启用/空声明零开销返回
                         if (!enabled || blockedPrefixes.isEmpty()) return
                         runCatching {

@@ -9,3 +9,5 @@
 -keepclasseswithmembers class io.github.deserthouse.sdkpruner.** {
     kotlinx.serialization.KSerializer serializer(...);
 }
+# Xposed hook entry (referenced only by assets/xposed_init at runtime — R8 cannot see it)
+-keep class io.github.deserthouse.prunoid.hook.PrunoidHook { *; }
