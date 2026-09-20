@@ -44,9 +44,79 @@ class PrunoidHook : de.robv.android.xposed.IXposedHookZygoteInit {
         }
     }
 
+    // ── 反射缓存（类加载时一次；hook 热路径零 getDeclaredField）──
+    private var fActivityInfo: java.lang.reflect.Field? = null
+    private var fServiceInfo: java.lang.reflect.Field? = null
+    private var fAiName: java.lang.reflect.Field? = null
+    private var fSiName: java.lang.reflect.Field? = null
+    @Volatile private var reflectReady = false
+
+    private fun initReflect() {
+        if (reflectReady) return
+        runCatching {
+            val cl = ClassLoader.getSystemClassLoader()
+            val ri = cl.loadClass("android.content.pm.ResolveInfo")
+            val ai = cl.loadClass("android.content.pm.ActivityInfo")
+            val si = cl.loadClass("android.content.pm.ServiceInfo")
+            fActivityInfo = ri.getDeclaredField("activityInfo").apply { isAccessible = true }
+            fServiceInfo = ri.getDeclaredField("serviceInfo").apply { isAccessible = true }
+            fAiName = ai.getDeclaredField("name").apply { isAccessible = true }
+            fSiName = si.getDeclaredField("name").apply { isAccessible = true }
+            reflectReady = true
+        }
+    }
+
     override fun initZygote(startupParam: de.robv.android.xposed.IXposedHookZygoteInit.StartupParam) {
-        // 骨架：真正的 resolve 层 hook 点绑定在 P 批上机阶段实现并验证
-        // （需要真机 LSPosed 环境逐点验证后启用；当前仅提供配置读取与匹配逻辑）
-        runCatching { loadDeclarations() }
+        runCatching {
+            initReflect()
+            val cl = ClassLoader.getSystemClassLoader()
+            val c = cl.loadClass("android.app.ApplicationPackageManager")
+            hookAll(c, "queryIntentActivities")
+            hookAll(c, "queryIntentServices")
+            hookAll(c, "queryIntentReceivers")
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                runCatching { loadDeclarations() }
+            }, 30_000)
+        }
+    }
+
+    private fun hookAll(c: Class<*>, methodName: String) {
+        runCatching {
+            var n = 0
+            for (m in c.declaredMethods) {
+                if (m.name != methodName) continue
+                if (!List::class.java.isAssignableFrom(m.returnType)) continue
+                de.robv.android.xposed.XposedBridge.hookMethod(m, object : de.robv.android.xposed.XC_MethodHook() {
+                    override fun afterHookedMethod(param: MethodHookParam) {
+                        // 热路径：未启用/空声明零开销返回
+                        if (!enabled || blockedPrefixes.isEmpty()) return
+                        runCatching {
+                            @Suppress("UNCHECKED_CAST")
+                            val list = param.result as? MutableList<Any?> ?: return
+                            if (list.isEmpty()) return
+                            val it = list.iterator()
+                            while (it.hasNext()) {
+                                val ri = it.next() ?: continue
+                                if (isBlocked(nameOf(ri))) it.remove()
+                            }
+                        }
+                    }
+                })
+                n++
+            }
+            de.robv.android.xposed.XposedBridge.log("PrunoidDecl hooked " + methodName + " x" + n)
+        }
+    }
+
+    private fun nameOf(ri: Any?): String? {
+        if (!reflectReady || ri == null) return null
+        return runCatching {
+            val act = fActivityInfo?.get(ri)
+            if (act != null) fAiName?.get(act) as? String
+            else {
+                val svc = fServiceInfo?.get(ri)
+                if (svc != null) fSiName?.get(svc) as? String else null
+            }
+        }.getOrNull()
     }
 }
