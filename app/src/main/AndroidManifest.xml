@@ -21,6 +21,11 @@
         android:fullBackupContent="@xml/backup_rules"
         android:theme="@style/Theme.Prunoid.Starting">
 
+        <!-- LSPosed 模块身份（批P；声明式清单默认空=零效果） -->
+        <meta-data android:name="xposedmodule" android:value="true" />
+        <meta-data android:name="xposeddescription" android:value="Prunoid declarative SDK blocking (resolve layer)" />
+        <meta-data android:name="xposedminversion" android:value="93" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true">

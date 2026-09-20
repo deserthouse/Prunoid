@@ -17,6 +17,7 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         maven("https://jitpack.io")  // libsu (topjohnwu)
+        maven("https://api.xposed.info/")  // Xposed API (批P)
     }
 }
 

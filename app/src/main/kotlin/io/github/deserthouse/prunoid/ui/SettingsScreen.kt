@@ -2,6 +2,7 @@ package io.github.deserthouse.prunoid.ui
 
 import androidx.compose.material.icons.outlined.Launch
 import androidx.compose.material.icons.outlined.ExpandLess
+import androidx.compose.material.icons.outlined.Extension
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.draw.clip
@@ -130,6 +131,34 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
                         else stringResource(R.string.wm_audit_desc),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            // ── 声明式（批P：LSPosed 模式，默认关闭） ──
+            SectionTitle(stringResource(R.string.sec_declarative))
+            SettingsCard {
+                Column(Modifier.padding(vertical = 4.dp)) {
+                    SettingRow(
+                        icon = Icons.Outlined.Extension,
+                        title = stringResource(R.string.decl_title),
+                        subtitle = if (st.workMode.id.name == "ROOT" || st.workMode.id.name == "AUDIT")
+                            stringResource(R.string.decl_status, vm.declared.size)
+                        else stringResource(R.string.decl_status, vm.declared.size)
+                    ) {
+                        Switch(checked = vm.declarationsEnabled, onCheckedChange = { vm.setDeclarationsEnabled(it) })
+                    }
+                    Text(
+                        stringResource(R.string.decl_note),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                    )
+                    Text(
+                        stringResource(R.string.decl_warning),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
                     )
                 }
             }

@@ -264,4 +264,10 @@
     <string name="share_report">分享组件清单（供规则仓研判）</string>
     <string name="about_share_title">组件清单分享说明</string>
     <string name="about_share_body">分享仅包含包名与组件类名（客观事实），不含个人信息；不自动上传，由你经系统分享器手动发出。</string>
+    <string name="sec_declarative">声明式拦截（实验）</string>
+    <string name="decl_title">全局 SDK 画圈</string>
+    <string name="decl_status">当前声明 %1$d 个前缀</string>
+    <string name="decl_note">需 LSPosed 环境并在其中启用本模块（作用域 system_server）。画圈入口在 SDK 库档案卡。</string>
+    <string name="decl_warning">实验特性：system_server 级 hook，未完成上机验证；启用风险自担。</string>
+    <string name="decl_toggle">全局声明（新装应用自动拦截）</string>
 </resources>

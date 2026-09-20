@@ -273,6 +273,44 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     private val chr10: Char = 10.toChar()
 
+    // ── 批P：声明式（hook 模式）——SDK 画圈写 declarations.json ──
+    val declared: Set<String> get() = io.github.deserthouse.prunoid.core.engine.DeclarationsStore.declaredPrefixes
+    val declarationsEnabled: Boolean get() = io.github.deserthouse.prunoid.core.engine.DeclarationsStore.enabled
+
+    init {
+        viewModelScope.launch(Dispatchers.IO) {
+            io.github.deserthouse.prunoid.core.engine.DeclarationsStore.read()
+        }
+    }
+
+    /** 画圈/取消一个 SDK（ruleId → 其全部 packPrefixes 展开写声明文件） */
+    fun toggleDeclaration(ruleId: String, on: Boolean, onDone: (String) -> Unit = {}) {
+        viewModelScope.launch {
+            val rule = rules.rule(ruleId) ?: return@launch
+            val cur = io.github.deserthouse.prunoid.core.engine.DeclarationsStore.declaredPrefixes
+            val next = if (on) cur + rule.packPrefixes.map { it.trimEnd('.') }
+                       else cur - rule.packPrefixes.map { it.trimEnd('.') }.toSet()
+            val r = io.github.deserthouse.prunoid.core.engine.DeclarationsStore.write(
+                io.github.deserthouse.prunoid.core.engine.DeclarationsStore.Decl(
+                    enabled = next.isNotEmpty(),
+                    prefixes = next.sorted()
+                )
+            )
+            onDone(if (r.isSuccess) "" else (r.exceptionOrNull()?.message ?: "write failed"))
+        }
+    }
+
+    fun setDeclarationsEnabled(on: Boolean) {
+        viewModelScope.launch {
+            io.github.deserthouse.prunoid.core.engine.DeclarationsStore.write(
+                io.github.deserthouse.prunoid.core.engine.DeclarationsStore.Decl(
+                    enabled = on,
+                    prefixes = io.github.deserthouse.prunoid.core.engine.DeclarationsStore.declaredPrefixes.sorted()
+                )
+            )
+        }
+    }
+
     fun onRambleTapped() {
         if (_state.value.easterRambleBurned) {
             _state.update { it.copy(message = appCtx.getString(R.string.easter_dry)) }

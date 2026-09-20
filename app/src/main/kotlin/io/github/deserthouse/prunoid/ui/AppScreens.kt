@@ -1377,6 +1377,22 @@ fun SdkArchiveSheet(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.primary
             )
+            // 批P：全局声明开关（所有档案卡可见；写 declarations.json）
+            Row(
+                Modifier.padding(top = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(stringResource(R.string.decl_toggle), style = MaterialTheme.typography.labelMedium)
+                Spacer(Modifier.width(8.dp))
+                val vmDecl = vm.state.collectAsState().value
+                val ruleDecls = remember(hit.ruleId) {
+                    vm.ruleInfo(hit.ruleId)?.packPrefixes?.map { it.trimEnd('.') }?.toSet() ?: emptySet()
+                }
+                val declOn = remember(vm.declared) { ruleDecls.isNotEmpty() && ruleDecls.any { it in vm.declared } }
+                Switch(checked = declOn, onCheckedChange = { on ->
+                    vm.toggleDeclaration(hit.ruleId, on)
+                })
+            }
             if (!libraryContext) {
                 Row(
                     Modifier.padding(top = 8.dp),

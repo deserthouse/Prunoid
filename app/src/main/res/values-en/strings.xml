@@ -248,4 +248,10 @@
     <string name="share_report">Share component report (for the rules repo)</string>
     <string name="about_share_title">Component report sharing</string>
     <string name="about_share_body">Reports contain only package and class names (objective facts), no personal data; nothing is uploaded automatically — you send it via the system share sheet.</string>
+    <string name="sec_declarative">Declarative blocking (experimental)</string>
+    <string name="decl_title">Global SDK declarations</string>
+    <string name="decl_status">%1$d prefixes declared</string>
+    <string name="decl_note">Requires LSPosed with this module enabled (scope: system_server). Draw circles from SDK archive sheets.</string>
+    <string name="decl_warning">Experimental: system_server-level hooking, on-device verification pending; enable at your own risk.</string>
+    <string name="decl_toggle">Declare globally (auto-block in future apps)</string>
 </resources>
