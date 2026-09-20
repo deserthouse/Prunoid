@@ -608,6 +608,13 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
                     )
                     HorizontalDivider()
                     SettingRow(
+                        icon = Icons.Outlined.Share,
+                        title = stringResource(R.string.about_share_title),
+                        subtitle = stringResource(R.string.about_share_body),
+                        subtitleMaxLines = 3
+                    )
+                    HorizontalDivider()
+                    SettingRow(
                         icon = Icons.Outlined.GppMaybe,
                         title = stringResource(R.string.about_disclaimer_title),
                         subtitle = stringResource(R.string.about_disclaimer_body),

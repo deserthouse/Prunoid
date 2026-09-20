@@ -245,4 +245,7 @@
     <string name="reapply_realtime_desc">Persistent foreground service; re-applies immediately on install/update (uses a persistent notification).</string>
     <string name="reapply_open_desc">Reconciles once when Prunoid opens, prompting for gaps; no resident service (default).</string>
     <string name="backup_off_sub">Backup off (optional; tap to manage)</string>
+    <string name="share_report">Share component report (for the rules repo)</string>
+    <string name="about_share_title">Component report sharing</string>
+    <string name="about_share_body">Reports contain only package and class names (objective facts), no personal data; nothing is uploaded automatically — you send it via the system share sheet.</string>
 </resources>

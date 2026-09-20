@@ -240,6 +240,39 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    /** 批O：导出某 app 的组件清单 JSON（供规则仓研判；纯本地分享，零上传） */
+    fun exportComponentReport(pkg: String): String {
+        val app = _state.value.apps.firstOrNull { it.packageName == pkg } ?: return ""
+        val nl = chr10
+        fun q(v: String) = '"' + v.replace('"', ' ') + '"'
+        val sb = StringBuilder()
+        sb.append('{').append(nl)
+        sb.append("  ").append(q("app")).append(": ").append(q(app.label)).append(',').append(nl)
+        sb.append("  ").append(q("package")).append(": ").append(q(app.packageName)).append(',').append(nl)
+        sb.append("  ").append(q("reportedAt")).append(": ").append(q(java.time.Instant.now().toString())).append(',').append(nl)
+        sb.append("  ").append(q("matched")).append(": [").append(nl)
+        app.matchedSdks.forEach { h ->
+            sb.append("    {").append(q("rule")).append(": ").append(q(h.name))
+                .append(", ").append(q("components")).append(": ")
+                .append(h.matchedComponents.joinToString(", ", "[", "]") { q(it) })
+                .append("},").append(nl)
+        }
+        sb.append("  ],").append(nl)
+        sb.append("  ").append(q("unmatched")).append(": [").append(nl)
+        app.unmatched.forEach { g ->
+            sb.append("    {").append(q("prefix")).append(": ").append(q(g.prefix))
+                .append(", ").append(q("count")).append(": ").append(g.count)
+                .append(", ").append(q("components")).append(": ")
+                .append(g.components.take(50).joinToString(", ", "[", "]") { q(it) })
+                .append("},").append(nl)
+        }
+        sb.append("  ]").append(nl)
+        sb.append('}')
+        return sb.toString()
+    }
+
+    private val chr10: Char = 10.toChar()
+
     fun onRambleTapped() {
         if (_state.value.easterRambleBurned) {
             _state.update { it.copy(message = appCtx.getString(R.string.easter_dry)) }

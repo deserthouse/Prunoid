@@ -261,4 +261,7 @@
     <string name="reapply_realtime_desc">常驻前台服务，应用装/更即时重应用（占用一条常驻通知）。</string>
     <string name="reapply_open_desc">启动 Prunoid 时对账一次，缺口提示补齐；无常驻服务（默认）。</string>
     <string name="backup_off_sub">备份已关闭（可选功能，点开管理）</string>
+    <string name="share_report">分享组件清单（供规则仓研判）</string>
+    <string name="about_share_title">组件清单分享说明</string>
+    <string name="about_share_body">分享仅包含包名与组件类名（客观事实），不含个人信息；不自动上传，由你经系统分享器手动发出。</string>
 </resources>

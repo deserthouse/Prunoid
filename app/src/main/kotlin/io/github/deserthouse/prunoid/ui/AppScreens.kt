@@ -41,6 +41,7 @@ import androidx.compose.material.icons.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.Sort
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.WarningAmber
@@ -1204,6 +1205,26 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                         color = MaterialTheme.colorScheme.error,
                                         modifier = Modifier.padding(top = 4.dp)
                                     )
+                                }
+                                // 批O：组件清单分享（系统分享器出 JSON，零上传零 token）
+                                val ctxShare = androidx.compose.ui.platform.LocalContext.current
+                                OutlinedButton(
+                                    onClick = {
+                                        val json = vm.exportComponentReport(app.packageName)
+                                        val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                                            type = "application/json"
+                                            putExtra(android.content.Intent.EXTRA_TEXT, json)
+                                            putExtra(android.content.Intent.EXTRA_SUBJECT, "Prunoid component report: " + app.label)
+                                        }
+                                        runCatching {
+                                            ctxShare.startActivity(android.content.Intent.createChooser(send, null))
+                                        }
+                                    },
+                                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp)
+                                ) {
+                                    Icon(Icons.Outlined.Share, contentDescription = null, modifier = Modifier.size(16.dp))
+                                    Spacer(Modifier.width(6.dp))
+                                    Text(stringResource(R.string.share_report))
                                 }
                             }
                         }
