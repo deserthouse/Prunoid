@@ -20,7 +20,7 @@ kotlin {
     }
 }
 
-val APP_VERSION_NAME = "0.10.0"
+val APP_VERSION_NAME = "0.11.0"
 
 android {
     namespace = "io.github.deserthouse.prunoid"
@@ -30,7 +30,7 @@ android {
         applicationId = "io.github.deserthouse.prunoid"
         minSdk = 31  // Android 12 minimum — full Material You generation, aligned with OptIcon
         targetSdk = 37
-        versionCode = 15
+        versionCode = 16
         versionName = APP_VERSION_NAME
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
