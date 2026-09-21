@@ -60,6 +60,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
 import io.github.deserthouse.prunoid.core.engine.AppliedRulesStore
 import io.github.deserthouse.prunoid.core.engine.DisableEngine
 import io.github.deserthouse.prunoid.core.engine.Engine
@@ -694,8 +695,10 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                 }
             }.sortedBy { it.first }
         }
+        val detailListState = rememberLazyListState()
         LazyColumn(
             Modifier.padding(padding).fillMaxSize(),
+            state = detailListState,
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -1074,8 +1077,36 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
             }
             // 未识别组件（LibChecker "Unmarked library" 语义）：只读展示，供人审与规则仓 PR
             if (detailTab == 0 && app.unmatched.isNotEmpty()) {
-                item {
+                item(key = "unmatched") {
                     var unmatchedOpen by remember { mutableStateOf(false) }
+                    // 展开时卡体常整体落在视口折叠线下（卡顶近屏底），用户只见卡头+分隔线、
+                    // 展开体看似"没渲染"——若卡顶已在视口下半区，把卡顶滚动到视口顶。
+                    LaunchedEffect(unmatchedOpen) {
+                        if (!unmatchedOpen) return@LaunchedEffect
+                        val info = detailListState.layoutInfo.visibleItemsInfo
+                            .firstOrNull { it.key == "unmatched" } ?: return@LaunchedEffect
+                        val viewport = detailListState.layoutInfo.viewportEndOffset -
+                            detailListState.layoutInfo.viewportStartOffset
+                        if (info.offset > viewport * 0.35f) {
+                            // 等展开尺寸动画收敛再滚：目标项生长中时 animateScrollToItem 会被打断而中途停（实测 42ms 即返回）
+                            var last = -1
+                            var guard = 0
+                            while (guard++ < 20) {
+                                val h = detailListState.layoutInfo.visibleItemsInfo
+                                    .firstOrNull { it.key == "unmatched" }?.size ?: break
+                                if (h == last) break
+                                last = h
+                                delay(50)
+                            }
+                            detailListState.animateScrollToItem(info.index)
+                            // 断言落点：动画若再被打断则瞬时校正到卡顶
+                            val after = detailListState.layoutInfo.visibleItemsInfo
+                                .firstOrNull { it.key == "unmatched" }
+                            if (after != null && after.offset > 2) {
+                                detailListState.scrollToItem(info.index)
+                            }
+                        }
+                    }
                     // 动效对齐 Blocker 克制区间（tween 100~200ms，FastOutSlowIn）
                     val rot by animateFloatAsState(
                         targetValue = if (unmatchedOpen) 180f else 0f,
