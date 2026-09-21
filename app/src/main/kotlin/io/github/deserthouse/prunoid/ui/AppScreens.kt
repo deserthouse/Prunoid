@@ -421,7 +421,8 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
                         }
                         Spacer(Modifier.height(8.dp))
                         Text(stringResource(R.string.filter_safety), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(vertical = 6.dp)) {
+                        // FlowRow 换行：四 chip 一行挤不下导致末位竖排塌陷（judge 抓出）
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(vertical = 6.dp)) {
                             Safety.entries.forEach { sf ->
                                 FilterChip(
                                     selected = safetySel == sf,
