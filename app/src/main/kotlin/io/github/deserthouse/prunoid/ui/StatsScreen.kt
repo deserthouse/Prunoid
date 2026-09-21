@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import io.github.deserthouse.prunoid.R
 import io.github.deserthouse.prunoid.core.rules.Safety
 import io.github.deserthouse.prunoid.core.rules.SdkRule
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 
 // 统计页（E2 重组）：SDK 分类统计为主角——总量卡 → 分类环形图（中央总数+图例）→ 在机排行 → 未识别前缀 Top。
@@ -220,7 +221,7 @@ fun StatsScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
                             shape = RoundedCornerShape(50)
                         ) {
                             Text(
-                                "${row.hitApps} app",
+                                pluralStringResource(R.plurals.badge_apps, row.hitApps, row.hitApps),
                                 style = MaterialTheme.typography.labelSmall,
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                             )

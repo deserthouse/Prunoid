@@ -9,6 +9,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import io.github.deserthouse.prunoid.R
 import androidx.compose.animation.animateContentSize
@@ -541,7 +542,7 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
                                                         .background(safetyColors(worst, dark).container, RoundedCornerShape(50))
                                                 )
                                                 Spacer(Modifier.width(4.dp))
-                                                Text("${app.matchedSdks.size} SDK")
+                                                Text(pluralStringResource(R.plurals.badge_sdks, app.matchedSdks.size, app.matchedSdks.size))
                                             }
                                         }
                                     )
@@ -1113,7 +1114,8 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                         animationSpec = tween(150, easing = FastOutSlowInEasing),
                         label = "unmatchedArrow"
                     )
-                    val total = app.unmatched.sumOf { it.count }
+                    val total = app.unmatchedTotalComponents
+                    val groupsTruncated = app.unmatchedTotalGroups > app.unmatched.size
                     Card(
                         onClick = { unmatchedOpen = !unmatchedOpen },
                         Modifier
@@ -1132,6 +1134,14 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
+                                    // P1⑨：unmatched 只带前 20 组，组数超限时明示口径防"少报"误读
+                                    if (groupsTruncated) {
+                                        Text(
+                                            stringResource(R.string.unmatched_truncated, app.unmatched.size, app.unmatchedTotalGroups),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.tertiary
+                                        )
+                                    }
                                 }
                                 Icon(
                                     Icons.Outlined.ExpandMore,
@@ -1336,7 +1346,7 @@ fun typeLabel(t: String): String = stringResource(when (t) {
     "activity" -> R.string.comp_activity
     "service" -> R.string.comp_service
     "receiver" -> R.string.comp_receiver
-    "provider" -> R.string.comp_other
+    "provider" -> R.string.comp_provider
     else -> R.string.comp_other
 })
 
@@ -1403,6 +1413,9 @@ fun SdkArchiveSheet(
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            // judge 拉通重审补：档案卡头部补四级安全徽标（详情 SDK 行有而此处缺，一致性）
+            Spacer(Modifier.height(6.dp))
+            SafetyBadge(hit.safety)
             Spacer(Modifier.height(8.dp))
             Text(
                 stringResource(R.string.sheet_matched_line, hit.matchedComponents.size, blocked),

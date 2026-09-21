@@ -72,6 +72,7 @@
     <string name="cd_detail">详情</string>
     <string name="unmatched_total">未识别组件 %1$d</string>
     <string name="unmatched_desc">不在规则库中，暂无法禁用；可提交至规则仓库</string>
+    <string name="unmatched_truncated">仅显示前 %1$d 组（共 %2$d 组）</string>
     <string name="collapse">收起</string>
     <string name="expand">展开</string>
     <string name="suspicious">疑似广告/统计</string>
@@ -87,7 +88,8 @@
     <!-- 组件类型 -->
     <string name="comp_activity">界面 activity</string>
     <string name="comp_service">后台 service</string>
-    <string name="comp_receiver">广播 receiver</string>
+        <string name="comp_provider">提供器</string>
+<string name="comp_receiver">广播 receiver</string>
     <string name="comp_other">其他组件</string>
     <!-- 置信度 -->
     <string name="conf_high">高</string>
@@ -139,7 +141,7 @@
     <string name="engine_ifw_body2">应用完全感知不到，也无法自行恢复；规则文件独立于 APK，应用更新后依然生效。推荐日常使用。</string>
     <string name="engine_pm_body1">把组件置为系统级“已停用”状态。兼容性好、状态可查，但应用能检测到组件被禁并可能自行恢复；</string>
     <string name="engine_pm_body2">停用状态同样跨应用更新保留。适合排查 IFW 行为异常的兼容性场景。</string>
-    <string name="engines_note">两种引擎都只针对第三方应用组件，操作前自动备份；恢复入口在本页「应急通道」。</string>
+    <string name="engines_note">两种引擎都只针对第三方应用组件；开启「备份与恢复」后应用前自动留快照，恢复入口在本页「应急通道」。</string>
     <string name="auto_title">自动重应用</string>
     <string name="auto_summary">应用安装/更新后自动重新禁用其 SDK 组件（后台常驻服务 + 常驻通知）</string>
     <string name="auto_off_note1">已关闭：后台服务已停止。Android 15+ 系统会跳过对后台应用的安装/更新广播，</string>
@@ -270,4 +272,6 @@
     <string name="decl_note">需 LSPosed 环境并在其中启用本模块（作用域 system_server）。画圈入口在 SDK 库档案卡。</string>
     <string name="decl_warning">实验特性：system_server 级 hook，未完成上机验证；启用风险自担。</string>
     <string name="decl_toggle">全局声明（新装应用自动拦截）</string>
+    <plurals name="badge_apps"><item quantity="other">%d 应用</item></plurals>
+    <plurals name="badge_sdks"><item quantity="other">%d SDK</item></plurals>
 </resources>

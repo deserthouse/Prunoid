@@ -2,6 +2,7 @@ package io.github.deserthouse.prunoid.ui
 
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import io.github.deserthouse.prunoid.R
 import androidx.compose.foundation.background
@@ -36,7 +37,6 @@ private data class LibRow(
     val rule: SdkRule,
     val hitApps: Int,
     val hitComponents: Int,
-    val hitApps3p: Int   // 第三方命中应用数（白名单系统应用不计入可禁用目标）
 )
 
 @Composable
@@ -48,14 +48,15 @@ fun SdkLibraryScreen(vm: AppViewModel, onBack: () -> Unit) {
     var sheetRow by remember { mutableStateOf<LibRow?>(null) }
     var sheetMsg by remember { mutableStateOf<String?>(null) }
 
-    // ruleId → (命中 app 数, 命中组件数)
+    // ruleId → (命中 app 数, 命中组件数)。口径=在机检出（全量 apps，与统计页排行一致）；
+    // 白名单系统应用的排除由禁用引擎在执行层兜底，展示层不重复过滤——
+    // 曾因 eligible 过滤出现库徽标 17 vs 档案卡/统计页 74 的同 SDK 三处口径不一（judge 抓出）
     val hitMap = remember(st.apps) {
         val m = HashMap<String, IntArray>()
         st.apps.forEach { app ->
-            val eligible = !io.github.deserthouse.prunoid.core.engine.DisableEngine.isForbidden(app.packageName)
             app.matchedSdks.forEach { hit ->
                 val a = m.getOrPut(hit.ruleId) { IntArray(2) }
-                if (eligible) a[0] += 1
+                a[0] += 1
                 a[1] += hit.matchedComponents.size
             }
         }
@@ -161,7 +162,7 @@ fun SdkLibraryScreen(vm: AppViewModel, onBack: () -> Unit) {
             val rows = remember(all, hitMap, tab, query, libCat, libSortByName) {
                 all.map { r ->
                     val h = hitMap[r.id] ?: IntArray(2)
-                    LibRow(r, h[0], h[1], h[0])
+                    LibRow(r, h[0], h[1])
                 }
                     .filter { if (tab == 0) it.hitApps > 0 else it.hitApps == 0 }
                     .filter { libCat.isEmpty() || it.rule.category in libCat }
@@ -190,13 +191,19 @@ fun SdkLibraryScreen(vm: AppViewModel, onBack: () -> Unit) {
                                 Text(row.rule.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             },
                             supportingContent = {
-                                Text(
-                                    (row.rule.company.ifBlank { categoryLabel(row.rule.category) }) +
-                                        " · " + categoryLabel(row.rule.category),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        (row.rule.company.ifBlank { categoryLabel(row.rule.category) }) +
+                                            " · " + categoryLabel(row.rule.category),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.weight(1f, fill = false)
+                                    )
+                                    Spacer(Modifier.width(8.dp))
+                                    // judge 拉通重审补：库行补四级安全徽标（与详情 SDK 行一致）
+                                    SafetyBadge(row.rule.safety())
+                                }
                             },
                             leadingContent = {
                                 SdkMonogram(row.rule.id, row.rule.name)
@@ -209,7 +216,7 @@ fun SdkLibraryScreen(vm: AppViewModel, onBack: () -> Unit) {
                                         shape = RoundedCornerShape(50)
                                     ) {
                                         Text(
-                                            "${row.hitApps} app",
+                                            pluralStringResource(R.plurals.badge_apps, row.hitApps, row.hitApps),
                                             style = MaterialTheme.typography.labelSmall,
                                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                                         )
@@ -239,7 +246,7 @@ fun SdkLibraryScreen(vm: AppViewModel, onBack: () -> Unit) {
                 componentTypes = row.rule.components.associate { it.`class` to it.type }
             ),
             libraryContext = true,
-            libraryApps = row.hitApps3p,
+            libraryApps = row.hitApps,
             onDisableEverywhere = {
                 vm.disableSdkEverywhere(row.rule.id) { sheetMsg = it }
             },

@@ -66,6 +66,7 @@
     <string name="cd_detail">Details</string>
     <string name="unmatched_total">Unrecognized components %1$d</string>
     <string name="unmatched_desc">Not in the rule base yet; cannot be disabled — consider contributing a rule</string>
+    <string name="unmatched_truncated">Showing top %1$d of %2$d groups</string>
     <string name="collapse">Collapse</string>
     <string name="expand">Expand</string>
     <string name="suspicious">Possibly ads/analytics</string>
@@ -79,7 +80,8 @@
     <string name="apply">Apply</string>
     <string name="comp_activity">activity</string>
     <string name="comp_service">service</string>
-    <string name="comp_receiver">receiver</string>
+        <string name="comp_provider">Provider</string>
+<string name="comp_receiver">receiver</string>
     <string name="comp_other">Other component</string>
     <string name="conf_high">High</string>
     <string name="conf_medium">Medium</string>
@@ -125,7 +127,7 @@
     <string name="engine_pm_short">pm disable</string>
     <string name="engine_pm_body1">Marks components as system-level “disabled”. Good compatibility and inspectable, but the app can detect it and may self-recover;</string>
     <string name="engine_pm_body2">the disabled state also survives app updates. Useful for debugging IFW compatibility issues.</string>
-    <string name="engines_note">Both engines only touch third-party app components and back up automatically; recovery lives in the Recovery section of these settings.</string>
+    <string name="engines_note">Both engines only touch third-party app components; with Backup &amp; restore enabled, a snapshot is taken before applying. Recovery lives in the Recovery section of these settings.</string>
     <string name="auto_title">Auto re-apply</string>
     <string name="auto_summary">Re-disable SDK components after app install/update (foreground service + persistent notification)</string>
     <string name="auto_off_note1">Off: the foreground service is stopped. On Android 15+ the system skips install/update broadcasts to background apps,</string>
@@ -254,4 +256,6 @@
     <string name="decl_note">Requires LSPosed with this module enabled (scope: system_server). Draw circles from SDK archive sheets.</string>
     <string name="decl_warning">Experimental: system_server-level hooking, on-device verification pending; enable at your own risk.</string>
     <string name="decl_toggle">Declare globally (auto-block in future apps)</string>
+    <plurals name="badge_apps"><item quantity="one">1 app</item><item quantity="other">%d apps</item></plurals>
+    <plurals name="badge_sdks"><item quantity="one">1 SDK</item><item quantity="other">%d SDKs</item></plurals>
 </resources>
