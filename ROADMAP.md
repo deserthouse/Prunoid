@@ -76,7 +76,9 @@ M1 最小可用 ──→ M2 规则生态 ──→ M3 自动化与共建
 ## Status
 
 - ✅ M1/M2/M3 complete and verified (rooted emulator, Android 16 baseline)
-- ✅ v0.3.0-alpha: renamed to Prunoid, multi-source subscription, auto-reapply toggle, SDK library browser, archive sheet, component-type grouping, system-app tiers, brand icons (166), rich descriptions (667), unrecognized-components view, countdown confirms
-- ⏭️ Next: v0.4.0 (versionCode 5) ships i18n (zh default + en), batch-B polish (async icons, Blocker-aligned motion, stats-card fix), AppChecker study absorbed; long-tail icons/descriptions via community contributions
+- ✅ v0.4–v0.6: i18n (zh default + en), batch polish, filter/sort & stats donut, settings regrouping, pull-to-refresh, optional backup model, live disable-state readout
+- ✅ v0.7–v0.9: community pipeline (component report share), rule governance (1929 entities), list/detail rework (LibChecker-aligned), WorkMode architecture
+- ✅ v0.10.0 (versionCode 15): phone-batch rule intake (2003 entities / 774 hits), LSPosed declarative groundwork (off by default; system_server query-layer engine mounted, launch-layer interception descoped by decision)
+- ⏭️ Next: v0.11.0 (versionCode 16) — unmatched-card expand UX fix (auto-scroll-to-top), full-scope unmatched totals with truncation note, heuristic token matching, safety badges in library rows & archive sheet, provider type-label fix, plurals; 2003-rule bundled snapshot
 
 > 本地维护文档，进度事实源另见 project_status.md 与持久记忆（本文件由仓库同步，Status 段对外可读）。
