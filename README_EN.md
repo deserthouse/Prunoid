@@ -17,6 +17,8 @@ See every SDK embedded in your apps, and decide which components to block
 
 ---
 
+> ⚠️ **This project is still at a very early stage.** Make sure you have read and fully understood this document before you start using it. No promises are made about its future: it may see large-scale changes and refactors, may change direction, and may be abandoned or stop being maintained at any time.
+
 > **Prunoid** is a root-required Android tool that scans every installed app, identifies embedded ad / analytics / push SDKs, and selectively blocks their components through the system-level Intent Firewall — **without hooking the target app**. Apps can't detect it, and can't recover.
 
 ## ✨ Features
