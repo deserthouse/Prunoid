@@ -20,7 +20,7 @@ M1 最小可用 ──→ M2 规则生态 ──→ M3 自动化与共建
 
 **R2 规则 schema + 冷启动快照**（1~2 天级）
 - schema：Thanox/Blocker 共用范本扩展 `name/company/category/detect/components/safeToBlock/sideEffect/whitelist/source[]/confidence/contributors`（source/confidence 为我们独有，逐条可溯源）
-- 冷启动合并脚本（Python，research/ 留档）：正源 blocker-general-rules(468) + LCR v44 骨架（识别锚点）+ Fuck.AD 类名(16 家) + oF2pks 事实参考；产出内置快照 JSON 打进 assets
+- 冷启动合并脚本（Python，本地留档）：正源 blocker-general-rules(468) + LCR v44 骨架（识别锚点）+ Fuck.AD 类名(16 家) + oF2pks 事实参考；产出内置快照 JSON 打进 assets
 - 验收：快照条数 ≥400，逐条带 source 字段，schema 校验通过
 - 红线执行：Exodus ODbL 数据不进快照；GPL/AGPL/无协议源零拷贝
 
