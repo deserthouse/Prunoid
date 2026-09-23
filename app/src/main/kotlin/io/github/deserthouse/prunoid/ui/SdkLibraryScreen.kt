@@ -2,6 +2,7 @@ package io.github.deserthouse.prunoid.ui
 
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import io.github.deserthouse.prunoid.R
@@ -12,8 +13,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.FilterList
+import androidx.compose.material.icons.outlined.Sort
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -39,8 +42,9 @@ private data class LibRow(
     val hitComponents: Int,
 )
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SdkLibraryScreen(vm: AppViewModel, onBack: () -> Unit) {
+fun SdkLibraryScreen(vm: AppViewModel) {
     val st by vm.state.collectAsState()
     val snackbar = rememberSnackbar()
     var query by remember { mutableStateOf("") }
@@ -83,33 +87,14 @@ fun SdkLibraryScreen(vm: AppViewModel, onBack: () -> Unit) {
                         )
                     }
                 },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
-                    }
-                }
             )
         }
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
-            OutlinedTextField(
+            SearchField(
                 value = query,
                 onValueChange = { query = it },
-                singleLine = true,
                 placeholder = { Text(stringResource(R.string.lib_search_hint)) },
-                leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
-                trailingIcon = {
-                    if (query.isNotEmpty()) IconButton(onClick = { query = "" }) {
-                        Icon(Icons.Outlined.Close, contentDescription = stringResource(R.string.clear_search))
-                    }
-                },
-                shape = RoundedCornerShape(28.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    unfocusedBorderColor = androidx.compose.ui.graphics.Color.Transparent,
-                    focusedBorderColor = MaterialTheme.colorScheme.primary
-                ),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp)
@@ -131,31 +116,62 @@ fun SdkLibraryScreen(vm: AppViewModel, onBack: () -> Unit) {
                     label = { Text(stringResource(R.string.lib_tab_missing, all.size - foundCount)) }
                 )
             }
-            // E1 查找力批：分类筛选 + 排序
+            // 批S2：筛选/排序与列表页同构——Filter（sheet）+ Sort（menu，带当前项勾选）
             var libCat by remember { mutableStateOf(setOf<String>()) }
             var libSortByName by remember { mutableStateOf(false) }
+            var libFilterSheet by remember { mutableStateOf(false) }
+            var libSortMenu by remember { mutableStateOf(false) }
             Row(
-                Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp),
+                Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                listOf("ads", "push", "analytics", "quality", "social_or_pay", "maps", "infra", "security", "framework", "other").forEach { c ->
-                    FilterChip(
-                        selected = c in libCat,
-                        onClick = { libCat = if (c in libCat) libCat - c else libCat + c },
-                        label = { Text(categoryLabel(c)) }
-                    )
+                FilledTonalButton(onClick = { libFilterSheet = true }, modifier = Modifier.weight(1f)) {
+                    Icon(Icons.Outlined.FilterList, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(if (libCat.isNotEmpty()) stringResource(R.string.filter_label_n, libCat.size)
+                         else stringResource(R.string.filter_label))
                 }
-                FilterChip(
-                    selected = libSortByName,
-                    onClick = { libSortByName = !libSortByName },
-                    label = { Text(stringResource(R.string.sort_name)) }
-                )
-                if (libCat.isNotEmpty() || libSortByName) {
-                    TextButton(onClick = { libCat = emptySet(); libSortByName = false }) {
-                        Text(stringResource(R.string.filter_clear))
+                Box(Modifier.weight(1f)) {
+                    FilledTonalButton(onClick = { libSortMenu = true }, modifier = Modifier.fillMaxWidth()) {
+                        Icon(Icons.Outlined.Sort, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text(stringResource(if (libSortByName) R.string.sort_name else R.string.sort_default),
+                            maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+                    DropdownMenu(expanded = libSortMenu, onDismissRequest = { libSortMenu = false }) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.sort_default)) },
+                            trailingIcon = { if (!libSortByName) Icon(Icons.Outlined.Check, contentDescription = null) },
+                            onClick = { libSortByName = false; libSortMenu = false }
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.sort_name)) },
+                            trailingIcon = { if (libSortByName) Icon(Icons.Outlined.Check, contentDescription = null) },
+                            onClick = { libSortByName = true; libSortMenu = false }
+                        )
+                    }
+                }
+            }
+            if (libFilterSheet) {
+                ModalBottomSheet(onDismissRequest = { libFilterSheet = false }) {
+                    Column(
+                        Modifier.padding(horizontal = 20.dp).navigationBarsPadding()
+                            .padding(bottom = 12.dp).verticalScroll(rememberScrollState())
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(stringResource(R.string.filter_label), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                            TextButton(onClick = { libCat = emptySet() }) { Text(stringResource(R.string.filter_clear)) }
+                        }
+                        SectionLabel(stringResource(R.string.filter_category))
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(vertical = 6.dp)) {
+                            ALL_CATEGORIES.forEach { c ->
+                                FilterChip(
+                                    selected = c in libCat,
+                                    onClick = { libCat = if (c in libCat) libCat - c else libCat + c },
+                                    label = { Text(categoryLabel(c)) }
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -201,26 +217,21 @@ fun SdkLibraryScreen(vm: AppViewModel, onBack: () -> Unit) {
                                         modifier = Modifier.weight(1f, fill = false)
                                     )
                                     Spacer(Modifier.width(8.dp))
-                                    // judge 拉通重审补：库行补四级安全徽标（与详情 SDK 行一致）
-                                    SafetyBadge(row.rule.safety())
+                                    // 批T5：Not found 页不显风险徽标（不在机谈不到禁用风险）
+                                    if (tab == 0) SafetyBadge(row.rule.safety())
                                 }
                             },
                             leadingContent = {
                                 SdkMonogram(row.rule.id, row.rule.name)
                             },
                             trailingContent = {
+                                // 批U2：计数去胶囊降密度（语义色留给安全徽标）
                                 if (row.hitApps > 0) {
-                                    Surface(
-                                        color = MaterialTheme.colorScheme.primaryContainer,
-                                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                        shape = RoundedCornerShape(50)
-                                    ) {
-                                        Text(
-                                            pluralStringResource(R.plurals.badge_apps, row.hitApps, row.hitApps),
-                                            style = MaterialTheme.typography.labelSmall,
-                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                                        )
-                                    }
+                                    Text(
+                                        pluralStringResource(R.plurals.badge_apps, row.hitApps, row.hitApps),
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
                                 }
                             },
                             modifier = Modifier.clickable {
@@ -246,7 +257,6 @@ fun SdkLibraryScreen(vm: AppViewModel, onBack: () -> Unit) {
                 componentTypes = row.rule.components.associate { it.`class` to it.type }
             ),
             libraryContext = true,
-            libraryApps = row.hitApps,
             onDisableEverywhere = {
                 vm.disableSdkEverywhere(row.rule.id) { sheetMsg = it }
             },

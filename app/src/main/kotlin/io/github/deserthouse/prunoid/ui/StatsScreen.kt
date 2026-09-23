@@ -32,18 +32,7 @@ import androidx.compose.ui.res.stringResource
 
 private data class StatsRow(val rule: SdkRule, val hitApps: Int, val hitComponents: Int)
 
-private fun categoryColor(c: String, dark: Boolean): Color = when (c) {
-    "ads" -> if (dark) Color(0xFFEF9A9A) else Color(0xFFC62828)
-    "push" -> if (dark) Color(0xFFFFCC80) else Color(0xFFE65100)
-    "analytics" -> if (dark) Color(0xFFA5D6A7) else Color(0xFF2E7D32)
-    "framework" -> if (dark) Color(0xFF90CAF9) else Color(0xFF1565C0)
-    "maps" -> if (dark) Color(0xFF80DEEA) else Color(0xFF00838F)
-    "social_or_pay" -> if (dark) Color(0xFFCE93D8) else Color(0xFF6A1B9A)
-    "quality" -> if (dark) Color(0xFFF48FB1) else Color(0xFFAD1457)
-    "infra" -> if (dark) Color(0xFFFFAB91) else Color(0xFFBF360C)
-    "security" -> if (dark) Color(0xFFFFF59D) else Color(0xFFF9A825)
-    else -> if (dark) Color(0xFFB0BEC5) else Color(0xFF546E7A)
-}
+private fun categoryColor(c: String, dark: Boolean): Color = chartColor(c, dark)
 
 @Composable
 fun StatsScreen(vm: AppViewModel, modifier: Modifier = Modifier) {

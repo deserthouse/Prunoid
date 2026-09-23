@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.*
 import kotlinx.coroutines.withContext
 
 data class AppUiState(
@@ -48,7 +49,13 @@ data class AppUiState(
     val workMode: io.github.deserthouse.prunoid.core.engine.WorkModeInfo =
         io.github.deserthouse.prunoid.core.engine.WorkModeInfo.ROOT,
     val reapplyMode: String = "open",
-    val backupEnabled: Boolean = false
+    val backupEnabled: Boolean = false,
+    // 批T8：列表筛选条件统一入 VM（全部会话态，导航往返保留、冷启复位——与 hitsOnly/showSystem 同层）
+    val listCatSel: Set<String> = emptySet(),
+    val listSafetySel: Safety? = null,
+    val listAppliedOnly: Boolean = false,
+    // 批T2：内置快照可溯源（"2026-09-21 · 2003"）
+    val snapshotMeta: String = ""
 )
 
 class AppViewModel(app: Application) : AndroidViewModel(app) {
@@ -240,38 +247,34 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /** 批O：导出某 app 的组件清单 JSON（供规则仓研判；纯本地分享，零上传） */
+    /** 批O：导出某 app 的组件清单 JSON（供规则仓研判；纯本地分享，零上传）。批V3：serialization 构造替代手写拼接 */
     fun exportComponentReport(pkg: String): String {
         val app = _state.value.apps.firstOrNull { it.packageName == pkg } ?: return ""
-        val nl = chr10
-        fun q(v: String) = '"' + v.replace('"', ' ') + '"'
-        val sb = StringBuilder()
-        sb.append('{').append(nl)
-        sb.append("  ").append(q("app")).append(": ").append(q(app.label)).append(',').append(nl)
-        sb.append("  ").append(q("package")).append(": ").append(q(app.packageName)).append(',').append(nl)
-        sb.append("  ").append(q("reportedAt")).append(": ").append(q(java.time.Instant.now().toString())).append(',').append(nl)
-        sb.append("  ").append(q("matched")).append(": [").append(nl)
-        app.matchedSdks.forEach { h ->
-            sb.append("    {").append(q("rule")).append(": ").append(q(h.name))
-                .append(", ").append(q("components")).append(": ")
-                .append(h.matchedComponents.joinToString(", ", "[", "]") { q(it) })
-                .append("},").append(nl)
+        val obj = buildJsonObject {
+            put("app", app.label)
+            put("package", app.packageName)
+            put("reportedAt", java.time.Instant.now().toString())
+            put("matched", buildJsonArray {
+                app.matchedSdks.forEach { h ->
+                    add(buildJsonObject {
+                        put("rule", h.name)
+                        put("components", JsonArray(h.matchedComponents.map { JsonPrimitive(it) }))
+                    })
+                }
+            })
+            put("unmatched", buildJsonArray {
+                app.unmatched.forEach { g ->
+                    add(buildJsonObject {
+                        put("prefix", g.prefix)
+                        put("count", g.count)
+                        put("components", JsonArray(g.components.take(50).map { JsonPrimitive(it) }))
+                    })
+                }
+            })
         }
-        sb.append("  ],").append(nl)
-        sb.append("  ").append(q("unmatched")).append(": [").append(nl)
-        app.unmatched.forEach { g ->
-            sb.append("    {").append(q("prefix")).append(": ").append(q(g.prefix))
-                .append(", ").append(q("count")).append(": ").append(g.count)
-                .append(", ").append(q("components")).append(": ")
-                .append(g.components.take(50).joinToString(", ", "[", "]") { q(it) })
-                .append("},").append(nl)
-        }
-        sb.append("  ]").append(nl)
-        sb.append('}')
-        return sb.toString()
+        return obj.toString()
     }
 
-    private val chr10: Char = 10.toChar()
 
     // ── 批P：声明式（hook 模式）——SDK 画圈写 declarations.json ──
     val declared: Set<String> get() = io.github.deserthouse.prunoid.core.engine.DeclarationsStore.declaredPrefixes
@@ -332,7 +335,16 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             _state.update { it.copy(scanning = true) }
             val apps = try {
-                withContext(Dispatchers.IO) { scanner.scanAll() }
+                withContext(Dispatchers.IO) {
+                    val out = scanner.scanAll()
+                    val snap = runCatching { rules.snapshot }.getOrNull()
+                    _state.update {
+                        it.copy(snapshotMeta = snap?.generatedAt?.take(10)?.orEmpty().let { d ->
+                            if (d != null && snap != null) "$d · ${snap.sdks.size}" else ""
+                        })
+                    }
+                    out
+                }
             } catch (e: Exception) {
                 android.util.Log.e("SdkPruner", "scan failed", e)
                 _state.update { it.copy(scanning = false, message = appCtx.getString(R.string.vm_scan_failed, e.message ?: "")) }
@@ -363,6 +375,23 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     fun toggleHitsOnly() {
         _state.update { it.copy(hitsOnly = !it.hitsOnly) }
+    }
+
+    // 批T8：列表筛选三件套的 VM 入口
+    fun toggleListCat(c: String) {
+        _state.update { it.copy(listCatSel = if (c in it.listCatSel) it.listCatSel - c else it.listCatSel + c) }
+    }
+
+    fun toggleListSafety(s: Safety) {
+        _state.update { it.copy(listSafetySel = if (it.listSafetySel == s) null else s) }
+    }
+
+    fun toggleListAppliedOnly() {
+        _state.update { it.copy(listAppliedOnly = !it.listAppliedOnly) }
+    }
+
+    fun clearListFilters() {
+        _state.update { it.copy(listCatSel = emptySet(), listSafetySel = null, listAppliedOnly = false, hitsOnly = false, showSystem = false) }
     }
 
     fun selectEngine(e: Engine) {

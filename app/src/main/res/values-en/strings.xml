@@ -15,13 +15,10 @@
     <string name="theme_name">Calm audit desk</string>
     <string name="subscribed">Rule source subscribed</string>
     <string name="using_snapshot">Using built-in snapshot</string>
-    <string name="rescan">Rescan</string>
-    <string name="menu_sources">Rule sources</string>
-    <string name="menu_recovery">Backup &amp; recovery</string>
     <string name="menu_library">SDK library</string>
     <string name="menu_settings">Settings</string>
     <string name="indexing">Indexing…</string>
-    <string name="list_summary">%1$d apps · %2$d with matched SDKs</string>
+    <string name="list_summary">%1$d user apps · %2$d with matched SDKs</string>
     <string name="vm_no_root">No root: scanning works, disable is unavailable</string>
     <string name="search_hint">Search app / package / SDK</string>
     <string name="clear_search">Clear search</string>
@@ -30,16 +27,12 @@
     <string name="empty_apps">Nothing to show</string>
     <string name="empty_no_match">No results</string>
     <string name="cd_applied">Rules applied</string>
-    <string name="dlg_sources_desc">Same schema as the built-in snapshot (schemaVersion + sdks); custom sources supported</string>
-    <string name="fill_official">Fill official source</string>
     <string name="subscribe">Subscribe</string>
     <string name="cancel">Cancel</string>
     <string name="recovery_empty">No backups yet (created automatically before applying)</string>
-    <string name="recovery_points">Restore points (new → old):</string>
     <string name="clear_ifw">Clear all IFW</string>
     <string name="clear_ifw_confirm">Confirm clear all</string>
     <string name="restore_selected">Restore selected</string>
-    <string name="restore_selected_confirm">Confirm restore</string>
     <string name="close">Close</string>
     <string name="no_version">No version</string>
     <string name="back">Back</string>
@@ -48,7 +41,7 @@
     <string name="apply_selected">Apply selected (%1$d)</string>
     <string name="apply_rules">Apply rules</string>
     <string name="restore">Restore</string>
-    <string name="detail_summary">v%1$s · %2$d SDKs · %3$d components</string>
+    <string name="detail_summary">v%1$s · %2$d SDKs · %3$d matched components</string>
     <string name="applied_line">%1$d components applied (%2$s)</string>
     <string name="ifw_desc">IFW: invisible to the app, cannot self-recover (recommended)</string>
     <string name="pm_desc">pm disable: compatible, but the app may recover by itself</string>
@@ -65,7 +58,7 @@
     <string name="select_none">Select none</string>
     <string name="cd_detail">Details</string>
     <string name="unmatched_total">Unrecognized components %1$d</string>
-    <string name="unmatched_desc">Not in the rule base yet; cannot be disabled — consider contributing a rule</string>
+    <string name="unmatched_desc">Not in the rule base — selecting these for blocking is your own judgment; consider contributing a rule</string>
     <string name="unmatched_truncated">Showing top %1$d of %2$d groups</string>
     <string name="collapse">Collapse</string>
     <string name="expand">Expand</string>
@@ -74,15 +67,15 @@
     <string name="sys_dialog_body">“%1$s” is a system app. Disabling its components may break the app or system features.</string>
     <string name="sys_dialog_note">If anything breaks, restore in-app or roll back via backup/recovery.</string>
     <string name="confirm_line">Will disable %2$d components across %1$d SDKs</string>
-    <string name="excluded_line">(%1$d risky items excluded)</string>
-    <string name="engine_line">, engine %1$s. A backup is created automatically.</string>
+    <string name="excluded_line"> (%1$d risky SDKs not selected are out of scope)</string>
+    <string name="engine_line">, engine %1$s. With Backup &amp; restore enabled, a snapshot is taken before applying.</string>
     <string name="risk_continue">I understand the risk, continue</string>
     <string name="apply">Apply</string>
-    <string name="comp_activity">activity</string>
-    <string name="comp_service">service</string>
+    <string name="comp_activity">Activity</string>
+    <string name="comp_service">Service</string>
         <string name="comp_provider">Provider</string>
-<string name="comp_receiver">receiver</string>
-    <string name="comp_other">Other component</string>
+<string name="comp_receiver">Receiver</string>
+    <string name="comp_other">Other</string>
     <string name="conf_high">High</string>
     <string name="conf_medium">Medium</string>
     <string name="conf_low">Low</string>
@@ -112,7 +105,7 @@
     <string name="lib_empty">No matching entries</string>
     <string name="stats_identified">SDKs identified</string>
     <string name="stats_blocked">Components disabled</string>
-    <string name="stats_apps">Apps scanned</string>
+    <string name="stats_apps">Apps scanned (incl. system)</string>
     <string name="stats_cat_title">SDK category distribution</string>
     <string name="stats_rank_title">Top SDKs on device</string>
     <string name="installed_at">Installed %1$s</string>
@@ -135,8 +128,6 @@
     <string name="engine_default_title">Default engine</string>
     <string name="engine_default_desc">Used at startup; can be switched per-app on the detail page</string>
     <string name="backup_keep_title">Backup copies to keep</string>
-    <string name="backup_keep_current">Keeping last %1$d (3–30)</string>
-    <string name="sub_title">Rule subscriptions</string>
     <string name="sub_desc">Multiple sources merge as a union; on id conflict the higher confidence wins</string>
     <string name="builtin">Built-in</string>
     <string name="not_fetched">Not fetched</string>
@@ -144,10 +135,7 @@
     <string name="update">Update</string>
     <string name="remove">Remove</string>
     <string name="add_source_title">Add rule source</string>
-    <string name="recovery_title">Recovery channel</string>
-    <string name="recovery_desc">If the UI cannot be reached, run the command below on a computer to clear all IFW rules:</string>
     <string name="about">About</string>
-    <string name="about_line">SDK component auditor · Apache-2.0</string>
     <string name="add_source_desc">Same schema as the built-in snapshot (schemaVersion + sdks); sources merge as a union</string>
     <string name="name_optional">Name (optional)</string>
     <string name="add">Add</string>
@@ -172,7 +160,6 @@
     <string name="chip_applied">Applied</string>
     <string name="filter_safety">Safety</string>
     <string name="filter_clear">Reset</string>
-    <string name="sort_label">Sort</string>
     <string name="sort_default">Default</string>
     <string name="sort_sdk_desc">SDK count ↓</string>
     <string name="sort_comp_desc">Component count ↓</string>
@@ -189,7 +176,6 @@
     <string name="stats_prefix_count">%1$d components</string>
     <string name="about_github">GitHub project</string>
     <string name="about_ack_title">Acknowledgements &amp; licenses</string>
-    <string name="about_ack_body">Apache-2.0: LibChecker-Rules / LibChecker-Rules-Bundle / blocker-general-rules / libsu; Fuck.AD and oF2pks used as facts only</string>
     <string name="about_ai_title">AI usage disclosure</string>
     <string name="about_ai_body">Developed by AI under human direction, reviewed and accepted by humans</string>
     <string name="about_disclaimer_title">Disclaimer</string>
@@ -206,8 +192,7 @@
     <string name="recovery_cmd_sub">If the UI cannot be reached, run this on a computer to clear all IFW rules</string>
     <string name="recovery_clear_title">Clear all IFW rules</string>
     <string name="recovery_clear_desc">Clears ALL IFW rules written by this app and other tools indiscriminately; pm disabled states are unaffected.</string>
-    <string name="live_line">Disabled now: %1$d components</string>
-    <string name="cd_disabled">Disabled</string>
+    <string name="live_line">On-device state (incl. non-Prunoid sources): %1$d disabled</string>
     <string name="disabled_count">%1$d disabled</string>
     <string name="recovery_ifw_count">Current IFW rules: %1$d (incl. other tools)</string>
     <string name="about_desc">Root SDK component auditor · Android 12+</string>
@@ -220,8 +205,6 @@
     <string name="easter_extra_line" formatted="false">Wait — that last line was written by me personally, so the human ratio might grudgingly climb to 1%?</string>
     <string name="easter_dry" formatted="false">Stop tapping — there\'s not a single drop left 😭</string>
     <string name="vm_sdk_everywhere_ok">%1$s: written to %2$d of %3$d matching apps, %4$d component rules each</string>
-    <string name="disable_everywhere_btn">Disable this SDK on %1$d apps</string>
-    <string name="disable_everywhere_hint">Writes IFW rules to every matching app (covers future updates); restore via the detail page of each app.</string>
     <string name="lang_section">语言 / Language</string>
     <string name="sheet_matched_line">%1$d matched, %2$d blocked</string>
     <string name="filter_label">Filter</string>
@@ -258,4 +241,11 @@
     <string name="decl_toggle">Declare globally (auto-block in future apps)</string>
     <plurals name="badge_apps"><item quantity="one">1 app</item><item quantity="other">%d apps</item></plurals>
     <plurals name="badge_sdks"><item quantity="one">1 SDK</item><item quantity="other">%d SDKs</item></plurals>
+    <string name="search_prefix_hint">Search component prefix</string>
+    <string name="source_official">Official rule source</string>
+    <string name="snapshot_meta">Bundled rule snapshot: %1$s (entities)</string>
+    <string name="addsource_disclosure">Custom sources count as low confidence — they never outrank official high-confidence rules on id conflict. Only add sources you trust.</string>
+    <string name="apply_confirm_armed">Confirm apply</string>
+    <string name="confirm_defaults">%1$d default-checked safe items are included.</string>
+    <string name="restore_confirm_armed">Confirm restore</string>
 </resources>

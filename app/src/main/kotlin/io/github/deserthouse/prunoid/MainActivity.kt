@@ -39,7 +39,7 @@ import io.github.deserthouse.prunoid.ui.SdkPrunerTheme
 import io.github.deserthouse.prunoid.ui.SettingsScreen
 import io.github.deserthouse.prunoid.ui.StatsScreen
 
-class MainActivity : ComponentActivity() {
+class MainActivity : androidx.appcompat.app.AppCompatActivity() {
     // 批I：手动语言覆盖（"" = 跟随系统）。attachBaseContext 包裹 activity，同时刷应用级资源，
     // 使 VM 的 appCtx.getString 同步切换；DataStore 冷读一次性成本可接受。
     override fun attachBaseContext(newBase: android.content.Context) {
@@ -111,10 +111,12 @@ fun SdkPrunerApp() {
     BackHandler(enabled = selected != null || inSettings) {
         if (inSettings) inSettings = false else selected = null
     }
-    when {
-        inSettings -> SettingsScreen(vm, onBack = { inSettings = false })
-        selected != null -> AppDetailScreen(selected!!, vm, onBack = { selected = null })
-        else -> Scaffold(
+    androidx.compose.animation.Crossfade(targetState = Triple(inSettings, selected?.packageName, tab), label = "nav") { nav ->
+        val (inSettingsNav, selPkg, tabNav) = nav
+        when {
+            inSettingsNav -> SettingsScreen(vm, onBack = { inSettings = false })
+            selPkg != null -> AppDetailScreen(selected!!, vm, onBack = { selected = null })
+            else -> Scaffold(
             bottomBar = {
                 NavigationBar {
                     NavigationBarItem(
@@ -138,16 +140,17 @@ fun SdkPrunerApp() {
                 }
             }
         ) { padding ->
-            Box(Modifier.padding(padding)) {
-                when (tab) {
-                    0 -> AppListScreen(
-                        vm,
-                        onOpen = { selected = it },
-                        onOpenSettings = { inSettings = true },
-                        onOpenLibrary = { tab = 1 }
-                    )
-                    1 -> SdkLibraryScreen(vm, onBack = { tab = 0 })
-                    else -> StatsScreen(vm)
+                Box(Modifier.padding(padding)) {
+                    when (tabNav) {
+                        0 -> AppListScreen(
+                            vm,
+                            onOpen = { selected = it },
+                            onOpenSettings = { inSettings = true },
+                            onOpenLibrary = { tab = 1 }
+                        )
+                        1 -> SdkLibraryScreen(vm)
+                        else -> StatsScreen(vm)
+                    }
                 }
             }
         }

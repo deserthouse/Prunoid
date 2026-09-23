@@ -44,7 +44,8 @@ class RuleRepository(context: Context, initialSources: List<SettingsRepository.S
             snapshot.sdks,
             sources.map { it.id }.mapNotNull { id -> subscription.cached(id)?.snapshot?.sdks }
         )
-        effectiveRules = rules
+        // 批R5：同实体别名去重（保守合并，详见 RuleDedup.kt）
+        effectiveRules = dedupRules(rules)
         rulesById = rules.associateBy { it.id }
         val m = HashMap<String, MutableList<String>>()
         for (r in rules) {

@@ -94,15 +94,18 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
             SettingsCard {
                 Column(Modifier.padding(16.dp)) {
                     SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                        // 批T7：迁官方 per-app locales（AppCompatDelegate），与系统「应用语言」入口同源
+                        val cur = androidx.appcompat.app.AppCompatDelegate.getApplicationLocales().toLanguageTags()
                         val opts = listOf("" to "System", "zh-CN" to "中文", "en" to "English")
                         opts.forEachIndexed { i, (tag, label) ->
+                            val selectedNow = if (cur.startsWith("zh")) "zh-CN" else if (cur.startsWith("en")) "en" else ""
                             SegmentedButton(
-                                selected = st.language == tag,
+                                selected = selectedNow == tag,
                                 onClick = {
-                                    if (st.language != tag) {
-                                        vm.setLanguage(tag) {
-                                            (ctx as? android.app.Activity)?.recreate()
-                                        }
+                                    if (selectedNow != tag) {
+                                        androidx.appcompat.app.AppCompatDelegate.setApplicationLocales(
+                                            androidx.core.os.LocaleListCompat.forLanguageTags(tag)
+                                        )
                                     }
                                 },
                                 shape = SegmentedButtonDefaults.itemShape(index = i, count = opts.size)
@@ -287,6 +290,14 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(Modifier.height(8.dp))
+                    if (st.snapshotMeta.isNotBlank()) {
+                        Text(
+                            stringResource(R.string.snapshot_meta, st.snapshotMeta),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(Modifier.height(4.dp))
+                    }
                     // F2：OptIcon 式源行——恒定 40dp IconButton 足迹，busy 原位换 spinner
                     st.sources.forEach { src ->
                         Row(
@@ -296,7 +307,11 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
                             val srcCtx = LocalContext.current
                             Column(Modifier.weight(1f)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(src.name, style = MaterialTheme.typography.bodyLarge)
+                                    // 批T9：内置源显示名资源化（英文 locale 不再漏中文）
+                                    Text(
+                                        if (src.builtin) stringResource(R.string.source_official) else src.name,
+                                        style = MaterialTheme.typography.bodyLarge
+                                    )
                                     if (src.builtin) {
                                         Spacer(Modifier.width(6.dp))
                                         Text(
@@ -711,7 +726,7 @@ private fun SectionTitle(title: String) {
     Text(
         title,
         style = MaterialTheme.typography.labelLarge,
-        color = MaterialTheme.colorScheme.primary,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier.padding(start = 4.dp)
     )
 }
@@ -896,6 +911,13 @@ fun AddSourceDialog(onDismiss: () -> Unit, onConfirm: (String, String) -> Unit) 
                     onValueChange = { url = it },
                     singleLine = true,
                     label = { Text("https://…") }
+                )
+                Spacer(Modifier.height(6.dp))
+                // 批T3：自建源置信度与信任披露
+                Text(
+                    stringResource(R.string.addsource_disclosure),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         },
