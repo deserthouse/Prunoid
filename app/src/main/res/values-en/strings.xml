@@ -12,7 +12,6 @@
     <string name="cat_other">Other</string>
     <string name="badge_framework">Framework</string>
     <string name="badge_system">System</string>
-    <string name="theme_name">Calm audit desk</string>
     <string name="subscribed">Rule source subscribed</string>
     <string name="using_snapshot">Using built-in snapshot</string>
     <string name="menu_library">SDK library</string>
@@ -172,7 +171,7 @@
     <string name="sec_about">About</string>
     <string name="stats_cat_center">SDKs identified</string>
     <string name="stats_prefix_title">Top 5 unrecognized prefixes</string>
-    <string name="stats_prefix_hint">Not in the rule base and not disableable — contributions welcome</string>
+    <string name="stats_prefix_hint">Not in the rule base — blocking them is your own judgment; contributions welcome</string>
     <string name="stats_prefix_count">%1$d components</string>
     <string name="about_github">GitHub project</string>
     <string name="about_ack_title">Acknowledgements &amp; licenses</string>

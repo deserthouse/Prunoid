@@ -21,11 +21,23 @@ class RuleRepository(context: Context, initialSources: List<SettingsRepository.S
 
     private var rulesById: Map<String, SdkRule> = emptyMap()
 
+    /** 生效别名表 = 内置快照 + 各源快照并集（源可补充/覆盖） */
+    var aliasTable: Map<String, String> = emptyMap()
+        private set
+
     /** 包名前缀倒排索引：前缀 -> 规则 id 列表 */
     var prefixIndex: Map<String, List<String>> = emptyMap()
         private set
 
+    @Volatile
+    private var builtinAliases: Map<String, String> = emptyMap()
+
+    private fun loadBuiltin() {
+        builtinAliases = snapshot.aliases
+    }
+
     init {
+        loadBuiltin()
         // 单例化前置：所有构造点（VM/自动重应用/守护服务/应急恢复）默认同步装载
         // 注册表全量源（含自定义源缓存），保证后台链路与 UI 使用同一规则集。
         // sources 缺省走 DataStore 同步读（filesDir IO，量小可控）。
@@ -45,7 +57,12 @@ class RuleRepository(context: Context, initialSources: List<SettingsRepository.S
             sources.map { it.id }.mapNotNull { id -> subscription.cached(id)?.snapshot?.sdks }
         )
         // 批R5：同实体别名去重（保守合并，详见 RuleDedup.kt）
-        effectiveRules = dedupRules(rules)
+        aliasTable = builtinAliases.toMutableMap().apply {
+            sources.forEach { src ->
+                subscription.cached(src.id)?.snapshot?.aliases?.let { fromSrc -> putAll(fromSrc) }
+            }
+        }
+        effectiveRules = dedupRules(rules, aliasTable)
         rulesById = rules.associateBy { it.id }
         val m = HashMap<String, MutableList<String>>()
         for (r in rules) {

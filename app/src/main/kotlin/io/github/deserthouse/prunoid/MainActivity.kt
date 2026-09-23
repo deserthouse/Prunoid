@@ -4,15 +4,14 @@ import androidx.compose.ui.res.stringResource
 import io.github.deserthouse.prunoid.R
 import android.content.Intent
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.first
@@ -40,31 +39,6 @@ import io.github.deserthouse.prunoid.ui.SettingsScreen
 import io.github.deserthouse.prunoid.ui.StatsScreen
 
 class MainActivity : androidx.appcompat.app.AppCompatActivity() {
-    // 批I：手动语言覆盖（"" = 跟随系统）。attachBaseContext 包裹 activity，同时刷应用级资源，
-    // 使 VM 的 appCtx.getString 同步切换；DataStore 冷读一次性成本可接受。
-    override fun attachBaseContext(newBase: android.content.Context) {
-        val tag = kotlinx.coroutines.runBlocking {
-            runCatching {
-                io.github.deserthouse.prunoid.core.rules.SettingsRepository(newBase).settings.first().language
-            }.getOrDefault("")
-        }
-        val base = if (tag.isBlank()) newBase else {
-            val loc = java.util.Locale.forLanguageTag(tag)
-            java.util.Locale.setDefault(loc)
-            val cfg = android.content.res.Configuration(newBase.resources.configuration)
-            cfg.setLocale(loc)
-            newBase.createConfigurationContext(cfg)
-        }
-        super.attachBaseContext(base)
-        // 应用级资源同步（VM 消息走 appCtx）
-        if (!tag.isBlank()) {
-            val appRes = applicationContext.resources
-            val cfg = android.content.res.Configuration(appRes.configuration)
-            cfg.setLocale(java.util.Locale.forLanguageTag(tag))
-            appRes.updateConfiguration(cfg, appRes.displayMetrics)
-        }
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()

@@ -3,18 +3,13 @@ package io.github.deserthouse.prunoid.core.rules
 // 批R5：同实体多规则去重（judge 实锤 Aurora Push/极光推送 安全评级相反、个推同名两条、
 // Signal360 ×4 等）。数据侧根治在规则仓管线；此处为运行时保守合并，原则：
 // safeToBlock 取 AND（只升不造）、confidence 取组内最低、组件/前缀/来源取并集。
-// 仅显式别名表 + 规范名全等分组，不做模糊启发（宁缺毋滥）。
-
-/** 跨语言别名 → 规范名（与规则库 name 全等匹配） */
-private val NAME_ALIASES: Map<String, String> = mapOf(
-    "Aurora Push" to "极光推送",
-    "Getui SDK" to "个推"
-)
+// 别名表随快照 aliases 字段下发；同名组自动归并。不做模糊启发（宁缺毋滥）。
 
 private val CONF_RANK = mapOf("high" to 2, "medium" to 1, "low" to 0)
 
-fun dedupRules(rules: List<SdkRule>): List<SdkRule> {
-    val canonical = rules.map { NAME_ALIASES[it.name] ?: it.name }
+/** aliases：别名 → 规范名（数据侧经快照 aliases 字段下发；app 内不再硬编码） */
+fun dedupRules(rules: List<SdkRule>, aliases: Map<String, String> = emptyMap()): List<SdkRule> {
+    val canonical = rules.map { aliases[it.name] ?: it.name }
     val groups = LinkedHashMap<String, MutableList<SdkRule>>()
     rules.forEachIndexed { i, r -> groups.getOrPut(canonical[i]) { mutableListOf() }.add(r) }
     // 保持首见顺序输出（UI 列表顺序确定性）

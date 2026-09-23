@@ -23,7 +23,6 @@ class SettingsRepository(private val context: Context) {
         val autoReapply: Boolean = true,
         val easterUnlocked: Boolean = false,
         val easterRambleBurned: Boolean = false,
-        val language: String = "",
         // 批N：一级工作方式（root=全能力；audit=只读审计）+ IFW 重应用两档（open=启动对账/realtime=常驻服务）
         val workMode: String = "root",
         val reapplyMode: String = "open",
@@ -51,7 +50,6 @@ class SettingsRepository(private val context: Context) {
         private val KEY_AUTO_REAPPLY = booleanPreferencesKey("auto_reapply")
         private val KEY_EASTER_UNLOCKED = booleanPreferencesKey("easter_unlocked")
         private val KEY_EASTER_RAMBLE = booleanPreferencesKey("easter_ramble_burned")
-        private val KEY_LANGUAGE = stringPreferencesKey("language")
         private val KEY_WORK_MODE = stringPreferencesKey("work_mode")
         private val KEY_REAPPLY_MODE = stringPreferencesKey("reapply_mode")
         private val KEY_BACKUP_ENABLED = booleanPreferencesKey("backup_enabled")
@@ -66,7 +64,6 @@ class SettingsRepository(private val context: Context) {
             autoReapply = p[KEY_AUTO_REAPPLY] ?: true,
             easterUnlocked = p[KEY_EASTER_UNLOCKED] ?: false,
             easterRambleBurned = p[KEY_EASTER_RAMBLE] ?: false,
-            language = p[KEY_LANGUAGE] ?: "",
             workMode = p[KEY_WORK_MODE] ?: "root",
             reapplyMode = p[KEY_REAPPLY_MODE] ?: "open",
             backupEnabled = p[KEY_BACKUP_ENABLED] ?: false,
@@ -106,11 +103,6 @@ class SettingsRepository(private val context: Context) {
 
     suspend fun setBackupEnabled(v: Boolean) {
         context.dataStore.edit { it[KEY_BACKUP_ENABLED] = v }
-    }
-
-    /** "" = 跟随系统；"zh-CN" / "en" 手动覆盖 */
-    suspend fun setLanguage(v: String) {
-        context.dataStore.edit { it[KEY_LANGUAGE] = v }
     }
 
     suspend fun setSources(list: List<SubSource>) {

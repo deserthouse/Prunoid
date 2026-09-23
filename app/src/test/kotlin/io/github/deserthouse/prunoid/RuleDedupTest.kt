@@ -21,10 +21,13 @@ class RuleDedupTest {
 
     @Test
     fun `跨语言别名合并且安全结论取保守`() {
-        val out = dedupRules(listOf(
-            rule("aurora", "Aurora Push", safe = true, conf = "high", comps = 5),
-            rule("jpush", "极光推送", safe = false, conf = "high", comps = 3)
-        ))
+        val out = dedupRules(
+            listOf(
+                rule("aurora", "Aurora Push", safe = true, conf = "high", comps = 5),
+                rule("jpush", "极光推送", safe = false, conf = "high", comps = 3)
+            ),
+            aliases = mapOf("Aurora Push" to "极光推送")
+        )
         assertEquals(1, out.size)
         val r = out.single()
         assertEquals("极光推送", r.name)

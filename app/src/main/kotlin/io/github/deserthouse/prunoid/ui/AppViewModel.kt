@@ -44,7 +44,6 @@ data class AppUiState(
     val easterUnlocked: Boolean = false,
     val easterExpanded: Boolean = false,
     val easterRambleBurned: Boolean = false,
-    val language: String = "",
     // 批N：工作方式与档位（audit=只读审计；reapply open=启动对账/realtime=常驻）
     val workMode: io.github.deserthouse.prunoid.core.engine.WorkModeInfo =
         io.github.deserthouse.prunoid.core.engine.WorkModeInfo.ROOT,
@@ -93,7 +92,6 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                         autoReapply = s.autoReapply,
                         easterUnlocked = s.easterUnlocked,
                         easterRambleBurned = s.easterRambleBurned,
-                        language = s.language,
                         workMode = io.github.deserthouse.prunoid.core.engine.WorkModeInfo.fromTag(s.workMode),
                         reapplyMode = s.reapplyMode,
                         backupEnabled = s.backupEnabled,
@@ -164,13 +162,6 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /** 批I：手动语言（"" = 跟随系统）；落盘完成后 UI 再 recreate，避免竞态读旧值 */
-    fun setLanguage(v: String, onDone: () -> Unit = {}) {
-        viewModelScope.launch {
-            settings.setLanguage(v)
-            onDone()
-        }
-    }
-
     /** 批I：跨应用统一禁用某 SDK——对规则库中命中该 SDK 的所有已安装应用写 IFW（组件取规则全量，覆盖未来更新） */
     fun disableSdkEverywhere(ruleId: String, onDone: (String) -> Unit) {
         viewModelScope.launch {

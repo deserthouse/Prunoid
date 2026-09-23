@@ -56,7 +56,9 @@ object MotionTokens {
     const val FAST_MS = 150
     const val SHEET_MS = 300
     const val CHART_MS = 600
-    fun <T> fast(): TweenSpec<T> = tween(FAST_MS, easing = FastOutSlowInEasing)
+    // 常用类型直接给命名 token，调用点免显式泛型
+    val fastFloat: TweenSpec<Float> = tween(FAST_MS, easing = FastOutSlowInEasing)
+    val fastSize: TweenSpec<androidx.compose.ui.unit.IntSize> = tween(FAST_MS, easing = FastOutSlowInEasing)
     fun <T> sheet(): TweenSpec<T> = tween(SHEET_MS, easing = FastOutSlowInEasing)
     fun <T> chart(): TweenSpec<T> = tween(CHART_MS, easing = FastOutSlowInEasing)
 }
@@ -69,7 +71,7 @@ fun chartColor(cat: String, dark: Boolean): Color = when (cat) {
     "analytics" -> if (dark) Color(0xFF80DEEA) else Color(0xFF00838F)
     "quality" -> if (dark) Color(0xFFBCAAA4) else Color(0xFF6D4C41)
     "social_or_pay" -> if (dark) Color(0xFF9FA8DA) else Color(0xFF3949AB)
-    "maps" -> if (dark) Color(0xFF81D4FA) else Color(0xFF0277BD)
+    "maps" -> if (dark) Color(0xFF4DD0E1) else Color(0xFF00ACC1)
     "framework" -> if (dark) Color(0xFF90CAF9) else Color(0xFF1565C0)
     "infra" -> if (dark) Color(0xFF90A4AE) else Color(0xFF455A64)
     "security" -> if (dark) Color(0xFFFFF59D) else Color(0xFFF9A825)

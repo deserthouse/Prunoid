@@ -15,7 +15,6 @@
     <string name="badge_framework">框架</string>
     <string name="badge_system">系统</string>
     <!-- 列表页 -->
-    <string name="theme_name">冷静的审计台</string>
     <string name="subscribed">已订阅规则源</string>
     <string name="using_snapshot">使用内置快照</string>
     <string name="menu_library">SDK 库</string>
@@ -188,7 +187,7 @@
     <string name="sec_about">关于</string>
     <string name="stats_cat_center">已识别 SDK</string>
     <string name="stats_prefix_title">未识别组件前缀 Top 5</string>
-    <string name="stats_prefix_hint">不在规则库中、无法禁用；欢迎向规则仓库提交规则</string>
+    <string name="stats_prefix_hint">不在规则库中——勾选禁用属人工判断；欢迎贡献规则</string>
     <string name="stats_prefix_count">%1$d 组件</string>
     <string name="about_github">GitHub 项目主页</string>
     <string name="about_ack_title">致谢与开源许可</string>

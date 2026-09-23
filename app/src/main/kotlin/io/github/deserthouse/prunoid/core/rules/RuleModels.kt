@@ -9,6 +9,8 @@ import kotlinx.serialization.Serializable
 data class RuleSnapshot(
     val schemaVersion: Int,
     val generatedAt: String = "",
+    // 批R5 数据侧：跨语言别名 → 规范名（如 "Aurora Push"→"极光推送"）；缺省空表向后兼容
+    val aliases: Map<String, String> = emptyMap(),
     val generator: String = "",
     val license: String = "",
     val stats: SnapshotStats = SnapshotStats(),

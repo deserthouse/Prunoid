@@ -22,7 +22,6 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.deserthouse.prunoid.R
-import io.github.deserthouse.prunoid.core.rules.Safety
 import io.github.deserthouse.prunoid.core.rules.SdkRule
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -90,7 +89,8 @@ fun StatsScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
             Row(
                 Modifier.padding(16.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
+                // 批遗留#2：三列顶部对齐——标签两行的列不再把大数字居中抬高
+                verticalAlignment = Alignment.Top
             ) {
                 listOf(
                     stringResource(R.string.stats_identified) to "$totalIdentified",
@@ -99,14 +99,16 @@ fun StatsScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
                 ).forEach { (label, value) ->
                     Column(
                         Modifier.weight(1f),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = androidx.compose.foundation.layout.Arrangement.Top
                     ) {
                         Text(value, style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary)
                         Text(
                             label,
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1
+                            maxLines = 2,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
                         )
                     }
                 }
