@@ -272,7 +272,6 @@
     <string name="guide_got_it">知道了</string>
     <string name="audit_badge">只读模式</string>
     <string name="uninstall_note">提示：卸载 Prunoid 不会移除已写入的 IFW 规则——卸载前请先用上方「清除全部 IFW」。</string>
-    <plurals name="badge_ads_push"><item quantity="other">广告 %1$d · 推送 %2$d</item></plurals>
 <string name="badge_ads_push_short">含 %1$d 广告 · %2$d 推送</string>
 <string name="disable_selected_n">禁用所选（%1$d 组）</string>
     <string name="cons_safe">可安全禁用——不影响应用正常功能</string>

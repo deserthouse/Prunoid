@@ -256,7 +256,6 @@
     <string name="guide_got_it">Got it</string>
     <string name="audit_badge">Read-only</string>
     <string name="uninstall_note">Note: uninstalling Prunoid does not remove written IFW rules — run "Clear all IFW" above first for a clean slate.</string>
-    <plurals name="badge_ads_push"><item quantity="one">%2$d ads</item><item quantity="other">%1$d apps: %2$d ads · %3$d push</item></plurals>
 <string name="badge_ads_push_short">%1$d ads · %2$d push</string>
 <string name="disable_selected_n">Disable selected (%1$d)</string>
     <string name="cons_safe">Safe to disable — app keeps working normally</string>
