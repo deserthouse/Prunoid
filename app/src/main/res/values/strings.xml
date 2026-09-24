@@ -284,4 +284,6 @@
     <string name="credit_bgr_desc">Apache-2.0 · SDK 禁用规则与安全标注正源</string>
     <string name="credit_libsu_name">libsu</string>
     <string name="credit_libsu_desc">Apache-2.0 · root shell 框架</string>
+    <string name="search_sdk_in_app">搜索本应用中的 SDK</string>
+    <string name="matched_via">命中自 SDK：%1$s</string>
 </resources>

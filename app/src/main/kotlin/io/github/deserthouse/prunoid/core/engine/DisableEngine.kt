@@ -20,12 +20,25 @@ object IfwXmlBuilder {
         try {
             val parser = org.xmlpull.v1.XmlPullParserFactory.newInstance().newPullParser()
             parser.setInput(java.io.StringReader(xml))
+            // 批N3：外层 tag（activity/service/receiver）分组——此前误用 component-filter
+            // 自身作 key，产出 <component-filter> 单组 XML，IFW 系统不识别（静默失败）
+            var currentTag: String? = null
             var event = parser.eventType
             while (event != org.xmlpull.v1.XmlPullParser.END_DOCUMENT) {
-                if (event == org.xmlpull.v1.XmlPullParser.START_TAG) {
-                    val name = parser.getAttributeValue(null, "name")
-                    if (parser.name == "component-filter" && !name.isNullOrBlank()) {
-                        out.getOrPut(parser.name) { linkedSetOf() }.add(name)
+                when (event) {
+                    org.xmlpull.v1.XmlPullParser.START_TAG -> {
+                        when (parser.name) {
+                            "activity", "service", "receiver" -> currentTag = parser.name
+                            "component-filter" -> {
+                                val name = parser.getAttributeValue(null, "name")
+                                if (!name.isNullOrBlank() && currentTag != null) {
+                                    out.getOrPut(currentTag!!) { linkedSetOf() }.add(name)
+                                }
+                            }
+                        }
+                    }
+                    org.xmlpull.v1.XmlPullParser.END_TAG -> {
+                        if (parser.name in setOf("activity", "service", "receiver")) currentTag = null
                     }
                 }
                 event = parser.next()

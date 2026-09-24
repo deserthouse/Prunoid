@@ -268,4 +268,6 @@
     <string name="credit_bgr_desc">Apache-2.0 · blocking rules &amp; safety annotations source</string>
     <string name="credit_libsu_name">libsu</string>
     <string name="credit_libsu_desc">Apache-2.0 · root shell framework</string>
+    <string name="search_sdk_in_app">Search SDKs in this app</string>
+    <string name="matched_via">matched via SDK: %1$s</string>
 </resources>

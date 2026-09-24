@@ -129,8 +129,13 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
         AddSourceDialog(
             onDismiss = { showAddSource = false },
             onConfirm = { name, url ->
-                showAddSource = false
-                vm.addSource(name, url) { msg = it }
+                // 批N3：失败不静默——成功才关（成功判定=消息含成功/Fetched）
+                vm.addSource(name, url) { msgText ->
+                    msg = msgText
+                    if (msgText.contains("成功") || msgText.contains("Fetched")) {
+                        showAddSource = false
+                    }
+                }
             }
         )
     }
@@ -348,6 +353,8 @@ fun BackupDialog(vm: AppViewModel, onMessage: (String) -> Unit, onDismiss: () ->
 fun AddSourceDialog(onDismiss: () -> Unit, onConfirm: (String, String) -> Unit) {
     var name by remember { mutableStateOf("") }
     var url by remember { mutableStateOf("") }
+    // 批N3：提交中状态（失败不静默，成功关闭）
+    var submitting by remember { mutableStateOf(false) }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.add_source_title)) },
@@ -378,7 +385,12 @@ fun AddSourceDialog(onDismiss: () -> Unit, onConfirm: (String, String) -> Unit) 
         },
         confirmButton = {
             TextButton(
-                onClick = { if (url.isNotBlank()) onConfirm(name.trim(), url.trim()) },
+                onClick = {
+                    if (url.isNotBlank()) {
+                        submitting = true
+                        onConfirm(name.trim(), url.trim())
+                    }
+                },
                 enabled = url.startsWith("http")
             ) { Text(stringResource(R.string.add)) }
         },

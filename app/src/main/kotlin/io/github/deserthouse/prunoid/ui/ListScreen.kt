@@ -366,13 +366,30 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
                                 }
                             },
                             supportingContent = {
-                                Text(
-                                    app.packageName,
-                                    fontFamily = FontFamily.Monospace,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
+                                Column {
+                                    Text(
+                                        app.packageName,
+                                        fontFamily = FontFamily.Monospace,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    // 批P1#7：搜索命中原因（SDK 名命中时提示，避免"搜 tencent 出 6 个 app"困惑）
+                                    if (query.length >= 3 && app.label?.contains(query, true) != true &&
+                                        !app.packageName.contains(query, true)
+                                    ) {
+                                        val via = app.matchedSdks.firstOrNull { it.name.contains(query, true) }
+                                        if (via != null) {
+                                            Text(
+                                                stringResource(R.string.matched_via, via.name),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
+                                    }
+                                }
                             },
                             leadingContent = {
                                 coil.compose.AsyncImage(

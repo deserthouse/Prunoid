@@ -95,6 +95,8 @@ androidComponents {
 }
 
 dependencies {
+    testImplementation("net.sf.kxml:kxml2:2.3.0")
+
     // 批P：LSPosed 模块身份（仅编译，不入包）
     compileOnly("de.robv.android.xposed:api:82")
     // ━━━ Root shell (libsu, topjohnwu, Apache-2.0) ━━━

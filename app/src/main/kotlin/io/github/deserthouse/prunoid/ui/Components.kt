@@ -143,7 +143,7 @@ fun SdkMonogram(ruleId: String, name: String, modifier: Modifier = Modifier, ico
     }
     val hasBrand = !iconUrl.isNullOrBlank() || iconRes != null
     // 品牌矢量分支对齐上游 LibChecker：中性浅底 + 原色渲染（tint 会把多色路径染成单色）
-    val brandBg = if (dark) BrandTileDark else MaterialTheme.colorScheme.surfaceContainerHighest
+    val brandBg = if (dark) BrandTileDark else MaterialTheme.colorScheme.surfaceVariant
     Box(
         modifier
             .size(32.dp)
@@ -315,6 +315,10 @@ fun CountdownConfirmTextButton(
 
 /** SDK 类别单一来源（批Q2：列表筛选 sheet 与 SDK 库共用，加分类只改这里） */
 val ALL_CATEGORIES = listOf("ads", "push", "analytics", "quality", "social_or_pay", "maps", "infra", "security", "framework", "other")
+
+/** 批N2②：类型 → 全词标签查表（非 composable，可在任意 lambda 使用；文本已本地化由调用方传入 locale） */
+@Composable
+fun tagText(t: String): String = typeLabel(t)
 
 /** 统一分区标题（批Q5）：静态文本不占用 primary 语义，让位给可点项 */
 @Composable

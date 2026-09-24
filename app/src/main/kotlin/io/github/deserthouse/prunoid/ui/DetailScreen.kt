@@ -257,8 +257,13 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
             }
             if (detailTab == 0) {
                 item {
-                    // 批L3：SDK 视图搜索（批Q4 统一组件）
-                    SearchField(value = sdkQuery, onValueChange = { sdkQuery = it }, modifier = Modifier.fillMaxWidth())
+                    // 批L3：SDK 视图搜索（批Q4 统一组件）；批N2⑥ 作用域明确
+                    SearchField(
+                        value = sdkQuery,
+                        onValueChange = { sdkQuery = it },
+                        placeholder = { Text(stringResource(R.string.search_sdk_in_app)) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
             if (detailTab == 1) {
@@ -489,7 +494,8 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                 // 批E2：勾选后卡头就近禁用（免滚 20 行找按钮）
                                 val selN = unmatchedSel.count { it.value }
                                 if (unmatchedOpen && selN > 0) {
-                                    FilledTonalButton(
+                                    // 批N2①：批量禁用属危险操作，用 error 语义色
+                                    Button(
                                         onClick = {
                                             val selGroups = app.unmatched.filter { unmatchedSel[it.prefix] == true }
                                             val byType = selGroups.flatMap { g ->
@@ -498,6 +504,10 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                             vm.disableUnmatched(app.packageName, byType) { msg = it }
                                             unmatchedSel.clear()
                                         },
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = MaterialTheme.colorScheme.errorContainer,
+                                            contentColor = MaterialTheme.colorScheme.onErrorContainer
+                                        ),
                                         contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 4.dp)
                                     ) {
                                         Text(stringResource(R.string.disable_selected_n, selN), style = MaterialTheme.typography.labelSmall)
@@ -569,13 +579,23 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                             }
                                         }
                                         Text(
-                                            // 批E3：类型构成标签（判断依据），如 "A3 S1"
-                                            g.componentTypes.values.groupingBy { it }.eachCount()
-                                                .entries.sortedByDescending { it.value }
-                                                .joinToString(" ") { (t, n) -> "${t.take(1).uppercase()}$n" } +
-                                                " · " + g.count,
+                                            // 批N2②：改全词（Activity×3），用屏级 lookup 表避免 lambda 内调 composable
+                                            buildString {
+                                                g.componentTypes.values.groupingBy { it }.eachCount()
+                                                    .entries.sortedByDescending { it.value }
+                                                    .forEachIndexed { idx, (t, n) ->
+                                                        if (idx > 0) append(" ")
+                                                        append(tagText(t))
+                                                        append("×")
+                                                        append(n)
+                                                    }
+                                                append(" · ")
+                                                append(g.count)
+                                            },
                                             style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
                                         )
                                     }
                                 }

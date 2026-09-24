@@ -526,10 +526,15 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             val result = withBusy("addsource") { rules.refreshSource(id, url) }
             if (result.ok) {
                 val cur = _state.value.sources
-                settings.setSources(cur + SettingsRepository.SubSource(
+                val newList = cur + SettingsRepository.SubSource(
                     id = id, name = name.ifBlank { url.substringAfter("//").substringBefore('/') },
                     url = url, lastFetched = java.time.Instant.now().toString()
-                ))
+                )
+                settings.setSources(newList)
+                // 批N1 修复：规则集已在 refreshSource→rebuild 更新，此处直接刷新 UI 态，
+                // 不等 settings collect 回流（collect 回调里 sourcesChanged 会再次 rescan，
+                // 与 refreshSource 内部的 rebuild 竞争曾致 ANR）
+                rescan()
             }
             onDone(result.message)
         }
