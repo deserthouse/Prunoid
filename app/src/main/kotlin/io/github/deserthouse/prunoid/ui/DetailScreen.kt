@@ -53,6 +53,9 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
     val snackbar = rememberSnackbar()
     var msg by remember { mutableStateOf<String?>(null) }
     var showApplyConfirm by remember { mutableStateOf(false) }
+    var showRestoreConfirm by remember { mutableStateOf(false) }
+    // 批E1：未识别勾选提升至屏级——有勾选时底部 SDK 操作栏让位（两套勾选不再并存误触）
+    var unmatchedSelCount by remember { mutableStateOf(0) }
     val st by vm.state.collectAsState()
     val pm = LocalContext.current.packageManager
     // 逐 SDK 勾选：默认勾选 SAFE/CAUTION（RISKY/UNKNOWN 需显式加选）
@@ -62,7 +65,10 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
     }
     var selected by remember(app.packageName) { mutableStateOf(defaultSelected) }
     // 分类筛选：null = 全部
-    var catFilter by remember(app.packageName) { mutableStateOf<String?>(null) }
+    // 批P1#14：列表级 SDK 分类筛选传导进详情（用户"只关心广告"的意图不丢失；详情内可再改）
+    var catFilter by remember(app.packageName) {
+        mutableStateOf(st.listCatSel.singleOrNull())
+    }
     // SDK 档案卡弹层（Blocker/LibChecker 模式）：点卡片打开
     var sheetFor by remember { mutableStateOf<SdkHit?>(null) }
     var detailTab by remember { mutableStateOf(0) }   // 0=SDK 视图 1=组件视图
@@ -94,6 +100,11 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
     // 量化确认摘要（以当前勾选与引擎为准）
     val selHits = app.matchedSdks.filter { it.ruleId in selected }
     val selComponents = selHits.flatMap { it.matchedComponents }
+    // 批C2：按类别归纳影响（组合期预算字符串，供确认句引用）
+    val selBreakdown = selHits.groupBy { it.category }
+        .mapValues { (_, v) -> v.sumOf { it.matchedComponents.size } }
+        .entries.map { (c, n) -> categoryLabel(c) to n }
+        .joinToString(" · ") { (label, n) -> "$label × $n" }
     val excludedRisky = app.matchedSdks.count {
         it.safety == Safety.RISKY && it.ruleId !in selected
     }
@@ -134,7 +145,19 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                 .padding(horizontal = 16.dp, vertical = 8.dp)
                         )
                     }
-                    Row(
+                    if (unmatchedSelCount > 0) {
+                        // 批E1：未识别勾选进行中——SDK 操作栏让位，防误触另一套操作
+                        Row(
+                            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)
+                        ) {
+                            Text(
+                                stringResource(R.string.unmatched_pending_hint),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.tertiary,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    } else Row(
                         Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp, vertical = 12.dp),
@@ -153,7 +176,8 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                             Text(if (selected.isNotEmpty() && selected != defaultSelected) stringResource(R.string.apply_selected, selected.size) else stringResource(R.string.apply_rules))
                         }
                         OutlinedButton(
-                            onClick = { vm.restoreApp(app) { msg = it } },
+                            // 批D1：全量回滚补确认
+                            onClick = { showRestoreConfirm = true },
                             enabled = !framework && !st.busy && appliedEntry != null
                                 && st.workMode.capabilities.disablePerApp && st.rootGranted,
                             modifier = Modifier.weight(1f)
@@ -473,12 +497,18 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                             Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                stringResource(R.string.showing_sdks, visibleSdks.size),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.weight(1f)
-                            )
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    stringResource(R.string.showing_sdks, visibleSdks.size),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    stringResource(R.string.precheck_note),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                             TextButton(
                                 onClick = { selected = selected + visibleSdks.map { it.ruleId }.toSet() },
                                 enabled = visibleSdks.isNotEmpty()
@@ -616,6 +646,7 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                 var unmatchedQuery by remember { mutableStateOf("") }
                                 var suspiciousOnly by remember { mutableStateOf(false) }
                                 val unmatchedSel = remember(app.packageName) { mutableStateMapOf<String, Boolean>() }
+                                LaunchedEffect(unmatchedSel.size) { unmatchedSelCount = unmatchedSel.count { it.value } }
                                 val visibleGroups = app.unmatched.filter { g ->
                                     (unmatchedQuery.isBlank() || g.prefix.contains(unmatchedQuery, true)) &&
                                         (!suspiciousOnly || g.suspicious)
@@ -724,6 +755,27 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
         }
     }
 
+    if (showRestoreConfirm) {
+        AlertDialog(
+            onDismissRequest = { showRestoreConfirm = false },
+            title = { Text(stringResource(R.string.restore)) },
+            text = { Text(stringResource(R.string.restore_app_confirm)) },
+            confirmButton = {
+                CountdownConfirmTextButton(
+                    label = stringResource(R.string.restore),
+                    armedLabel = stringResource(R.string.restore_confirm_armed),
+                    enabled = true,
+                    seconds = 3,
+                    onConfirm = {
+                        showRestoreConfirm = false
+                        vm.restoreApp(app) { msg = it }
+                    }
+                )
+            },
+            dismissButton = { TextButton(onClick = { showRestoreConfirm = false }) { Text(stringResource(R.string.cancel)) } }
+        )
+    }
+
     sheetFor?.let { hit ->
         SdkArchiveSheet(
             hit = hit,
@@ -775,6 +827,14 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
+                    if (selBreakdown.isNotBlank()) {
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            selBreakdown,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             },
             confirmButton = {
@@ -786,7 +846,11 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                     seconds = 3,
                     onConfirm = {
                         showApplyConfirm = false
-                        vm.applyRules(app, selected) { msg = it }
+                        vm.applyRules(app, selected) { m ->
+                        msg = m
+                        // 批C5：操作完成，选择集回落默认预勾（按钮不再停留"待执行"态）
+                        selected = defaultSelected
+                    }
                     }
                 )
             },

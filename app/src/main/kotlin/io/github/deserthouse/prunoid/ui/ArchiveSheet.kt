@@ -72,11 +72,14 @@ fun SdkArchiveSheet(
             Spacer(Modifier.height(6.dp))
             SafetyBadge(hit.safety)
             Spacer(Modifier.height(8.dp))
-            Text(
-                stringResource(R.string.sheet_matched_line, hit.matchedComponents.size, blocked),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.primary
-            )
+            if (!libraryContext) {
+                Text(
+                    stringResource(R.string.sheet_matched_line, hit.matchedComponents.size, blocked),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+            // 批库链修复④：库上下文不显示锚点口径量化句（与下方扫描集清单自相矛盾）
             // 批P：全局声明开关（所有档案卡可见；写 declarations.json）
             Row(
                 Modifier.fillMaxWidth().padding(top = 8.dp),
@@ -127,10 +130,29 @@ fun SdkArchiveSheet(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 } else {
-                    Text(
-                        stringResource(R.string.sheet_apps_title, userApps.size),
-                        style = MaterialTheme.typography.titleSmall
-                    )
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            stringResource(R.string.sheet_apps_title, userApps.size),
+                            style = MaterialTheme.typography.titleSmall,
+                            modifier = Modifier.weight(1f)
+                        )
+                        // 批库链修复②：全局禁用按钮（此前 onDisableEverywhere 为死回调从未接入）
+                        onDisableEverywhere?.let { cb ->
+                            FilledTonalButton(
+                                onClick = cb,
+                                enabled = !st0.busy && st0.workMode.capabilities.disablePerApp && st0.rootGranted,
+                                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                            ) {
+                                Text(
+                                    stringResource(R.string.block_everywhere, userApps.size),
+                                    style = MaterialTheme.typography.labelSmall
+                                )
+                            }
+                        }
+                    }
                     Spacer(Modifier.height(4.dp))
                     userApps.take(30).forEach { a ->
                         val disN = liveSet0[a.packageName]?.count { c ->
@@ -152,18 +174,14 @@ fun SdkArchiveSheet(
                                     color = if (disN > 0) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
-                            Switch(
-                                checked = disN > 0,
-                                onCheckedChange = { on ->
-                                    if (on) {
-                                        vm.disableSdkEverywhere(hit.ruleId) { sheetStatus = it }
-                                    } else {
-                                        // 关 = 该 app 恢复（IFW 移除 + pm 重启用）
-                                        vm.restoreApp(a) { sheetStatus = it }
-                                    }
-                                },
-                                enabled = !st0.busy && st0.workMode.capabilities.disablePerApp && st0.rootGranted
-                            )
+            Switch(
+                // 批库链修复③：开关=该 app × 该 SDK 单粒度（不再全局/整 app 越权）
+                checked = vm.sdkEnabledFor(a, hit.ruleId),
+                onCheckedChange = { on ->
+                    vm.setSdkForApp(a.packageName, hit.ruleId, on) { sheetStatus = it }
+                },
+                enabled = !st0.busy && st0.workMode.capabilities.disablePerApp && st0.rootGranted
+            )
                         }
                     }
                     if (userApps.size > 30) {

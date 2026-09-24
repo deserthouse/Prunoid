@@ -7,6 +7,32 @@ package io.github.deserthouse.prunoid.core.rules
 
 private val CONF_RANK = mapOf("high" to 2, "medium" to 1, "low" to 0)
 
+data class DedupResult(
+    val rules: List<SdkRule>,
+    val oldToCanonicalId: Map<String, String>,
+    val nameAliases: Map<String, Set<String>>
+)
+
+/** 结构化版：附带 旧id to 主id 映射 与 规范名 to 别名集合（搜索索引/索引归一用） */
+fun dedupRulesDetailed(rules: List<SdkRule>, aliases: Map<String, String> = emptyMap()): DedupResult {
+    val canonical = rules.map { aliases[it.name] ?: it.name }
+    val groups = LinkedHashMap<String, MutableList<SdkRule>>()
+    rules.forEachIndexed { i, r -> groups.getOrPut(canonical[i]) { mutableListOf() }.add(r) }
+    val oldToId = HashMap<String, String>()
+    val aliasesByName = HashMap<String, MutableSet<String>>()
+    val out = groups.map { (name, group) ->
+        val primary = group.sortedWith(
+            compareByDescending<SdkRule> { CONF_RANK[it.confidence] ?: 0 }
+                .thenByDescending { it.components.size }
+        ).first()
+        group.forEach { oldToId[it.id] = primary.id }
+        val others = group.map { it.name }.filter { it != name }.toMutableSet()
+        if (others.isNotEmpty()) aliasesByName[name] = others
+        if (group.size == 1) group[0] else mergeGroup(name, group)
+    }
+    return DedupResult(out, oldToId, aliasesByName)
+}
+
 /** aliases：别名 → 规范名（数据侧经快照 aliases 字段下发；app 内不再硬编码） */
 fun dedupRules(rules: List<SdkRule>, aliases: Map<String, String> = emptyMap()): List<SdkRule> {
     val canonical = rules.map { aliases[it.name] ?: it.name }

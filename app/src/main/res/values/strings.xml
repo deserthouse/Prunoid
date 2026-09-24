@@ -263,4 +263,15 @@
     <string name="apply_confirm_armed">确认应用</string>
     <string name="confirm_defaults">本次操作含 %1$d 个默认勾选的安全项。</string>
     <string name="restore_confirm_armed">确认恢复</string>
+    <string name="block_everywhere">全部禁用 (%1$d 个应用)</string>
+    <string name="unmatched_pending_hint">未识别组件勾选进行中——先在卡内完成「禁用所选」，再回来操作 SDK</string>
+    <string name="precheck_note">安全项已默认勾选，风险项需手动加选</string>
+    <string name="restore_app_confirm">将按本工具的应用记录回滚该应用的全部禁用（IFW 规则移除 + pm 重启用）；其他工具写入的规则会保留。</string>
+    <string name="guide_title">三步开始</string>
+    <string name="guide_body">1) 下拉刷新扫描应用；2) 进入应用勾选要禁用的 SDK（安全项已预选）；3) 点「应用规则」。设置里可切换引擎与订阅规则源。</string>
+    <string name="guide_got_it">知道了</string>
+    <string name="audit_badge">只读模式</string>
+    <string name="uninstall_note">提示：卸载 Prunoid 不会移除已写入的 IFW 规则——卸载前请先用上方「清除全部 IFW」。</string>
+    <plurals name="badge_ads_push"><item quantity="other">广告 %1$d · 推送 %2$d</item></plurals>
+<string name="badge_ads_push_short">含 %1$d 广告 · %2$d 推送</string>
 </resources>

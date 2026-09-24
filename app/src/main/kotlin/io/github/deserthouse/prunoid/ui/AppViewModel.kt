@@ -31,7 +31,9 @@ data class AppUiState(
     val rootGranted: Boolean = false,
     val message: String? = null,
     val engine: Engine = Engine.IFW,   // 双引擎切换，默认 IFW（app 无感知、无法自恢复）
-    val busy: Boolean = false,         // 任一 root/网络操作进行中（按钮禁用 + 进度）
+    val busyOp: String? = null,        // 进行中的操作名；busy 为派生值（批H：操作级状态）
+    val msgSeq: Int = 0,               // 消息序号（同文本连发也能弹 Snackbar）
+    val guided: Boolean = false,       // 首启引导已读
     val autoReapply: Boolean = true,   // 自动重应用总开关（控制 RuleGuardService）
     val sources: List<SettingsRepository.SubSource> = listOf(SettingsRepository.OFFICIAL_SOURCE),
     val applied: Map<String, AppliedRulesStore.AppliedEntry> = emptyMap(), // 包名 -> 已应用记录
@@ -55,7 +57,10 @@ data class AppUiState(
     val listAppliedOnly: Boolean = false,
     // 批T2：内置快照可溯源（"2026-09-21 · 2003"）
     val snapshotMeta: String = ""
-)
+) {
+    // 批H：busy 由 busyOp 派生（UI 读法不变）
+    val busy: Boolean get() = busyOp != null
+}
 
 class AppViewModel(app: Application) : AndroidViewModel(app) {
     private val appCtx get() = getApplication<Application>()
@@ -73,8 +78,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             // 主动建立 root shell（首次调用触发 Magisk su 授权请求）
             val root = withContext(Dispatchers.IO) { engine.rootAvailable() }
             _state.update {
-                it.copy(rootGranted = root, message = if (root) null else appCtx.getString(R.string.vm_no_root))
+                it.copy(rootGranted = root)
             }
+            if (!root) setMessage(appCtx.getString(R.string.vm_no_root))
         }
         viewModelScope.launch {
             var lastSourceKey: String? = null
@@ -95,6 +101,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                         workMode = io.github.deserthouse.prunoid.core.engine.WorkModeInfo.fromTag(s.workMode),
                         reapplyMode = s.reapplyMode,
                         backupEnabled = s.backupEnabled,
+                        guided = s.guided,
                         sources = s.sources,
                         // 用户本次会话未手动切引擎时，跟随设置的默认引擎
                         engine = if (!userTouchedEngine) Engine.entries.first { it.name == s.defaultEngine } else st.engine
@@ -125,11 +132,25 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             e.components.count { c -> c !in liveSet && c.substringAfterLast('/') !in liveSet }
         }
         if (gap > 0) {
-            _state.update { it.copy(message = appCtx.getString(R.string.vm_reconcile_gap, gap)) }
+            setMessage(appCtx.getString(R.string.vm_reconcile_gap, gap))
         }
     }
 
     private var userTouchedEngine = false
+
+    /** 批H：带序号消息（同文本连发也能弹 Snackbar） */
+    private fun setMessage(text: String) {
+        _state.update { it.copy(message = text, msgSeq = it.msgSeq + 1) }
+    }
+
+    /** 批H：操作级 busy 包装——finally 保底清零（异常不再永久卡死全 UI） */
+    private suspend fun <T> withBusy(op: String, block: suspend () -> T): T =
+        try {
+            _state.update { it.copy(busyOp = op) }
+            withContext(Dispatchers.IO) { block() }
+        } finally {
+            _state.update { it.copy(busyOp = null) }
+        }
 
     /** 批N：root 类操作统一闸门——非 ROOT 模式一律拒绝（UI 层已禁灰，此处安全兜底） */
     private fun rootGate(): Boolean =
@@ -151,7 +172,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
         aboutTapCount++
         if (aboutTapCount < 7) {
-            _state.update { it.copy(message = "🐾".repeat(aboutTapCount)) }
+            setMessage("🐾".repeat(aboutTapCount))
             return
         }
         aboutTapCount = 0
@@ -165,34 +186,41 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     /** 批I：跨应用统一禁用某 SDK——对规则库中命中该 SDK 的所有已安装应用写 IFW（组件取规则全量，覆盖未来更新） */
     fun disableSdkEverywhere(ruleId: String, onDone: (String) -> Unit) {
         viewModelScope.launch {
-            _state.update { it.copy(busy = true) }
-            val msg = withContext(Dispatchers.IO) {
-                if (!rootGate()) return@withContext appCtx.getString(R.string.vm_need_root)
-                val rule = rules.rule(ruleId) ?: return@withContext appCtx.getString(R.string.vm_no_targets)
-                val components = rule.components.map { it.`class` }
-                val byType = rule.components.groupBy({ it.type }, { it.`class` })
-                    .mapValues { it.value }
-                    .filterKeys { it != "native" }
-                if (byType.isEmpty()) return@withContext appCtx.getString(R.string.vm_no_targets)
+            val msg = withBusy("everywhere") {
+                if (!rootGate()) return@withBusy appCtx.getString(R.string.vm_need_root)
+                val rule = rules.rule(ruleId) ?: return@withBusy appCtx.getString(R.string.vm_no_targets)
+                // 批库链修复①：目标组件改用各 app 扫描命中的真实组件
+                // （规则锚点 87% 为空，旧实现必然 "no targets"）
                 // 白名单（系统/框架）应用一律跳过——安全层语义，不做半写
                 val targets = _state.value.apps
                     .filter { a -> a.matchedSdks.any { it.ruleId == ruleId } }
                     .filter { !DisableEngine.isForbidden(it.packageName) }
-                if (targets.isEmpty()) return@withContext appCtx.getString(R.string.vm_no_targets)
+                if (targets.isEmpty()) return@withBusy appCtx.getString(R.string.vm_no_targets)
                 if (_state.value.backupEnabled) engine.backup(_state.value.backupKeep).getOrNull() else null
                 var ok = 0
+                var total = 0
                 val touched = mutableListOf<String>()
                 targets.forEach { a ->
+                    val hit = a.matchedSdks.first { it.ruleId == ruleId }
+                    val byType = hit.componentTypes.entries
+                        .groupBy({ it.value }, { it.key })
+                        .filterKeys { it != "native" }
+                    if (byType.isEmpty()) return@forEach
+                    total++
+                    val prev = applied.get(a.packageName)
                     val r = engine.applyIfw(a.packageName, byType)
                     if (r.isSuccess) {
                         ok++
                         touched.add(a.packageName)
+                        // 合并记录：不覆盖该 app 其他 SDK 的条目
                         applied.record(
-                            a.packageName, Engine.IFW.name, components,
-                            byType.entries.flatMap { (t, cs) -> cs.map { it to t } }.toMap()
+                            a.packageName, Engine.IFW.name,
+                            (prev?.components.orEmpty() + hit.matchedComponents).distinct(),
+                            (prev?.types.orEmpty() + hit.componentTypes)
                         )
                     }
                 }
+                if (total == 0) return@withBusy appCtx.getString(R.string.vm_no_targets)
                 // 批G：批量写入后统一重读现场
                 val live = engine.readLiveDisabled(touched).first
                 _state.update {
@@ -201,28 +229,83 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                         liveDisabled = it.liveDisabled + live.mapValues { e -> e.value.toSet() }
                     )
                 }
-                appCtx.getString(R.string.vm_sdk_everywhere_ok, rule.name, ok, targets.size,
-                    components.size)
+                appCtx.getString(R.string.vm_sdk_everywhere_ok, rule.name, ok, targets.size, total)
             }
-            _state.update { it.copy(busy = false) }
             onDone(msg)
         }
+    }
+
+    /** 批库链修复③：per-app × 单 SDK 粒度开关（库页档案卡行开关专用） */
+    fun setSdkForApp(pkg: String, ruleId: String, on: Boolean, onDone: (String) -> Unit) {
+        viewModelScope.launch {
+            val msg = withBusy(if (on) "sdk-on" else "sdk-off") {
+                if (!rootGate()) return@withBusy appCtx.getString(R.string.vm_need_root)
+                val app = _state.value.apps.firstOrNull { it.packageName == pkg }
+                    ?: return@withBusy appCtx.getString(R.string.vm_no_targets)
+                val hit = app.matchedSdks.firstOrNull { it.ruleId == ruleId }
+                    ?: return@withBusy appCtx.getString(R.string.vm_no_targets)
+                val prev = applied.get(pkg)
+                if (on) {
+                    val byType: Map<String, List<String>> = hit.componentTypes.entries
+                        .groupBy({ it.value }, { it.key })
+                        .filterKeys { it != "provider" }
+                    if (byType.isEmpty()) return@withBusy appCtx.getString(R.string.vm_no_targets)
+                    val r = engine.applyIfw(pkg, byType)
+                    if (r.isSuccess) applied.record(
+                        pkg, Engine.IFW.name,
+                        (prev?.components.orEmpty() + hit.matchedComponents).distinct(),
+                        (prev?.types.orEmpty() + hit.componentTypes)
+                    )
+                } else {
+                    // off：仅移除该 SDK 的组件。
+                    // IFW 侧用 applyIfw 合并重放"剩余集"（合并语义天然保留外部工具 filter，
+                    // 二轮实测 removeIfw(keep) 保留删除会删过头，弃用）
+                    val removed: Set<String> = hit.matchedComponents.toSet()
+                    // AppliedEntry.types 形状 = 组件 → 类型（单映射）
+                    val remaining: Map<String, String> = prev?.types.orEmpty().filterKeys { it !in removed }
+                    val remainingByType: Map<String, List<String>> = remaining.entries
+                        .groupBy({ it.value }, { it.key })
+                        .filterKeys { it != "provider" }
+                    if (remainingByType.isEmpty()) engine.removeIfw(pkg) else engine.applyIfw(pkg, remainingByType)
+                    engine.enablePm(pkg, removed.toList())
+                    if (prev != null) applied.record(pkg, prev.engine, remaining.keys.toList(), remaining)
+                    else applied.remove(pkg)
+                }
+                val liveAfter = engine.readLiveDisabled(listOf(pkg)).first
+                _state.update {
+                    it.copy(liveDisabled = liveAfter.let { l -> it.liveDisabled + (pkg to (l[pkg] ?: emptySet())) })
+                }
+                ""
+            }
+            if (msg.isNotBlank()) onDone(msg)
+        }
+    }
+
+    /** 档案卡开关状态：该 app 现场禁用集与该 SDK 命中组件有交集 = on */
+    fun sdkEnabledFor(app: ScannedApp, ruleId: String): Boolean {
+        val hit = app.matchedSdks.firstOrNull { it.ruleId == ruleId } ?: return false
+        val live = _state.value.liveDisabled[app.packageName] ?: return false
+        return hit.matchedComponents.any { c -> live.any { it == c || it == app.packageName + "/" + c } }
     }
 
     /** 批L4：禁用勾选的未识别组件（IFW 按类型分组；记 applied 供恢复） */
     fun disableUnmatched(pkg: String, byType: Map<String, List<String>>, onDone: (String) -> Unit) {
         viewModelScope.launch {
-            _state.update { it.copy(busy = true) }
-            val msg = withContext(Dispatchers.IO) {
-                if (!rootGate()) return@withContext appCtx.getString(R.string.vm_need_root)
-                if (DisableEngine.isForbidden(pkg)) return@withContext appCtx.getString(R.string.vm_forbidden)
+            val msg = withBusy("unmatched") {
+                if (!rootGate()) return@withBusy appCtx.getString(R.string.vm_need_root)
+                if (DisableEngine.isForbidden(pkg)) return@withBusy appCtx.getString(R.string.vm_forbidden)
                 val comps = byType.values.flatten()
-                if (comps.isEmpty()) return@withContext appCtx.getString(R.string.vm_no_targets)
+                if (comps.isEmpty()) return@withBusy appCtx.getString(R.string.vm_no_targets)
                 if (_state.value.backupEnabled) engine.backup(_state.value.backupKeep).getOrNull() else null
                 val r = engine.applyIfw(pkg, byType)
                 if (r.isSuccess) {
-                    applied.record(pkg, Engine.IFW.name, comps,
-                        byType.entries.flatMap { (t, cs) -> cs.map { it to t } }.toMap())
+                    // 批E1：合并记录——不覆盖该 app 其他 SDK 的 applied 条目
+                    val prev = applied.get(pkg)
+                    applied.record(
+                        pkg, Engine.IFW.name,
+                        (prev?.components.orEmpty() + comps).distinct(),
+                        (prev?.types.orEmpty() + byType.entries.flatMap { (t, cs) -> cs.map { it to t } }.toMap())
+                    )
                 }
                 val liveAfter = if (r.isSuccess) engine.readLiveDisabled(listOf(pkg)).first else null
                 _state.update {
@@ -233,7 +316,6 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 }
                 appCtx.getString(R.string.vm_apply_ok, "IFW", r.getOrDefault(0))
             }
-            _state.update { it.copy(busy = false) }
             onDone(msg)
         }
     }
@@ -307,12 +389,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     fun onRambleTapped() {
         if (_state.value.easterRambleBurned) {
-            _state.update { it.copy(message = appCtx.getString(R.string.easter_dry)) }
+            setMessage(appCtx.getString(R.string.easter_dry))
             return
         }
         rambleTapCount++
         if (rambleTapCount < 7) {
-            _state.update { it.copy(message = "🍆".repeat(rambleTapCount)) }
+            setMessage("🍆".repeat(rambleTapCount))
             return
         }
         rambleTapCount = 0
@@ -338,7 +420,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 }
             } catch (e: Exception) {
                 android.util.Log.e("SdkPruner", "scan failed", e)
-                _state.update { it.copy(scanning = false, message = appCtx.getString(R.string.vm_scan_failed, e.message ?: "")) }
+                _state.update { it.copy(scanning = false) }
+                setMessage(appCtx.getString(R.string.vm_scan_failed, e.message ?: ""))
                 return@launch
             }
             android.util.Log.d("SdkPruner", "scan done: ${apps.size} apps, ${apps.sumOf { it.matchedSdks.size }} hits")
@@ -381,6 +464,15 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         _state.update { it.copy(listAppliedOnly = !it.listAppliedOnly) }
     }
 
+    fun dismissGuide() {
+        viewModelScope.launch { settings.setGuided() }
+        _state.update { it.copy(guided = true) }
+    }
+
+    /** 库页搜索别名（批库链修复⑤）：规则规范名之外的组内别名文本 */
+    fun aliasTextFor(name: String): String =
+        rules.nameAliases[name]?.joinToString(" ") ?: ""
+
     fun clearListFilters() {
         _state.update { it.copy(listCatSel = emptySet(), listSafetySel = null, listAppliedOnly = false, hitsOnly = false, showSystem = false) }
     }
@@ -418,9 +510,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     // ── 多源订阅管理 ─────────────────────────────────────────────
     fun refreshSource(source: SettingsRepository.SubSource, onDone: (String) -> Unit) {
         viewModelScope.launch {
-            _state.update { it.copy(busy = true) }
-            val result = withContext(Dispatchers.IO) { rules.refreshSource(source.id, source.url) }
-            _state.update { it.copy(busy = false) }
+            val result = withBusy("refresh") { rules.refreshSource(source.id, source.url) }
             if (result.ok) {
                 settings.updateSourceFetched(source.id, java.time.Instant.now().toString())
                 rescan()
@@ -431,9 +521,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     fun addSource(name: String, url: String, onDone: (String) -> Unit) {
         viewModelScope.launch {
-            _state.update { it.copy(busy = true) }
             val id = "src_" + url.hashCode().let { if (it < 0) -it else it }
-            val result = withContext(Dispatchers.IO) { rules.refreshSource(id, url) }
+            val result = withBusy("addsource") { rules.refreshSource(id, url) }
             if (result.ok) {
                 val cur = _state.value.sources
                 settings.setSources(cur + SettingsRepository.SubSource(
@@ -441,7 +530,6 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     url = url, lastFetched = java.time.Instant.now().toString()
                 ))
             }
-            _state.update { it.copy(busy = false) }
             onDone(result.message)
         }
     }
@@ -467,28 +555,31 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     fun restoreBackup(path: String, onDone: (String) -> Unit) {
         viewModelScope.launch {
-            _state.update { it.copy(busy = true) }
-            val msg = withContext(Dispatchers.IO) {
+            var ok = false
+            val msg = withBusy("backup") {
                 engine.restoreBackup(path).fold(
-                    onSuccess = { appCtx.getString(R.string.vm_restore_backup_ok) },
+                    onSuccess = {
+                        ok = true
+                        appCtx.getString(R.string.vm_restore_backup_ok)
+                    },
                     onFailure = { appCtx.getString(R.string.vm_restore_backup_fail, it.message ?: "") }
                 )
             }
-            _state.update { it.copy(busy = false, applied = withContext(Dispatchers.IO) { applied.all() }) }
+            _state.update { it.copy(applied = withContext(Dispatchers.IO) { applied.all() }) }
+            if (ok) rescan()  // 批P2#30：恢复后现场与记录可能漂移，重扫校准
             onDone(msg)
         }
     }
 
     fun clearAllIfw(onDone: (String) -> Unit) {
         viewModelScope.launch {
-            _state.update { it.copy(busy = true) }
-            val msg = withContext(Dispatchers.IO) {
+            val msg = withBusy("clearifw") {
                 engine.clearAllIfw().fold(
                     onSuccess = { appCtx.getString(R.string.vm_ifw_cleared, it) },
                     onFailure = { appCtx.getString(R.string.vm_clear_fail, it.message ?: "") }
                 )
             }
-            _state.update { it.copy(busy = false, applied = withContext(Dispatchers.IO) { applied.all() }) }
+            _state.update { it.copy(applied = withContext(Dispatchers.IO) { applied.all() }) }
             onDone(msg)
         }
     }
@@ -507,15 +598,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     /** 应用用户勾选的 SDK（默认勾选 SAFE/CAUTION；用户可显式加选 RISKY/UNKNOWN） */
     fun applyRules(scanned: ScannedApp, selectedRuleIds: Set<String>, onDone: (String) -> Unit) {
         viewModelScope.launch {
-            _state.update { it.copy(busy = true) }
-            val msg = withContext(Dispatchers.IO) {
-                if (!rootGate()) return@withContext appCtx.getString(R.string.vm_need_root)
-                if (DisableEngine.isForbidden(scanned.packageName)) return@withContext appCtx.getString(R.string.vm_forbidden)
+            val msg = withBusy("apply") {
+                if (!rootGate()) return@withBusy appCtx.getString(R.string.vm_need_root)
+                if (DisableEngine.isForbidden(scanned.packageName)) return@withBusy appCtx.getString(R.string.vm_forbidden)
                 val selected = scanned.matchedSdks.filter { it.ruleId in selectedRuleIds }
                 val targets = selected.flatMap { it.matchedComponents }
-                if (targets.isEmpty()) return@withContext appCtx.getString(R.string.vm_no_targets)
+                if (targets.isEmpty()) return@withBusy appCtx.getString(R.string.vm_no_targets)
                 val backup = if (_state.value.backupEnabled) engine.backup(_state.value.backupKeep).getOrNull() else null
-                val byType = byTypeFor(scanned, selectedRuleIds)
+                val byType = byTypeForVM(scanned, selectedRuleIds)
                 val r = when (_state.value.engine) {
                     Engine.IFW -> engine.applyIfw(scanned.packageName, byType)
                     Engine.PM -> engine.applyPm(scanned.packageName, targets)
@@ -541,19 +631,18 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     r.exceptionOrNull()?.let { append(appCtx.getString(R.string.vm_fail_suffix, it.message ?: "")) }
                 }
             }
-            _state.update { it.copy(busy = false) }
             onDone(msg)
         }
     }
 
     fun restoreApp(scanned: ScannedApp, onDone: (String) -> Unit) {
         viewModelScope.launch {
-            _state.update { it.copy(busy = true) }
-            val msg = withContext(Dispatchers.IO) {
+            val msg = withBusy("restore") {
                 // 按 applied 记录回滚（当时真实写入集），不用当前扫描重算——
                 // 否则规则更新/显式加选的组件会成为恢复盲区
                 val entry = applied.get(scanned.packageName)
-                val r1 = engine.removeIfw(scanned.packageName)
+                // 批P0#8：保留删除——只移除本工具 applied 的 filter，外部/其他来源 IFW 规则幸存
+                val r1 = engine.removeIfw(scanned.packageName, keepComponents = entry?.components?.toSet())
                 val r2 = entry?.components?.let { engine.enablePm(scanned.packageName, it) }
                     ?: Result.success(0)
                 applied.remove(scanned.packageName)
@@ -568,8 +657,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 }
                 if (ok) appCtx.getString(R.string.vm_restore_ok) else appCtx.getString(R.string.vm_restore_fail, r1.exceptionOrNull()?.message ?: r2.exceptionOrNull()?.message ?: "")
             }
-            _state.update { it.copy(busy = false) }
             onDone(msg)
         }
     }
 }
+
+/** 批债33：app 勾选 → 引擎类型分组（纯函数，供 VM 与单测共用） */
+fun byTypeForVM(scanned: ScannedApp, ruleIds: Set<String>): Map<String, List<String>> =
+    scanned.matchedSdks
+        .filter { it.ruleId in ruleIds }
+        .flatMap { it.componentTypes.entries }
+        .groupBy({ it.value }, { it.key })

@@ -13,6 +13,32 @@ import java.util.Locale
 // <activity block="true" log="true"><component-filter name="pkg/cls"/></activity>
 // provider 不受 IFW 支持，跳过
 object IfwXmlBuilder {
+    /** 解析现有 IFW XML → tag -> component-filter 全名集合（供合并/保留删除） */
+    fun parse(xml: String): Map<String, MutableSet<String>> {
+        val out = linkedMapOf<String, MutableSet<String>>()
+        val tagRe = Regex("<(activity|service|receiver)[^>]*>(.*?)</\\1>", RegexOption.DOT_MATCHES_ALL)
+        val nameRe = Regex("<component-filter name=\"([^\"]+)\"")
+        for (m in tagRe.findAll(xml)) {
+            val tag = m.groupValues[1]
+            val set = out.getOrPut(tag) { linkedSetOf() }
+            nameRe.findAll(m.groupValues[2]).forEach { set.add(it.groupValues[1]) }
+        }
+        return out
+    }
+
+    /** 由 tag->filters 重建 XML；空则 null */
+    fun buildByTag(byTag: Map<String, Set<String>>): String? {
+        val groups = byTag.mapNotNull { (tag, comps) ->
+            if (comps.isEmpty()) return@mapNotNull null
+            "  <$tag block=\"true\" log=\"true\">\n" +
+                comps.sorted().joinToString("\n") { "    <component-filter name=\"$it\" />" } +
+                "\n  </$tag>"
+        }
+        if (groups.isEmpty()) return null
+        return "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\" ?>\n<rules>\n" +
+            groups.joinToString("\n") + "\n</rules>"
+    }
+
     fun build(byType: Map<String, List<String>>): String? {
         val groups = byType.mapNotNull { (type, comps) ->
             if (comps.isEmpty() || type == "provider") return@mapNotNull null
@@ -163,7 +189,12 @@ class DisableEngine(
             runCatching {
                 require(!isForbidden(pkg)) { "system app blocked by whitelist: $pkg" }
                 val named = byType.mapValues { (_, comps) -> comps.map { "$pkg/$it" } }
-                val xml = IfwXmlBuilder.build(named)
+                // 批P0#8：合并语义——保留文件中既有 filter（含其他工具写入），叠加本次目标
+                val existing = Shell.cmd("cat ${ifwPath(pkg)} 2>/dev/null").exec().out.joinToString("\n")
+                val merged = linkedMapOf<String, MutableSet<String>>()
+                IfwXmlBuilder.parse(existing).forEach { (tag, set) -> merged.getOrPut(tag) { linkedSetOf() }.addAll(set) }
+                named.forEach { (tag, comps) -> merged.getOrPut(tag) { linkedSetOf() }.addAll(comps) }
+                val xml = IfwXmlBuilder.buildByTag(merged)
                     ?: return@runCatching 0
                 val tmp = "${context.cacheDir.absolutePath}/ifw_$pkg.xml"
                 java.io.File(tmp).writeText(xml)
@@ -176,13 +207,32 @@ class DisableEngine(
             }
         }
 
-    suspend fun removeIfw(pkg: String): Result<Unit> = withContext(Dispatchers.IO) {
-        runCatching {
-            require(!isForbidden(pkg)) { "system app blocked by whitelist: $pkg" }
-            Shell.cmd("rm -f ${ifwPath(pkg)}").exec()
-            Unit
+    suspend fun removeIfw(pkg: String, keepComponents: Set<String>? = null): Result<Unit> =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                require(!isForbidden(pkg)) { "system app blocked by whitelist: $pkg" }
+                if (keepComponents != null) {
+                    // 批P0#8：保留删除——移除本工具 applied 的 filter，外部/其他来源的幸存
+                    val existing = Shell.cmd("cat ${ifwPath(pkg)} 2>/dev/null").exec().out.joinToString("\n")
+                    if (existing.isBlank()) return@runCatching
+                    val keep = keepComponents.map { "$pkg/$it" }.toSet()
+                    val rebuilt = IfwXmlBuilder.parse(existing).mapValues { (_, set) ->
+                        set.filterNot { it in keep }.toSet()
+                    }
+                    val xml = IfwXmlBuilder.buildByTag(rebuilt)
+                    if (xml == null) {
+                        Shell.cmd("rm -f ${ifwPath(pkg)}").exec()
+                    } else {
+                        val tmp = "${context.cacheDir.absolutePath}/ifw_$pkg.xml"
+                        java.io.File(tmp).writeText(xml)
+                        Shell.cmd("cp $tmp ${ifwPath(pkg)} && chmod 644 ${ifwPath(pkg)} && rm -f $tmp").exec()
+                    }
+                } else {
+                    Shell.cmd("rm -f ${ifwPath(pkg)}").exec()
+                }
+                Unit
+            }
         }
-    }
 
     suspend fun hasIfw(pkg: String): Boolean = withContext(Dispatchers.IO) {
         Shell.cmd("test -f ${ifwPath(pkg)}").exec().isSuccess
@@ -206,7 +256,8 @@ class DisableEngine(
             runCatching {
                 if (componentNames.isEmpty()) return@runCatching 0
                 val cmds = componentNames.joinToString("; ") { "pm enable $pkg/$it" }
-                Shell.cmd(cmds).exec()
+                val r = Shell.cmd(cmds).exec()
+                check(r.isSuccess) { "pm enable failed: ${r.err}" }
                 componentNames.size
             }
         }

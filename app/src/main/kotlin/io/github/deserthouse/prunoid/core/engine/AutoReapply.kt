@@ -63,13 +63,15 @@ object AutoReapply {
         val pm = context.packageManager
         val flags = PackageManager.GET_ACTIVITIES or
             PackageManager.GET_SERVICES or
-            PackageManager.GET_RECEIVERS
+            PackageManager.GET_RECEIVERS or
+            PackageManager.GET_PROVIDERS
         return runCatching {
             buildList {
                 pm.getPackageInfo(pkg, flags)?.let {
                     it.activities?.let { a -> a.forEach { add(it.name to "activity") } }
                     it.services?.let { s -> s.forEach { add(it.name to "service") } }
                     it.receivers?.let { r -> r.forEach { add(it.name to "receiver") } }
+                    it.providers?.let { p -> p.forEach { add(it.name to "provider") } }
                 }
             }
         }.getOrDefault(emptyList())

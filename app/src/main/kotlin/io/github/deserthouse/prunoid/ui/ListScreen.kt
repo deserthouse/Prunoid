@@ -71,6 +71,8 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
 
     SnackbarEffect(snackbar, st.message)
     SnackbarEffect(snackbar, subMsg)
+    // 批A1：首启一次性引导（guided 标记）
+    val showGuide = !st.guided && st.apps.isNotEmpty()
 
     // E1 查找力：筛选/排序状态与结果列表提升到 Scaffold 之上，bottomBar 汇总与列表共用同一份
     // 批T8：筛选三件套统一入 VM 会话态（与 hitsOnly/showSystem 同层，导航往返保留）
@@ -109,6 +111,21 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text("Prunoid", style = MaterialTheme.typography.titleLarge)
+                        Spacer(Modifier.width(8.dp))
+                        // 批#21：audit 模式全局可读标识
+                        if (st.workMode.id.name == "AUDIT") {
+                            Text(
+                                stringResource(R.string.audit_badge),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier
+                                    .background(
+                                        MaterialTheme.colorScheme.surfaceVariant,
+                                        androidx.compose.foundation.shape.CircleShape
+                                    )
+                                    .padding(horizontal = 8.dp, vertical = 2.dp)
+                            )
+                        }
                         Spacer(Modifier.width(8.dp))
                         // 订阅状态点（批T4）：实心=有源拉取过；空心描边=仅内置快照
                         if (subscribed) {
@@ -169,6 +186,23 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
                             .fillMaxWidth()
                             .padding(horizontal = 20.dp, vertical = 8.dp)
                     )
+                }
+            }
+            if (showGuide) {
+                Card(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+                    Column(Modifier.padding(16.dp)) {
+                        Text(stringResource(R.string.guide_title), style = MaterialTheme.typography.titleSmall)
+                        Spacer(Modifier.height(6.dp))
+                        Text(
+                            stringResource(R.string.guide_body),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(Modifier.height(6.dp))
+                        TextButton(onClick = { vm.dismissGuide() }) {
+                            Text(stringResource(R.string.guide_got_it))
+                        }
+                    }
                 }
             }
             // 批L2：滚动收起搜索区（上滑即回，OptIcon 同款语义）
@@ -355,7 +389,18 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
                                                         .background(safetyColors(worst, dark).container, RoundedCornerShape(50))
                                                 )
                                                 Spacer(Modifier.width(4.dp))
-                                                Text(pluralStringResource(R.plurals.badge_sdks, app.matchedSdks.size, app.matchedSdks.size))
+                                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                                    Text(pluralStringResource(R.plurals.badge_sdks, app.matchedSdks.size, app.matchedSdks.size))
+                                                    val adsN = app.matchedSdks.count { it.category == "ads" }
+                                                    val pushN = app.matchedSdks.count { it.category == "push" }
+                                                    if (adsN + pushN > 0) {
+                                                        Text(
+                                                            stringResource(R.string.badge_ads_push_short, adsN, pushN),
+                                                            style = MaterialTheme.typography.labelSmall,
+                                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                        )
+                                                    }
+                                                }
                                             }
                                         }
                                     )

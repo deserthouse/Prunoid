@@ -749,6 +749,13 @@ private fun RecoverySection(st: AppUiState, vm: AppViewModel, onMsg: (String) ->
                     enabled = !st.busy,
                     onConfirm = { vm.clearAllIfw { onMsg(it) } }
                 )
+                Spacer(Modifier.height(6.dp))
+                // 批P2#23：卸载前清规则提示（root 工具经典翻车点）
+                Text(
+                    stringResource(R.string.uninstall_note),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }

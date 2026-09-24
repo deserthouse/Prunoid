@@ -180,8 +180,10 @@ fun SdkLibraryScreen(vm: AppViewModel) {
                     .filter { if (tab == 0) it.hitApps > 0 else it.hitApps == 0 }
                     .filter { libCat.isEmpty() || it.rule.category in libCat }
                     .filter {
+                        // 批库链修复⑤：组内别名并入搜索索引（Getui/Aurora 等英文名可命中规范名实体）
                         query.isBlank() || it.rule.name.contains(query, true) ||
-                            it.rule.company.contains(query, true)
+                            it.rule.company.contains(query, true) ||
+                            vm.aliasTextFor(it.rule.name).contains(query, true)
                     }
                     .let { l ->
                         if (libSortByName) l.sortedBy { it.rule.name.lowercase() }

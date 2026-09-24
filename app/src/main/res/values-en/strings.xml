@@ -247,4 +247,15 @@
     <string name="apply_confirm_armed">Confirm apply</string>
     <string name="confirm_defaults">%1$d default-checked safe items are included.</string>
     <string name="restore_confirm_armed">Confirm restore</string>
+    <string name="block_everywhere">Block in all apps (%1$d)</string>
+    <string name="unmatched_pending_hint">Unrecognized groups selected — finish "Disable selected" inside the card first.</string>
+    <string name="precheck_note">Safe items are pre-checked; risky ones need explicit opt-in.</string>
+    <string name="restore_app_confirm">Restores all blocking applied by Prunoid in this app (IFW rules removed + pm re-enabled). Rules written by other tools are kept.</string>
+    <string name="guide_title">Start in three steps</string>
+    <string name="guide_body">1) Pull down to scan; 2) open an app and tick SDKs to block (safe ones pre-checked); 3) tap "Apply rules". Engines and rule sources live in Settings.</string>
+    <string name="guide_got_it">Got it</string>
+    <string name="audit_badge">Read-only</string>
+    <string name="uninstall_note">Note: uninstalling Prunoid does not remove written IFW rules — run "Clear all IFW" above first for a clean slate.</string>
+    <plurals name="badge_ads_push"><item quantity="one">%2$d ads</item><item quantity="other">%1$d apps: %2$d ads · %3$d push</item></plurals>
+<string name="badge_ads_push_short">%1$d ads · %2$d push</string>
 </resources>

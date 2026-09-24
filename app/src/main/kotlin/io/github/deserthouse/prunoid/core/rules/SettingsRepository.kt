@@ -27,6 +27,7 @@ class SettingsRepository(private val context: Context) {
         val workMode: String = "root",
         val reapplyMode: String = "open",
         val backupEnabled: Boolean = false,
+        val guided: Boolean = false,
         val sources: List<SubSource> = listOf(OFFICIAL_SOURCE)
     )
 
@@ -53,6 +54,7 @@ class SettingsRepository(private val context: Context) {
         private val KEY_WORK_MODE = stringPreferencesKey("work_mode")
         private val KEY_REAPPLY_MODE = stringPreferencesKey("reapply_mode")
         private val KEY_BACKUP_ENABLED = booleanPreferencesKey("backup_enabled")
+        private val KEY_GUIDED = booleanPreferencesKey("guided")
         private val KEY_SOURCES = stringPreferencesKey("sub_sources")
         private val json = Json { ignoreUnknownKeys = true }
     }
@@ -67,6 +69,7 @@ class SettingsRepository(private val context: Context) {
             workMode = p[KEY_WORK_MODE] ?: "root",
             reapplyMode = p[KEY_REAPPLY_MODE] ?: "open",
             backupEnabled = p[KEY_BACKUP_ENABLED] ?: false,
+            guided = p[KEY_GUIDED] ?: false,
             sources = p[KEY_SOURCES]?.let {
                 runCatching { json.decodeFromString<List<SubSource>>(it) }.getOrNull()
             } ?: listOf(OFFICIAL_SOURCE)
@@ -103,6 +106,10 @@ class SettingsRepository(private val context: Context) {
 
     suspend fun setBackupEnabled(v: Boolean) {
         context.dataStore.edit { it[KEY_BACKUP_ENABLED] = v }
+    }
+
+    suspend fun setGuided() {
+        context.dataStore.edit { it[KEY_GUIDED] = true }
     }
 
     suspend fun setSources(list: List<SubSource>) {

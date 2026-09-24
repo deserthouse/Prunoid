@@ -25,6 +25,10 @@ class RuleRepository(context: Context, initialSources: List<SettingsRepository.S
     var aliasTable: Map<String, String> = emptyMap()
         private set
 
+    /** 规范名 → 组内别名集合（库页搜索索引用） */
+    var nameAliases: Map<String, Set<String>> = emptyMap()
+        private set
+
     /** 包名前缀倒排索引：前缀 -> 规则 id 列表 */
     var prefixIndex: Map<String, List<String>> = emptyMap()
         private set
@@ -62,10 +66,13 @@ class RuleRepository(context: Context, initialSources: List<SettingsRepository.S
                 subscription.cached(src.id)?.snapshot?.aliases?.let { fromSrc -> putAll(fromSrc) }
             }
         }
-        effectiveRules = dedupRules(rules, aliasTable)
-        rulesById = rules.associateBy { it.id }
+        // 批库链修复⑦：索引/查表归一到主 id（别名组非主 id 不再有断链窗口）
+        val dr = dedupRulesDetailed(rules, aliasTable)
+        effectiveRules = dr.rules
+        nameAliases = dr.nameAliases
+        rulesById = dr.rules.associateBy { it.id }
         val m = HashMap<String, MutableList<String>>()
-        for (r in rules) {
+        for (r in dr.rules) {
             for (p in r.packPrefixes) m.getOrPut(p) { mutableListOf() }.add(r.id)
         }
         prefixIndex = m
