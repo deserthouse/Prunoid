@@ -48,7 +48,7 @@
     <string name="restore">恢复</string>
     <string name="detail_summary">v%1$s · %2$d 个 SDK · %3$d 个已识别组件</string>
     <string name="applied_line">已应用 %1$d 组件（%2$s）</string>
-    <string name="ifw_desc">IFW：app 无感知、无法自恢复（推荐）</string>
+    <string name="ifw_desc">IFW：在系统框架层拦截组件启动；应用不会收到提示，也无法自行恢复（推荐）</string>
     <string name="pm_desc">pm disable：兼容性好，但 app 可能自行恢复</string>
     <string name="view_sdk">SDK 视图</string>
     <string name="view_components">组件视图</string>
@@ -125,12 +125,12 @@
     <!-- 设置页 -->
     <string name="settings_title">设置</string>
     <string name="engines_title">两种禁用引擎的区别</string>
-    <string name="engine_ifw_title">IFW（意图防火墙，无感知）</string>
+    <string name="engine_ifw_title">IFW（意图防火墙）</string>
     <string name="engine_ifw_short">IFW（无感知）</string>
     <string name="engine_pm_title">pm disable（组件停用，跨更新）</string>
     <string name="engine_pm_short">pm disable（跨更新）</string>
     <string name="engine_ifw_body1">向 /data/system/ifw/ 写入拦截规则，在系统框架层拦下组件的启动请求。</string>
-    <string name="engine_ifw_body2">应用完全感知不到，也无法自行恢复；规则文件独立于 APK，应用更新后依然生效。推荐日常使用。</string>
+    <string name="engine_ifw_body2">被拦截的组件状态跨应用更新持续生效。推荐日常使用。</string>
     <string name="engine_pm_body1">把组件置为系统级“已停用”状态。兼容性好、状态可查，但应用能检测到组件被禁并可能自行恢复；</string>
     <string name="engine_pm_body2">停用状态同样跨应用更新保留。适合排查 IFW 行为异常的兼容性场景。</string>
     <string name="engines_note">两种引擎都只针对第三方应用组件；开启「备份与恢复」后应用前自动留快照，恢复入口在本页「应急通道」。</string>
@@ -251,7 +251,7 @@
     <string name="sec_declarative">声明式拦截（实验）</string>
     <string name="decl_title">全局 SDK 画圈</string>
     <string name="decl_status">当前声明 %1$d 个前缀</string>
-    <string name="decl_note">需 LSPosed 环境并在其中启用本模块（作用域 system_server）。画圈入口在 SDK 库档案卡。</string>
+    <string name="decl_note">需 LSPosed 环境并启用本模块（作用域 system_server）。开启后可在各 SDK 档案卡中标记要声明的 SDK。</string>
     <string name="decl_warning">实验特性：system_server 级 hook，未完成上机验证；启用风险自担。</string>
     <string name="decl_toggle">全局声明（新装应用自动拦截）</string>
     <plurals name="badge_apps"><item quantity="other">%d 应用</item></plurals>
@@ -278,4 +278,10 @@
     <string name="cons_caution">谨慎禁用——可能导致部分功能异常</string>
     <string name="cons_risky">禁用有风险——应用可能崩溃或核心功能失效</string>
     <string name="cons_unknown">影响未知——缺少足够的社区反馈</string>
-    <string name="confirm_wait">等待 %1$d 秒后自动可确认</string></resources>
+    <string name="confirm_wait">等待 %1$d 秒后自动可确认</string>    <string name="credit_lcr_name">LibChecker-Rules / LibChecker-Rules-Bundle</string>
+    <string name="credit_lcr_desc">Apache-2.0 · SDK 识别锚点 / 品牌图标 / 富描述</string>
+    <string name="credit_bgr_name">blocker-general-rules</string>
+    <string name="credit_bgr_desc">Apache-2.0 · SDK 禁用规则与安全标注正源</string>
+    <string name="credit_libsu_name">libsu</string>
+    <string name="credit_libsu_desc">Apache-2.0 · root shell 框架</string>
+</resources>

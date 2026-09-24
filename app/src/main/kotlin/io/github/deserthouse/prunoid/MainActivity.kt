@@ -74,6 +74,13 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
     }
 }
 
+/** 批P0-1：导航状态快照——Crossfade 退场期间持有旧对象，不再读活状态 */
+private data class NavTarget(
+    val inSettings: Boolean,
+    val selected: io.github.deserthouse.prunoid.core.scanner.ScannedApp?,
+    val tab: Int
+)
+
 // 三屏切换（列表/详情/设置），各自持有 Scaffold；外层只做选中状态管理
 @Composable
 fun SdkPrunerApp() {
@@ -85,11 +92,13 @@ fun SdkPrunerApp() {
     BackHandler(enabled = selected != null || inSettings) {
         if (inSettings) inSettings = false else selected = null
     }
-    androidx.compose.animation.Crossfade(targetState = Triple(inSettings, selected?.packageName, tab), label = "nav") { nav ->
-        val (inSettingsNav, selPkg, tabNav) = nav
+    // 批P0-1 修复：Crossfade target 直接持有 ScannedApp 对象。
+    // 旧实现 target 存 selected?.packageName、内容读活状态 selected!!——返回动画期间
+    // selected 已置 null 而旧内容仍被组合 → NPE 必崩（0.12.0/0.13.0 均受影响）
+    androidx.compose.animation.Crossfade(targetState = NavTarget(inSettings, selected, tab), label = "nav") { nav ->
         when {
-            inSettingsNav -> SettingsScreen(vm, onBack = { inSettings = false })
-            selPkg != null -> AppDetailScreen(selected!!, vm, onBack = { selected = null })
+            nav.inSettings -> SettingsScreen(vm, onBack = { inSettings = false })
+            nav.selected != null -> AppDetailScreen(nav.selected, vm, onBack = { selected = null })
             else -> Scaffold(
             bottomBar = {
                 NavigationBar {
@@ -114,18 +123,18 @@ fun SdkPrunerApp() {
                 }
             }
         ) { padding ->
-                Box(Modifier.padding(padding)) {
-                    when (tabNav) {
-                        0 -> AppListScreen(
-                            vm,
-                            onOpen = { selected = it },
-                            onOpenSettings = { inSettings = true },
-                            onOpenLibrary = { tab = 1 }
-                        )
-                        1 -> SdkLibraryScreen(vm)
-                        else -> StatsScreen(vm)
+                    Box(Modifier.padding(padding)) {
+                        when (nav.tab) {
+                            0 -> AppListScreen(
+                                vm,
+                                onOpen = { selected = it },
+                                onOpenSettings = { inSettings = true },
+                                onOpenLibrary = { tab = 1 }
+                            )
+                            1 -> SdkLibraryScreen(vm)
+                            else -> StatsScreen(vm)
+                        }
                     }
-                }
             }
         }
     }

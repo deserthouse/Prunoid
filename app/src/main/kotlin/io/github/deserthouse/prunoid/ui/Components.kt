@@ -290,13 +290,6 @@ fun CountdownConfirmTextButton(
             }
         }
     }
-    // 已解锁但 5 秒未确认 → 自动回到锁定态
-    LaunchedEffect(armed, tick) {
-        if (armed && tick == 0) {
-            kotlinx.coroutines.delay(5000)
-            if (armed && tick == 0) armed = false
-        }
-    }
     TextButton(
         onClick = {
             // 倒计时归零前点击无效——锁定语义：数到 0 才放行

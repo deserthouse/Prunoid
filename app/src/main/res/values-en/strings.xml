@@ -42,7 +42,7 @@
     <string name="restore">Restore</string>
     <string name="detail_summary">v%1$s · %2$d SDKs · %3$d matched components</string>
     <string name="applied_line">%1$d components applied (%2$s)</string>
-    <string name="ifw_desc">IFW: invisible to the app, cannot self-recover (recommended)</string>
+    <string name="ifw_desc">IFW: blocks components at the system framework level; the app is not notified and cannot re-enable them on its own (recommended)</string>
     <string name="pm_desc">pm disable: compatible, but the app may recover by itself</string>
     <string name="view_sdk">SDK view</string>
     <string name="view_components">Components view</string>
@@ -111,10 +111,10 @@
     <string name="updated_at">Updated %1$s</string>
     <string name="settings_title">Settings</string>
     <string name="engines_title">Two disable engines</string>
-    <string name="engine_ifw_title">IFW (Intent Firewall, undetectable)</string>
+    <string name="engine_ifw_title">IFW (Intent Firewall)</string>
     <string name="engine_ifw_short">IFW</string>
     <string name="engine_ifw_body1">Writes block rules to /data/system/ifw/, intercepting component start requests at the system framework level.</string>
-    <string name="engine_ifw_body2">The app cannot detect it or self-recover; rules live outside the APK and survive app updates. Recommended for daily use.</string>
+    <string name="engine_ifw_body2">The blocked state persists across app updates. Recommended for daily use.</string>
     <string name="engine_pm_title">pm disable (component disabled, survives updates)</string>
     <string name="engine_pm_short">pm disable</string>
     <string name="engine_pm_body1">Marks components as system-level “disabled”. Good compatibility and inspectable, but the app can detect it and may self-recover;</string>
@@ -262,4 +262,10 @@
     <string name="cons_caution">Use caution — some features may misbehave</string>
     <string name="cons_risky">Risky — the app may crash or lose core features</string>
     <string name="cons_unknown">Unknown impact — not enough community feedback yet</string>
-    <string name="confirm_wait">Wait %1$d s, then tap to confirm</string></resources>
+    <string name="confirm_wait">Wait %1$d s, then tap to confirm</string>    <string name="credit_lcr_name">LibChecker-Rules / LibChecker-Rules-Bundle</string>
+    <string name="credit_lcr_desc">Apache-2.0 · component anchors / brand icons / rich descriptions</string>
+    <string name="credit_bgr_name">blocker-general-rules</string>
+    <string name="credit_bgr_desc">Apache-2.0 · blocking rules &amp; safety annotations source</string>
+    <string name="credit_libsu_name">libsu</string>
+    <string name="credit_libsu_desc">Apache-2.0 · root shell framework</string>
+</resources>

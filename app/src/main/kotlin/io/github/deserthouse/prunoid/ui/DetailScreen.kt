@@ -55,7 +55,10 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
     var showApplyConfirm by remember { mutableStateOf(false) }
     var showRestoreConfirm by remember { mutableStateOf(false) }
     // 批E1：未识别勾选提升至屏级——有勾选时底部 SDK 操作栏让位（两套勾选不再并存误触）
-    var unmatchedSelCount by remember { mutableStateOf(0) }
+    // 批E1/P0-2：未识别勾选集屏级持有，计数由组合直接派生
+    // （旧实现 LaunchedEffect(map.size) 在取消勾选时 size 不变 → 计数闩死、底部栏永不恢复）
+    val unmatchedSel = remember(app.packageName) { mutableStateMapOf<String, Boolean>() }
+    val unmatchedSelCount = unmatchedSel.values.count { it }
     val st by vm.state.collectAsState()
     val pm = LocalContext.current.packageManager
     // 逐 SDK 勾选：默认勾选 SAFE/CAUTION（RISKY/UNKNOWN 需显式加选）
@@ -420,8 +423,6 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
             if (detailTab == 0 && app.unmatched.isNotEmpty()) {
                 item(key = "unmatched") {
                     var unmatchedOpen by remember { mutableStateOf(false) }
-                    // 批E2：勾选集提升至卡级——卡头可就近提供禁用按钮
-                    val unmatchedSel = remember(app.packageName) { mutableStateMapOf<String, Boolean>() }
                     // 展开时卡体常整体落在视口折叠线下（卡顶近屏底），用户只见卡头+分隔线、
                     // 展开体看似"没渲染"——若卡顶已在视口下半区，把卡顶滚动到视口顶。
                     LaunchedEffect(unmatchedOpen) {
@@ -518,7 +519,6 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                 // 批L4：搜索 + 疑似筛选 + 可勾选禁用（默认全不选——未验证组件人拍板）
                                 var unmatchedQuery by remember { mutableStateOf("") }
                                 var suspiciousOnly by remember { mutableStateOf(false) }
-                                LaunchedEffect(unmatchedSel.size) { unmatchedSelCount = unmatchedSel.count { it.value } }
                                 val visibleGroups = app.unmatched.filter { g ->
                                     (unmatchedQuery.isBlank() || g.prefix.contains(unmatchedQuery, true)) &&
                                         (!suspiciousOnly || g.suspicious)

@@ -73,7 +73,7 @@ fun chartColor(cat: String, dark: Boolean): Color = when (cat) {
     "social_or_pay" -> if (dark) Color(0xFF9FA8DA) else Color(0xFF3949AB)
     "maps" -> if (dark) Color(0xFF4DD0E1) else Color(0xFF00ACC1)
     "framework" -> if (dark) Color(0xFF90CAF9) else Color(0xFF1565C0)
-    "infra" -> if (dark) Color(0xFF90A4AE) else Color(0xFF455A64)
+    "infra" -> if (dark) Color(0xFFA1887F) else Color(0xFF6D4C41)
     "security" -> if (dark) Color(0xFFFFF59D) else Color(0xFFF9A825)
     else -> if (dark) Color(0xFFB0BEC5) else Color(0xFF546E7A)
 }

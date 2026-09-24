@@ -954,18 +954,18 @@ private fun CreditsSection() {
     SettingsCard {
         Column(Modifier.padding(vertical = 4.dp)) {
             CreditEntry(
-                "LibChecker-Rules / LibChecker-Rules-Bundle",
-                "Apache-2.0 · SDK 识别锚点 / 品牌图标 / 富描述",
+                stringResource(R.string.credit_lcr_name),
+                stringResource(R.string.credit_lcr_desc),
                 "https://github.com/libchecker/LibChecker-Rules"
             )
             CreditEntry(
-                "blocker-general-rules",
-                "Apache-2.0 · SDK 禁用规则与安全标注正源",
+                stringResource(R.string.credit_bgr_name),
+                stringResource(R.string.credit_bgr_desc),
                 "https://github.com/lihenggui/blocker-general-rules"
             )
             CreditEntry(
-                "libsu",
-                "Apache-2.0 · root shell 框架",
+                stringResource(R.string.credit_libsu_name),
+                stringResource(R.string.credit_libsu_desc),
                 "https://github.com/topjohnwu/libsu"
             )
         }
