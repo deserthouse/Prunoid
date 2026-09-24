@@ -69,7 +69,7 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
     // semantics{} 非组合上下文，文案先在组合期解析
     val subDotDesc = if (subscribed) stringResource(R.string.subscribed) else stringResource(R.string.using_snapshot)
 
-    SnackbarEffect(snackbar, st.message)
+    SnackbarEffect(snackbar, st.message, st.msgSeq)
     SnackbarEffect(snackbar, subMsg)
     // 批A1：首启一次性引导（guided 标记）
     val showGuide = !st.guided && st.apps.isNotEmpty()

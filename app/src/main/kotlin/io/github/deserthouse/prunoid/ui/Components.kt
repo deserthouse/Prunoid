@@ -172,6 +172,15 @@ fun SdkMonogram(ruleId: String, name: String, modifier: Modifier = Modifier, ico
     }
 }
 
+/** 评级 → 用户语言后果说明（批#10） */
+@Composable
+fun safetyConsequence(s: Safety): String = stringResource(when (s) {
+    Safety.SAFE -> R.string.cons_safe
+    Safety.CAUTION -> R.string.cons_caution
+    Safety.RISKY -> R.string.cons_risky
+    Safety.UNKNOWN -> R.string.cons_unknown
+})
+
 /** 四级安全徽标：图标 + 文字（色不单独表意） */
 @Composable
 fun SafetyBadge(s: Safety, modifier: Modifier = Modifier) {
@@ -183,8 +192,12 @@ fun SafetyBadge(s: Safety, modifier: Modifier = Modifier) {
         shape = RoundedCornerShape(50),
         modifier = modifier
     ) {
+        // semantics{} 非组合上下文——文案先在组合期解析（既有教训）
+        val badgeCd = safetyLabel(s) + " — " + safetyConsequence(s)
         Row(
-            Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+            Modifier
+                .semantics { contentDescription = badgeCd }
+                .padding(horizontal = 10.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
@@ -197,8 +210,9 @@ fun SafetyBadge(s: Safety, modifier: Modifier = Modifier) {
 fun rememberSnackbar(): SnackbarHostState = remember { SnackbarHostState() }
 
 @Composable
-fun SnackbarEffect(snackbar: SnackbarHostState, message: String?) {
-    LaunchedEffect(message) {
+fun SnackbarEffect(snackbar: SnackbarHostState, message: String?, seq: Any? = null) {
+    // 批J#4：seq 参与 key——同文本连续两次（如两次 Apply 成功）也能弹出
+    LaunchedEffect(message, seq) {
         message?.takeIf { it.isNotBlank() }?.let { snackbar.showSnackbar(it, withDismissAction = true) }
     }
 }
@@ -297,7 +311,7 @@ fun CountdownConfirmTextButton(
     ) {
         Text(
             when {
-                armed && tick > 0 -> "$armedLabel (${tick}s)"
+                armed && tick > 0 -> stringResource(R.string.confirm_wait, tick)
                 armed -> armedLabel
                 else -> label
             },

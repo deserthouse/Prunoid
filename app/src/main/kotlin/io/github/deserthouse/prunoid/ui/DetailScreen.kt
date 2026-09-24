@@ -212,154 +212,7 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            item {
-                Card(Modifier.fillMaxWidth()) {
-                    Column(Modifier.padding(16.dp)) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            val icon = st.icons[app.packageName]
-                            coil.compose.AsyncImage(
-                                model = icon,
-                                contentDescription = null,
-                                modifier = Modifier.size(52.dp)
-                            )
-                            Column {
-                                Text(app.label, style = MaterialTheme.typography.titleMedium)
-                                Text(
-                                    app.packageName,
-                                    fontFamily = FontFamily.Monospace,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                Text(
-                                    stringResource(R.string.detail_summary, versionName, app.matchedSdks.size, app.matchedSdks.sumOf { it.matchedComponents.size }),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                                // 大头部补充行（LibChecker 式）：Target/Min/Size
-                                val appInfo = remember(app.packageName) {
-                                    runCatching { pm.getApplicationInfo(app.packageName, 0) }.getOrNull()
-                                }
-                                val apkSizeMb = remember(app.packageName) {
-                                    appInfo?.sourceDir?.let {
-                                        runCatching { java.io.File(it).length() / 1048576 }.getOrNull()
-                                    }
-                                }
-                                Text(
-                                    buildString {
-                                        append("Target ${appInfo?.targetSdkVersion ?: "?"} · Min ${appInfo?.minSdkVersion ?: "?"}")
-                                        if (apkSizeMb != null) append(" · ${apkSizeMb} MB")
-                                    },
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                // 安装/更新时间行（AppChecker 走查吸收点；数据取自扫描结果）
-                                if (app.lastUpdateTime > 0L) {
-                                    val fmt = remember { java.text.DateFormat.getDateTimeInstance(java.text.DateFormat.SHORT, java.text.DateFormat.SHORT) }
-                                    Text(
-                                        buildString {
-                                            append(stringResource(R.string.installed_at, fmt.format(java.util.Date(app.firstInstallTime))))
-                                            if (app.lastUpdateTime != app.firstInstallTime) {
-                                                append(" · ")
-                                                append(stringResource(R.string.updated_at, fmt.format(java.util.Date(app.lastUpdateTime))))
-                                            }
-                                        },
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
-                        }
-                        // 安全分布 mini-dots + 已应用状态行
-                        if (app.matchedSdks.isNotEmpty()) {
-                            Spacer(Modifier.height(8.dp))
-                            // 批T5：安全分布带文字图例（数字不再靠猜色）
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                Safety.entries.forEach { s ->
-                                    val n = app.matchedSdks.count { it.safety == s }
-                                    if (n > 0) {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Box(
-                                                Modifier
-                                                    .size(8.dp)
-                                                    .background(safetyColors(s, isSystemInDarkTheme()).container, RoundedCornerShape(50))
-                                            )
-                                            Spacer(Modifier.width(3.dp))
-                                            Text(
-                                                "$n " + safetyLabel(s),
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        // 已检出 SDK 快捷条（LibChecker 式）：点头像直达档案卡
-                        if (app.matchedSdks.isNotEmpty()) {
-                            Spacer(Modifier.height(8.dp))
-                            Row(
-                                Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                app.matchedSdks.take(10).forEach { hit ->
-                                    SdkMonogram(
-                                        hit.ruleId, hit.name,
-                                        Modifier.clickable { sheetFor = hit }
-                                    )
-                                }
-                                val rest = app.matchedSdks.size - 10
-                                if (rest > 0) {
-                                    Text(
-                                        "+$rest",
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
-                        }
-                        // 批G：现场口径行独立于 applied 记账显示（IFW+pm 两处，来源不限本应用）
-                        val liveN = st.liveDisabled[app.packageName]?.size ?: -1
-                        if (liveN >= 0) {
-                            Spacer(Modifier.height(6.dp))
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    Icons.Outlined.FactCheck,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.tertiary,
-                                    modifier = Modifier.size(14.dp)
-                                )
-                                Spacer(Modifier.width(4.dp))
-                                Text(
-                                    stringResource(R.string.live_line, liveN),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.tertiary
-                                )
-                            }
-                        }
-                        appliedEntry?.let { e ->
-                            Spacer(Modifier.height(6.dp))
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    Icons.Outlined.CheckCircle,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(14.dp)
-                                )
-                                Spacer(Modifier.width(4.dp))
-                                Text(
-                                    stringResource(R.string.applied_line, e.components.size, e.engine) +
-                                        if (e.at > 0) " · ${fmtTime(e.at)}" else "",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        }
-                    }
-                }
-            }
+            item { DetailHeaderCard(app, st, appliedEntry, pm, versionName) { sheetFor = it } }
             item {
                 Column {
                     SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
@@ -567,6 +420,8 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
             if (detailTab == 0 && app.unmatched.isNotEmpty()) {
                 item(key = "unmatched") {
                     var unmatchedOpen by remember { mutableStateOf(false) }
+                    // 批E2：勾选集提升至卡级——卡头可就近提供禁用按钮
+                    val unmatchedSel = remember(app.packageName) { mutableStateMapOf<String, Boolean>() }
                     // 展开时卡体常整体落在视口折叠线下（卡顶近屏底），用户只见卡头+分隔线、
                     // 展开体看似"没渲染"——若卡顶已在视口下半区，把卡顶滚动到视口顶。
                     LaunchedEffect(unmatchedOpen) {
@@ -630,6 +485,24 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                         )
                                     }
                                 }
+                                // 批E2：勾选后卡头就近禁用（免滚 20 行找按钮）
+                                val selN = unmatchedSel.count { it.value }
+                                if (unmatchedOpen && selN > 0) {
+                                    FilledTonalButton(
+                                        onClick = {
+                                            val selGroups = app.unmatched.filter { unmatchedSel[it.prefix] == true }
+                                            val byType = selGroups.flatMap { g ->
+                                                g.componentTypes.entries.map { (cn, t) -> t to cn }
+                                            }.groupBy({ it.first }, { it.second })
+                                            vm.disableUnmatched(app.packageName, byType) { msg = it }
+                                            unmatchedSel.clear()
+                                        },
+                                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                                    ) {
+                                        Text(stringResource(R.string.disable_selected_n, selN), style = MaterialTheme.typography.labelSmall)
+                                    }
+                                    Spacer(Modifier.width(6.dp))
+                                }
                                 Icon(
                                     Icons.Outlined.ExpandMore,
                                     contentDescription = if (unmatchedOpen) stringResource(R.string.collapse) else stringResource(R.string.expand),
@@ -645,7 +518,6 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                 // 批L4：搜索 + 疑似筛选 + 可勾选禁用（默认全不选——未验证组件人拍板）
                                 var unmatchedQuery by remember { mutableStateOf("") }
                                 var suspiciousOnly by remember { mutableStateOf(false) }
-                                val unmatchedSel = remember(app.packageName) { mutableStateMapOf<String, Boolean>() }
                                 LaunchedEffect(unmatchedSel.size) { unmatchedSelCount = unmatchedSel.count { it.value } }
                                 val visibleGroups = app.unmatched.filter { g ->
                                     (unmatchedQuery.isBlank() || g.prefix.contains(unmatchedQuery, true)) &&
@@ -697,36 +569,17 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                             }
                                         }
                                         Text(
-                                            " · " + g.count,
+                                            // 批E3：类型构成标签（判断依据），如 "A3 S1"
+                                            g.componentTypes.values.groupingBy { it }.eachCount()
+                                                .entries.sortedByDescending { it.value }
+                                                .joinToString(" ") { (t, n) -> "${t.take(1).uppercase()}$n" } +
+                                                " · " + g.count,
                                             style = MaterialTheme.typography.labelSmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                     }
                                 }
-                                // 批L4：勾选了组 → 禁用所选（IFW，按组件类型分组）
-                                val selGroups = app.unmatched.filter { unmatchedSel[it.prefix] == true }
-                                if (selGroups.isNotEmpty()) {
-                                    val selComps = selGroups.flatMap { it.components }
-                                    Button(
-                                        onClick = {
-                                            val byType = selGroups.flatMap { g ->
-                                                g.componentTypes.entries.map { (cn, t) -> t to cn }
-                                            }.groupBy({ it.first }, { it.second })
-                                            vm.disableUnmatched(app.packageName, byType) { msg = it }
-                                        },
-                                        enabled = !st.busy && selComps.isNotEmpty()
-                                            && st.workMode.capabilities.disablePerApp && st.rootGranted,
-                                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
-                                    ) {
-                                        Text(stringResource(R.string.disable_unmatched, selComps.size))
-                                    }
-                                    Text(
-                                        stringResource(R.string.unverified_note),
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.error,
-                                        modifier = Modifier.padding(top = 4.dp)
-                                    )
-                                }
+                                // 批E2：禁用操作已就近移至卡头（勾选即可见）
                                 // 批O：组件清单分享（系统分享器出 JSON，零上传零 token）
                                 val ctxShare = androidx.compose.ui.platform.LocalContext.current
                                 OutlinedButton(
@@ -859,4 +712,162 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
             }
         )
     }
+}
+
+@Composable
+private fun DetailHeaderCard(
+    app: ScannedApp,
+    st: AppUiState,
+    appliedEntry: io.github.deserthouse.prunoid.core.engine.AppliedRulesStore.AppliedEntry?,
+    pm: android.content.pm.PackageManager,
+    versionName: String,
+    onOpenSheet: (SdkHit) -> Unit
+) {
+            Card(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(16.dp)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            val icon = st.icons[app.packageName]
+                            coil.compose.AsyncImage(
+                                model = icon,
+                                contentDescription = null,
+                                modifier = Modifier.size(52.dp)
+                            )
+                            Column {
+                                Text(app.label, style = MaterialTheme.typography.titleMedium)
+                                Text(
+                                    app.packageName,
+                                    fontFamily = FontFamily.Monospace,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    stringResource(R.string.detail_summary, versionName, app.matchedSdks.size, app.matchedSdks.sumOf { it.matchedComponents.size }),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                // 大头部补充行（LibChecker 式）：Target/Min/Size
+                                val appInfo = remember(app.packageName) {
+                                    runCatching { pm.getApplicationInfo(app.packageName, 0) }.getOrNull()
+                                }
+                                val apkSizeMb = remember(app.packageName) {
+                                    appInfo?.sourceDir?.let {
+                                        runCatching { java.io.File(it).length() / 1048576 }.getOrNull()
+                                    }
+                                }
+                                Text(
+                                    buildString {
+                                        append("Target ${appInfo?.targetSdkVersion ?: "?"} · Min ${appInfo?.minSdkVersion ?: "?"}")
+                                        if (apkSizeMb != null) append(" · ${apkSizeMb} MB")
+                                    },
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                // 安装/更新时间行（AppChecker 走查吸收点；数据取自扫描结果）
+                                if (app.lastUpdateTime > 0L) {
+                                    val fmt = remember { java.text.DateFormat.getDateTimeInstance(java.text.DateFormat.SHORT, java.text.DateFormat.SHORT) }
+                                    Text(
+                                        buildString {
+                                            append(stringResource(R.string.installed_at, fmt.format(java.util.Date(app.firstInstallTime))))
+                                            if (app.lastUpdateTime != app.firstInstallTime) {
+                                                append(" · ")
+                                                append(stringResource(R.string.updated_at, fmt.format(java.util.Date(app.lastUpdateTime))))
+                                            }
+                                        },
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+                        // 安全分布 mini-dots + 已应用状态行
+                        if (app.matchedSdks.isNotEmpty()) {
+                            Spacer(Modifier.height(8.dp))
+                            // 批T5：安全分布带文字图例（数字不再靠猜色）
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                Safety.entries.forEach { s ->
+                                    val n = app.matchedSdks.count { it.safety == s }
+                                    if (n > 0) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Box(
+                                                Modifier
+                                                    .size(8.dp)
+                                                    .background(safetyColors(s, isSystemInDarkTheme()).container, RoundedCornerShape(50))
+                                            )
+                                            Spacer(Modifier.width(3.dp))
+                                            Text(
+                                                "$n " + safetyLabel(s),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        // 已检出 SDK 快捷条（LibChecker 式）：点头像直达档案卡
+                        if (app.matchedSdks.isNotEmpty()) {
+                            Spacer(Modifier.height(8.dp))
+                            Row(
+                                Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                app.matchedSdks.take(10).forEach { hit ->
+                                    SdkMonogram(
+                                        hit.ruleId, hit.name,
+                                        Modifier.clickable { onOpenSheet(hit) }
+                                    )
+                                }
+                                val rest = app.matchedSdks.size - 10
+                                if (rest > 0) {
+                                    Text(
+                                        "+$rest",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+                        // 批G：现场口径行独立于 applied 记账显示（IFW+pm 两处，来源不限本应用）
+                        val liveN = st.liveDisabled[app.packageName]?.size ?: -1
+                        if (liveN >= 0) {
+                            Spacer(Modifier.height(6.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    Icons.Outlined.FactCheck,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.tertiary,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(Modifier.width(4.dp))
+                                Text(
+                                    stringResource(R.string.live_line, liveN),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.tertiary
+                                )
+                            }
+                        }
+                        appliedEntry?.let { e ->
+                            Spacer(Modifier.height(6.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    Icons.Outlined.CheckCircle,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(Modifier.width(4.dp))
+                                Text(
+                                    stringResource(R.string.applied_line, e.components.size, e.engine) +
+                                        if (e.at > 0) " · ${fmtTime(e.at)}" else "",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+            }
+}
+
 }

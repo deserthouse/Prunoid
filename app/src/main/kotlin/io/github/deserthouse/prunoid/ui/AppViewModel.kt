@@ -257,19 +257,16 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                         (prev?.types.orEmpty() + hit.componentTypes)
                     )
                 } else {
-                    // off：仅移除该 SDK 的组件。
-                    // IFW 侧用 applyIfw 合并重放"剩余集"（合并语义天然保留外部工具 filter，
-                    // 二轮实测 removeIfw(keep) 保留删除会删过头，弃用）
+                    // off：仅移除该 SDK 命中的组件（IFW 定向移除 + pm enable）；
+                    // 外部/其他来源 filter 幸存（removeIfw 语义批J#1 已修正）
                     val removed: Set<String> = hit.matchedComponents.toSet()
-                    // AppliedEntry.types 形状 = 组件 → 类型（单映射）
-                    val remaining: Map<String, String> = prev?.types.orEmpty().filterKeys { it !in removed }
-                    val remainingByType: Map<String, List<String>> = remaining.entries
-                        .groupBy({ it.value }, { it.key })
-                        .filterKeys { it != "provider" }
-                    if (remainingByType.isEmpty()) engine.removeIfw(pkg) else engine.applyIfw(pkg, remainingByType)
                     engine.enablePm(pkg, removed.toList())
-                    if (prev != null) applied.record(pkg, prev.engine, remaining.keys.toList(), remaining)
-                    else applied.remove(pkg)
+                    engine.removeIfw(pkg, removeComponents = removed)
+                    if (prev != null) applied.record(
+                        pkg, prev.engine,
+                        prev.components.filter { it !in removed },
+                        prev.types.filterKeys { it !in removed }
+                    ) else applied.remove(pkg)
                 }
                 val liveAfter = engine.readLiveDisabled(listOf(pkg)).first
                 _state.update {
@@ -473,6 +470,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun aliasTextFor(name: String): String =
         rules.nameAliases[name]?.joinToString(" ") ?: ""
 
+    /** 档案卡别名展示（批#11） */
+    fun aliasesFor(name: String): String =
+        rules.nameAliases[name]?.joinToString(" / ") ?: ""
+
     fun clearListFilters() {
         _state.update { it.copy(listCatSel = emptySet(), listSafetySel = null, listAppliedOnly = false, hitsOnly = false, showSystem = false) }
     }
@@ -642,7 +643,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 // 否则规则更新/显式加选的组件会成为恢复盲区
                 val entry = applied.get(scanned.packageName)
                 // 批P0#8：保留删除——只移除本工具 applied 的 filter，外部/其他来源 IFW 规则幸存
-                val r1 = engine.removeIfw(scanned.packageName, keepComponents = entry?.components?.toSet())
+                val r1 = engine.removeIfw(scanned.packageName, removeComponents = entry?.components?.toSet())
                 val r2 = entry?.components?.let { engine.enablePm(scanned.packageName, it) }
                     ?: Result.success(0)
                 applied.remove(scanned.packageName)

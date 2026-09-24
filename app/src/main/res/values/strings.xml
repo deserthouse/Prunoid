@@ -21,7 +21,7 @@
     <string name="menu_settings">设置</string>
     <string name="indexing">正在建立索引…</string>
     <string name="list_summary">用户应用 %1$d 个 · %2$d 个命中 SDK</string>
-    <string name="vm_no_root">未取得 root：扫描可用，禁用操作不可用</string>
+    <string name="vm_no_root">未获得 root：扫描可用、禁用不可用——打开 Magisk → 超级用户 → 授权 Prunoid 后重进</string>
     <string name="search_hint">搜索 app / 包名 / SDK</string>
     <string name="clear_search">清除搜索</string>
     <string name="chip_show_system">含系统 app（只读）</string>
@@ -274,4 +274,9 @@
     <string name="uninstall_note">提示：卸载 Prunoid 不会移除已写入的 IFW 规则——卸载前请先用上方「清除全部 IFW」。</string>
     <plurals name="badge_ads_push"><item quantity="other">广告 %1$d · 推送 %2$d</item></plurals>
 <string name="badge_ads_push_short">含 %1$d 广告 · %2$d 推送</string>
-</resources>
+<string name="disable_selected_n">禁用所选（%1$d 组）</string>
+    <string name="cons_safe">可安全禁用——不影响应用正常功能</string>
+    <string name="cons_caution">谨慎禁用——可能导致部分功能异常</string>
+    <string name="cons_risky">禁用有风险——应用可能崩溃或核心功能失效</string>
+    <string name="cons_unknown">影响未知——缺少足够的社区反馈</string>
+    <string name="confirm_wait">等待 %1$d 秒后自动可确认</string></resources>

@@ -13,15 +13,25 @@ import java.util.Locale
 // <activity block="true" log="true"><component-filter name="pkg/cls"/></activity>
 // provider 不受 IFW 支持，跳过
 object IfwXmlBuilder {
-    /** 解析现有 IFW XML → tag -> component-filter 全名集合（供合并/保留删除） */
+    /** 解析现有 IFW XML → tag -> component-filter 全名集合（批L#13：XmlPullParser 正式解析，防正则误吞畸形文件） */
     fun parse(xml: String): Map<String, MutableSet<String>> {
         val out = linkedMapOf<String, MutableSet<String>>()
-        val tagRe = Regex("<(activity|service|receiver)[^>]*>(.*?)</\\1>", RegexOption.DOT_MATCHES_ALL)
-        val nameRe = Regex("<component-filter name=\"([^\"]+)\"")
-        for (m in tagRe.findAll(xml)) {
-            val tag = m.groupValues[1]
-            val set = out.getOrPut(tag) { linkedSetOf() }
-            nameRe.findAll(m.groupValues[2]).forEach { set.add(it.groupValues[1]) }
+        if (xml.isBlank()) return out
+        try {
+            val parser = org.xmlpull.v1.XmlPullParserFactory.newInstance().newPullParser()
+            parser.setInput(java.io.StringReader(xml))
+            var event = parser.eventType
+            while (event != org.xmlpull.v1.XmlPullParser.END_DOCUMENT) {
+                if (event == org.xmlpull.v1.XmlPullParser.START_TAG) {
+                    val name = parser.getAttributeValue(null, "name")
+                    if (parser.name == "component-filter" && !name.isNullOrBlank()) {
+                        out.getOrPut(parser.name) { linkedSetOf() }.add(name)
+                    }
+                }
+                event = parser.next()
+            }
+        } catch (_: Exception) {
+            // 畸形 XML 按已解析部分处理（调用方决定覆盖策略）
         }
         return out
     }
@@ -207,17 +217,18 @@ class DisableEngine(
             }
         }
 
-    suspend fun removeIfw(pkg: String, keepComponents: Set<String>? = null): Result<Unit> =
+    suspend fun removeIfw(pkg: String, removeComponents: Set<String>? = null): Result<Unit> =
         withContext(Dispatchers.IO) {
             runCatching {
                 require(!isForbidden(pkg)) { "system app blocked by whitelist: $pkg" }
-                if (keepComponents != null) {
-                    // 批P0#8：保留删除——移除本工具 applied 的 filter，外部/其他来源的幸存
+                if (removeComponents != null) {
+                    // 批J#1：参数语义修正（二轮实测删过头的根因=形参名 keep 实为删除集导致调用方传反）。
+                    // 移除 removeComponents 的 filter，外部/其他来源的幸存
                     val existing = Shell.cmd("cat ${ifwPath(pkg)} 2>/dev/null").exec().out.joinToString("\n")
                     if (existing.isBlank()) return@runCatching
-                    val keep = keepComponents.map { "$pkg/$it" }.toSet()
+                    val remove = removeComponents.map { "$pkg/$it" }.toSet()
                     val rebuilt = IfwXmlBuilder.parse(existing).mapValues { (_, set) ->
-                        set.filterNot { it in keep }.toSet()
+                        set.filterNot { it in remove }.toSet()
                     }
                     val xml = IfwXmlBuilder.buildByTag(rebuilt)
                     if (xml == null) {

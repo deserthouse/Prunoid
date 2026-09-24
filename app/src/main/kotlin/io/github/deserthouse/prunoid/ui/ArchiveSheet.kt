@@ -63,6 +63,14 @@ fun SdkArchiveSheet(
             SdkMonogram(hit.ruleId, hit.name, Modifier.size(56.dp), vm.ruleInfo(hit.ruleId)?.iconUrl)
             Spacer(Modifier.height(8.dp))
             Text(hit.name, style = MaterialTheme.typography.titleLarge)
+            // 批#11：组内英文别名展示（合并实体的另一名字）
+            vm.aliasesFor(hit.name).takeIf { it.isNotBlank() }?.let { alias ->
+                Text(
+                    alias,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
             Text(
                 categoryLabel(hit.category),
                 style = MaterialTheme.typography.labelMedium,

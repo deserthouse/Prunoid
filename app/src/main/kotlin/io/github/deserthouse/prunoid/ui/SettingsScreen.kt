@@ -222,7 +222,8 @@ private fun SettingRow(
 fun BackupDialog(vm: AppViewModel, onMessage: (String) -> Unit, onDismiss: () -> Unit) {
     // F3：备份=可选机制。对话框披露用法/路径/恢复点/份数（自由填写，不再滑杆）
     val backups = remember { vm.listBackups() }
-    val selected = remember { mutableStateMapOf<String, Boolean>() }
+    // 批J#3：备份快照是全量状态，多选恢复语义不成立——改单选（最后选中者生效）
+    var selected by remember { mutableStateOf<String?>(null) }
     var keepText by remember { mutableStateOf(vm.state.value.backupKeep.toString()) }
     var confirmRestore by remember { mutableStateOf(false) }
 
@@ -267,8 +268,8 @@ fun BackupDialog(vm: AppViewModel, onMessage: (String) -> Unit, onDismiss: () ->
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Checkbox(
-                                checked = selected[path] == true,
-                                onCheckedChange = { selected[path] = it }
+                                checked = selected == path,
+                                onCheckedChange = { on -> if (on) selected = path }
                             )
                             Text(
                                 path.substringAfterLast("/"),
@@ -281,7 +282,7 @@ fun BackupDialog(vm: AppViewModel, onMessage: (String) -> Unit, onDismiss: () ->
                     }
                     TextButton(
                         onClick = { confirmRestore = true },
-                        enabled = selected.values.any { it }
+                        enabled = selected != null
                     ) { Text(stringResource(R.string.restore_selected)) }
                 }
                 Spacer(Modifier.height(10.dp))
@@ -329,8 +330,8 @@ fun BackupDialog(vm: AppViewModel, onMessage: (String) -> Unit, onDismiss: () ->
                     seconds = 3,
                     onConfirm = {
                         confirmRestore = false
-                        val paths = selected.filterValues { it }.keys.toList()
-                        vm.restoreBackup(paths.first()) { onMessage(it) }
+                        vm.restoreBackup(selected!!) { onMessage(it) }
+                        selected = null
                         onDismiss()
                     }
                 )
