@@ -28,6 +28,8 @@ class SettingsRepository(private val context: Context) {
         val reapplyMode: String = "open",
         val backupEnabled: Boolean = false,
         val guided: Boolean = false,
+        // F1: 用户在系统弹窗点过"Don't allow"——记住后永不再自动弹（设置页可反悔）
+        val notifPermDenied: Boolean = false,
         val sources: List<SubSource> = listOf(OFFICIAL_SOURCE)
     )
 
@@ -55,6 +57,7 @@ class SettingsRepository(private val context: Context) {
         private val KEY_REAPPLY_MODE = stringPreferencesKey("reapply_mode")
         private val KEY_BACKUP_ENABLED = booleanPreferencesKey("backup_enabled")
         private val KEY_GUIDED = booleanPreferencesKey("guided")
+        private val KEY_NOTIF_PERM_DENIED = booleanPreferencesKey("notif_perm_denied")
         private val KEY_SOURCES = stringPreferencesKey("sub_sources")
         private val json = Json { ignoreUnknownKeys = true }
     }
@@ -70,6 +73,7 @@ class SettingsRepository(private val context: Context) {
             reapplyMode = p[KEY_REAPPLY_MODE] ?: "open",
             backupEnabled = p[KEY_BACKUP_ENABLED] ?: false,
             guided = p[KEY_GUIDED] ?: false,
+            notifPermDenied = p[KEY_NOTIF_PERM_DENIED] ?: false,
             sources = p[KEY_SOURCES]?.let {
                 runCatching { json.decodeFromString<List<SubSource>>(it) }.getOrNull()
             } ?: listOf(OFFICIAL_SOURCE)
@@ -106,6 +110,10 @@ class SettingsRepository(private val context: Context) {
 
     suspend fun setBackupEnabled(v: Boolean) {
         context.dataStore.edit { it[KEY_BACKUP_ENABLED] = v }
+    }
+
+    suspend fun setNotifPermDenied(v: Boolean) {
+        context.dataStore.edit { it[KEY_NOTIF_PERM_DENIED] = v }
     }
 
     suspend fun setGuided() {

@@ -57,19 +57,33 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
             android.app.NotificationManager.IMPORTANCE_MIN
         )
         getSystemService(android.app.NotificationManager::class.java).createNotificationChannel(channel)
-        if (android.os.Build.VERSION.SDK_INT >= 33 &&
-            checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED
-        ) {
-            requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 1)
-        }
         // 自动重应用开关（设置）：关=不启动规则守护（A15+ 收不到包事件，需手动重扫）
         // 异步读 DataStore（不阻塞主线程冷启动）；启动前短暂空窗可接受——服务自身幂等
         lifecycleScope.launch {
-            // 批N：常驻守护仅 root+realtime 档启动（默认 open=启动对账，无常驻）
-            val cfg = io.github.deserthouse.prunoid.core.rules.SettingsRepository(this@MainActivity).settings.first()
+            val repo = io.github.deserthouse.prunoid.core.rules.SettingsRepository(this@MainActivity)
+            val cfg = repo.settings.first()
+            // F1：权限请求放 DataStore 读取之后——需要"用户点过 Don't allow"这个记忆
+            // 才能决定弹不弹。弹窗本身触发 activity 重建→onCreate 再跑，无记忆=无限循环
+            // （R10 F-P1 实锤：3s 一轮，用户唯一逃逸是系统设置手动授权）。
+            if (android.os.Build.VERSION.SDK_INT >= 33 &&
+                checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED &&
+                !cfg.notifPermDenied
+            ) {
+                requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 1)
+            }
             val guard = cfg.autoReapply && cfg.workMode == "root" && cfg.reapplyMode == "realtime"
             if (guard) startForegroundService(Intent(this@MainActivity, RuleGuardService::class.java))
             else stopService(Intent(this@MainActivity, RuleGuardService::class.java))
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode != 1) return
+        lifecycleScope.launch {
+            // 授予→清标志；拒绝→置位永不再自动弹（设置页入口随时反悔）
+            io.github.deserthouse.prunoid.core.rules.SettingsRepository(this@MainActivity)
+                .setNotifPermDenied(grantResults.firstOrNull() != android.content.pm.PackageManager.PERMISSION_GRANTED)
         }
     }
 }
