@@ -24,11 +24,25 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.*
 import kotlinx.coroutines.withContext
 
+/** 列表筛选族（批G2c 自 AppUiState 平铺字段收拢）：全部会话态，导航往返保留、冷启复位 */
+data class ListFilters(
+    val hitsOnly: Boolean = false,
+    val showSystem: Boolean = false,
+    val catSel: Set<String> = emptySet(),
+    val safety: Safety? = null,
+    val appliedOnly: Boolean = false
+)
+
+/** About 彩蛋族（批G2c）：🐾×7 解锁 → 作者块展开 → 碎碎念 🍆 烧断（持久化 unlocked/rambleBurned） */
+data class EasterState(
+    val unlocked: Boolean = false,
+    val expanded: Boolean = false,
+    val rambleBurned: Boolean = false
+)
+
 data class AppUiState(
     val scanning: Boolean = false,
     val apps: List<ScannedApp> = emptyList(),
-    val showSystem: Boolean = false,
-    val hitsOnly: Boolean = false,
     val rootGranted: Boolean = false,
     val message: String? = null,
     val engine: Engine = Engine.IFW,   // 双引擎切换，默认 IFW（app 无感知、无法自恢复）
@@ -44,18 +58,14 @@ data class AppUiState(
     val liveDisabled: Map<String, Set<String>> = emptyMap(),
     val ifwTotal: Int = 0,
     // 批H 彩蛋（对齐 OptIcon）：About 卡整体可点，🐾×7 解锁作者块（持久化）；碎碎念 🍆×6→💦 烧断
-    val easterUnlocked: Boolean = false,
-    val easterExpanded: Boolean = false,
-    val easterRambleBurned: Boolean = false,
+    val easter: EasterState = EasterState(),
     // 批N：工作方式与档位（audit=只读审计；reapply open=启动对账/realtime=常驻）
     val workMode: io.github.deserthouse.prunoid.core.engine.WorkModeInfo =
         io.github.deserthouse.prunoid.core.engine.WorkModeInfo.ROOT,
     val reapplyMode: String = "open",
     val backupEnabled: Boolean = false,
-    // 批T8：列表筛选条件统一入 VM（全部会话态，导航往返保留、冷启复位——与 hitsOnly/showSystem 同层）
-    val listCatSel: Set<String> = emptySet(),
-    val listSafetySel: Safety? = null,
-    val listAppliedOnly: Boolean = false,
+    // 批G2c：列表筛选族（批T8 会话态 + hitsOnly/showSystem 收拢）
+    val filters: ListFilters = ListFilters(),
     // 批T2：内置快照可溯源（"2026-09-21 · 2003"）
     val snapshotMeta: String = ""
 ) {
@@ -97,8 +107,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     st.copy(
                         backupKeep = s.backupKeep,
                         autoReapply = s.autoReapply,
-                        easterUnlocked = s.easterUnlocked,
-                        easterRambleBurned = s.easterRambleBurned,
+                        easter = EasterState(unlocked = s.easterUnlocked, rambleBurned = s.easterRambleBurned),
                         workMode = io.github.deserthouse.prunoid.core.engine.WorkModeInfo.fromTag(s.workMode),
                         reapplyMode = s.reapplyMode,
                         backupEnabled = s.backupEnabled,
@@ -167,8 +176,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private var rambleTapCount = 0
 
     fun onAboutCardTapped() {
-        if (_state.value.easterUnlocked) {
-            _state.update { it.copy(easterExpanded = !it.easterExpanded) }
+        if (_state.value.easter.unlocked) {
+            _state.update { it.copy(easter = it.easter.copy(expanded = !it.easter.expanded)) }
             return
         }
         aboutTapCount++
@@ -179,7 +188,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         aboutTapCount = 0
         viewModelScope.launch {
             settings.setEasterUnlocked(true)
-            _state.update { it.copy(easterUnlocked = true, easterExpanded = true, message = "🐺") }
+            _state.update { it.copy(easter = it.easter.copy(unlocked = true, expanded = true), message = "🐺") }
         }
     }
 
@@ -386,7 +395,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun onRambleTapped() {
-        if (_state.value.easterRambleBurned) {
+        if (_state.value.easter.rambleBurned) {
             setMessage(appCtx.getString(R.string.easter_dry))
             return
         }
@@ -398,7 +407,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         rambleTapCount = 0
         viewModelScope.launch {
             settings.setEasterRambleBurned(true)
-            _state.update { it.copy(easterRambleBurned = true, message = "💦") }
+            _state.update { it.copy(easter = it.easter.copy(rambleBurned = true), message = "💦") }
         }
     }
 
@@ -442,24 +451,24 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun toggleShowSystem() {
-        _state.update { it.copy(showSystem = !it.showSystem) }
+        _state.update { it.copy(filters = it.filters.copy(showSystem = !it.filters.showSystem)) }
     }
 
     fun toggleHitsOnly() {
-        _state.update { it.copy(hitsOnly = !it.hitsOnly) }
+        _state.update { it.copy(filters = it.filters.copy(hitsOnly = !it.filters.hitsOnly)) }
     }
 
     // 批T8：列表筛选三件套的 VM 入口
     fun toggleListCat(c: String) {
-        _state.update { it.copy(listCatSel = if (c in it.listCatSel) it.listCatSel - c else it.listCatSel + c) }
+        _state.update { it.copy(filters = it.filters.copy(catSel = if (c in it.filters.catSel) it.filters.catSel - c else it.filters.catSel + c)) }
     }
 
     fun toggleListSafety(s: Safety) {
-        _state.update { it.copy(listSafetySel = if (it.listSafetySel == s) null else s) }
+        _state.update { it.copy(filters = it.filters.copy(safety = if (it.filters.safety == s) null else s)) }
     }
 
     fun toggleListAppliedOnly() {
-        _state.update { it.copy(listAppliedOnly = !it.listAppliedOnly) }
+        _state.update { it.copy(filters = it.filters.copy(appliedOnly = !it.filters.appliedOnly)) }
     }
 
     fun dismissGuide() {
@@ -476,7 +485,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         rules.nameAliases[name]?.joinToString(" / ") ?: ""
 
     fun clearListFilters() {
-        _state.update { it.copy(listCatSel = emptySet(), listSafetySel = null, listAppliedOnly = false, hitsOnly = false, showSystem = false) }
+        _state.update { it.copy(filters = ListFilters()) }
     }
 
     fun selectEngine(e: Engine) {

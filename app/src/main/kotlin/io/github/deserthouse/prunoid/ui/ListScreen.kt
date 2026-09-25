@@ -77,16 +77,16 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
     val showGuide = !st.guided && st.apps.isNotEmpty() && !searchFocused
 
     // E1 查找力：筛选/排序状态与结果列表提升到 Scaffold 之上，bottomBar 汇总与列表共用同一份
-    // 批T8：筛选三件套统一入 VM 会话态（与 hitsOnly/showSystem 同层，导航往返保留）
-    val catSel = st.listCatSel
-    val safetySel = st.listSafetySel
-    val appliedOnly = st.listAppliedOnly
+    // 批T8/G2c：筛选族统一入 VM 会话态（AppUiState.filters），导航往返保留
+    val catSel = st.filters.catSel
+    val safetySel = st.filters.safety
+    val appliedOnly = st.filters.appliedOnly
     var sortMode by remember { mutableStateOf(AppSort.DEFAULT) }
     var showFilterSheet by remember { mutableStateOf(false) }
-    val apps = remember(st.apps, st.showSystem, st.hitsOnly, query, catSel, safetySel, appliedOnly, sortMode, st.applied) {
+    val apps = remember(st.apps, st.filters.showSystem, st.filters.hitsOnly, query, catSel, safetySel, appliedOnly, sortMode, st.applied) {
         st.apps
-            .filter { st.showSystem || !it.isSystem }
-            .filter { !st.hitsOnly || it.matchedSdks.isNotEmpty() }
+            .filter { st.filters.showSystem || !it.isSystem }
+            .filter { !st.filters.hitsOnly || it.matchedSdks.isNotEmpty() }
             .filter { !appliedOnly || st.applied.containsKey(it.packageName) }
             .filter { catSel.isEmpty() || it.matchedSdks.any { m -> m.category in catSel } }
             .filter { safetySel == null || it.matchedSdks.any { m -> m.safety == safetySel } }
@@ -228,7 +228,7 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
             // 批L1：筛选收敛为两入口——Filter（sheet）+ Sort（menu），不再横滚找排序
             var sortMenu by remember { mutableStateOf(false) }
             val activeFilterCount = catSel.size + (if (safetySel != null) 1 else 0) + (if (appliedOnly) 1 else 0) +
-                (if (st.hitsOnly) 1 else 0) + (if (st.showSystem) 1 else 0)
+                (if (st.filters.hitsOnly) 1 else 0) + (if (st.filters.showSystem) 1 else 0)
             Row(
                 Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -270,8 +270,8 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
                         SectionLabel(stringResource(R.string.filter_scope))
                         // 批S3：Row→FlowRow，三 chip 溢出不再把末位压成逐字断行
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(vertical = 6.dp)) {
-                            FilterChip(selected = st.hitsOnly, onClick = { vm.toggleHitsOnly() }, label = { Text(stringResource(R.string.chip_hits_only)) })
-                            FilterChip(selected = st.showSystem, onClick = { vm.toggleShowSystem() }, label = { Text(stringResource(R.string.chip_show_system)) })
+                            FilterChip(selected = st.filters.hitsOnly, onClick = { vm.toggleHitsOnly() }, label = { Text(stringResource(R.string.chip_hits_only)) })
+                            FilterChip(selected = st.filters.showSystem, onClick = { vm.toggleShowSystem() }, label = { Text(stringResource(R.string.chip_show_system)) })
                             FilterChip(selected = appliedOnly, onClick = { vm.toggleListAppliedOnly() }, label = { Text(stringResource(R.string.chip_applied)) })
                         }
                         Spacer(Modifier.height(8.dp))

@@ -71,7 +71,7 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
     // 分类筛选：null = 全部
     // 批P1#14：列表级 SDK 分类筛选传导进详情（用户"只关心广告"的意图不丢失；详情内可再改）
     var catFilter by remember(app.packageName) {
-        mutableStateOf(st.listCatSel.singleOrNull())
+        mutableStateOf(st.filters.catSel.singleOrNull())
     }
     // SDK 档案卡弹层（Blocker/LibChecker 模式）：点卡片打开
     var sheetFor by remember { mutableStateOf<SdkHit?>(null) }

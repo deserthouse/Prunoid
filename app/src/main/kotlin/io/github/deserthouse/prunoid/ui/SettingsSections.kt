@@ -596,9 +596,9 @@ internal fun AboutSection(st: AppUiState, vm: AppViewModel) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                if (st.easterUnlocked) {
+                if (st.easter.unlocked) {
                     Icon(
-                        if (st.easterExpanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                        if (st.easter.expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
                         contentDescription = null,
                         modifier = Modifier.padding(start = 8.dp),
                         tint = MaterialTheme.colorScheme.primary
@@ -644,7 +644,7 @@ internal fun AboutSection(st: AppUiState, vm: AppViewModel) {
             }
             // 解锁后的作者块（二级：碎碎念块 🍆×6→💦→烧断）
             androidx.compose.animation.AnimatedVisibility(
-                visible = st.easterExpanded,
+                visible = st.easter.expanded,
                 enter = androidx.compose.animation.expandVertically() + androidx.compose.animation.fadeIn(),
                 exit = androidx.compose.animation.shrinkVertically() + androidx.compose.animation.fadeOut()
             ) {
@@ -736,7 +736,7 @@ internal fun AboutSection(st: AppUiState, vm: AppViewModel) {
                             lineHeight = 18.sp
                         )
                         androidx.compose.animation.AnimatedVisibility(
-                            visible = st.easterRambleBurned,
+                            visible = st.easter.rambleBurned,
                             enter = androidx.compose.animation.expandVertically() + androidx.compose.animation.fadeIn(),
                             exit = androidx.compose.animation.shrinkVertically() + androidx.compose.animation.fadeOut()
                         ) {
