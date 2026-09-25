@@ -78,6 +78,10 @@ fun chartColor(cat: String, dark: Boolean): Color = when (cat) {
     else -> if (dark) Color(0xFFBCAAA4) else Color(0xFF8D6E63)
 }
 
+/** 批F3/PD4：暗色判断唯一出口——UI 层不再直接调 isSystemInDarkTheme */
+@Composable
+fun isDark(): Boolean = isSystemInDarkTheme()
+
 fun safetyColors(s: Safety, darkTheme: Boolean): SafetyColors = when (s) {
     Safety.SAFE -> if (darkTheme) SafeDark else SafeLight
     Safety.CAUTION -> if (darkTheme) CautionDark else CautionLight

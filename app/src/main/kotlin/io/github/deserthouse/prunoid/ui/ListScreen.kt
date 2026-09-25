@@ -7,7 +7,6 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.lazy.LazyColumn
@@ -34,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -61,7 +61,7 @@ enum class AppSort(val labelRes: Int) {
 @OptIn(ExperimentalMaterial3Api::class)
 fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings: () -> Unit, onOpenLibrary: () -> Unit) {
     val st by vm.state.collectAsState()
-    val dark = isSystemInDarkTheme()
+    val dark = isDark()
     val snackbar = rememberSnackbar()
     var subMsg by remember { mutableStateOf<String?>(null) }
     var query by remember { mutableStateOf("") }
@@ -72,8 +72,9 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
 
     SnackbarEffect(snackbar, st.message, st.msgSeq)
     SnackbarEffect(snackbar, subMsg)
-    // 批A1：首启一次性引导（guided 标记）
-    val showGuide = !st.guided && st.apps.isNotEmpty()
+    // 批A1 首启引导；批F2/PD3：搜索聚焦即收卡，失焦+空词恢复（OptIcon C2 同款）
+    var searchFocused by remember { mutableStateOf(false) }
+    val showGuide = !st.guided && st.apps.isNotEmpty() && !searchFocused
 
     // E1 查找力：筛选/排序状态与结果列表提升到 Scaffold 之上，bottomBar 汇总与列表共用同一份
     // 批T8：筛选三件套统一入 VM 会话态（与 hitsOnly/showSystem 同层，导航往返保留）
@@ -222,6 +223,7 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp)
+                    .onFocusChanged { searchFocused = it.isFocused }
             )
             // 批L1：筛选收敛为两入口——Filter（sheet）+ Sort（menu），不再横滚找排序
             var sortMenu by remember { mutableStateOf(false) }

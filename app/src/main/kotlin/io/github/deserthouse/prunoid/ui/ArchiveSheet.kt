@@ -125,7 +125,7 @@ fun SdkArchiveSheet(
                     Surface(
                         color = MaterialTheme.colorScheme.secondaryContainer,
                         contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                        shape = RoundedCornerShape(8.dp),
+                        shape = MaterialTheme.shapes.extraSmall,
                         modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
                     ) {
                         Text(it, style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(8.dp))

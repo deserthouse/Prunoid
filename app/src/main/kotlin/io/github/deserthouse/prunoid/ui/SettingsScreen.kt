@@ -162,7 +162,7 @@ private fun CreditEntry(project: String, description: String, url: String) {
         )
         Row(
             Modifier
-                .clip(RoundedCornerShape(8.dp))
+                .clip(MaterialTheme.shapes.extraSmall)
                 .clickable {
                     runCatching {
                         ctx.startActivity(
@@ -842,7 +842,7 @@ private fun AboutSection(st: AppUiState, vm: AppViewModel) {
     SectionTitle(stringResource(R.string.sec_about))
     Card(
         onClick = { vm.onAboutCardTapped() },
-        shape = RoundedCornerShape(24.dp),
+        shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
         modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)
     ) {
@@ -875,7 +875,7 @@ private fun AboutSection(st: AppUiState, vm: AppViewModel) {
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(10.dp))
+                    .clip(MaterialTheme.shapes.small)
                     .clickable {
                         runCatching {
                             ctx.startActivity(
@@ -954,7 +954,7 @@ private fun AboutSection(st: AppUiState, vm: AppViewModel) {
                     Spacer(Modifier.height(8.dp))
                     Row(
                         Modifier
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(MaterialTheme.shapes.extraSmall)
                             .clickable {
                                 runCatching {
                                     ctx.startActivity(
@@ -985,7 +985,7 @@ private fun AboutSection(st: AppUiState, vm: AppViewModel) {
                     Column(
                         Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
+                            .clip(MaterialTheme.shapes.small)
                             .clickable { vm.onRambleTapped() }
                             .padding(horizontal = 4.dp, vertical = 10.dp)
                     ) {

@@ -5,7 +5,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
@@ -36,7 +35,7 @@ private fun categoryColor(c: String, dark: Boolean): Color = chartColor(c, dark)
 @Composable
 fun StatsScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
     val st by vm.state.collectAsState()
-    val dark = isSystemInDarkTheme()
+    val dark = isDark()
 
     val ruleById = remember(st.sources) { vm.allRules().associateBy { it.id } }
     // 聚合：每规则命中应用数/组件数

@@ -5,7 +5,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -28,6 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -142,7 +142,7 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                         Text(
                             stringResource(R.string.system_banner),
                             style = MaterialTheme.typography.labelMedium,
-                            color = if (isSystemInDarkTheme()) WarnContainerLight else WarnOnContainerLight,
+                            color = if (isDark()) WarnContainerLight else WarnOnContainerLight,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 16.dp, vertical = 8.dp)
@@ -568,8 +568,8 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                         )
                                         if (g.suspicious) {
                                                 Surface(
-                                                    color = safetyColors(Safety.CAUTION, isSystemInDarkTheme()).container,
-                                                    contentColor = safetyColors(Safety.CAUTION, isSystemInDarkTheme()).onContainer,
+                                                    color = safetyColors(Safety.CAUTION, isDark()).container,
+                                                    contentColor = safetyColors(Safety.CAUTION, isDark()).onContainer,
                                                     shape = RoundedCornerShape(50)
                                                 ) {
                                                 Text(
@@ -822,7 +822,7 @@ private fun DetailHeaderCard(
                                             Box(
                                                 Modifier
                                                     .size(8.dp)
-                                                    .background(safetyColors(s, isSystemInDarkTheme()).container, RoundedCornerShape(50))
+                                                    .background(safetyColors(s, isDark()).container, RoundedCornerShape(50))
                                             )
                                             Spacer(Modifier.width(3.dp))
                                             Text(
@@ -843,9 +843,13 @@ private fun DetailHeaderCard(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 app.matchedSdks.take(10).forEach { hit ->
+                                    // 批F2/PD2：48dp 最小触达 + clip(CircleShape) 修圆头像方波纹
                                     SdkMonogram(
                                         hit.ruleId, hit.name,
-                                        Modifier.clickable { onOpenSheet(hit) }
+                                        Modifier
+                                            .clip(androidx.compose.foundation.shape.CircleShape)
+                                            .clickable { onOpenSheet(hit) }
+                                            .padding(8.dp)
                                     )
                                 }
                                 val rest = app.matchedSdks.size - 10

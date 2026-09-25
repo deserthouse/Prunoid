@@ -14,7 +14,6 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.lazy.LazyColumn
@@ -127,7 +126,7 @@ private fun loadLibIcons(ctx: android.content.Context): Map<String, String> {
 
 @Composable
 fun SdkMonogram(ruleId: String, name: String, modifier: Modifier = Modifier, iconUrl: String? = null) {
-    val dark = isSystemInDarkTheme()
+    val dark = isDark()
     val (bg, fg) = MONOGRAM_COLORS[ruleId.hashCode().let { if (it < 0) -it else it } % MONOGRAM_COLORS.size]
     val bgC = if (dark) fg.copy(alpha = 0.25f) else bg
     val fgC = if (dark) MaterialTheme.colorScheme.onSurface else fg
@@ -184,7 +183,7 @@ fun safetyConsequence(s: Safety): String = stringResource(when (s) {
 /** 四级安全徽标：图标 + 文字（色不单独表意） */
 @Composable
 fun SafetyBadge(s: Safety, modifier: Modifier = Modifier) {
-    val dark = isSystemInDarkTheme()
+    val dark = isDark()
     val c = safetyColors(s, dark)
     Surface(
         color = c.container,
@@ -256,7 +255,7 @@ fun ArchiveFieldCard(label: String, content: @Composable ColumnScope.() -> Unit)
     Surface(
         color = MaterialTheme.colorScheme.surfaceVariant,
         contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-        shape = RoundedCornerShape(12.dp),
+        shape = MaterialTheme.shapes.small,
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(Modifier.padding(12.dp)) {
