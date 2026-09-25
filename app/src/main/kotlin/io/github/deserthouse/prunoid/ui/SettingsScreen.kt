@@ -29,10 +29,15 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
     val ctx = LocalContext.current
     val snackbar = rememberSnackbar()
     var msg by remember { mutableStateOf<String?>(null) }
+    var msgSeq by remember { mutableStateOf(0) }
+    // 批G4：seq 参与 SnackbarEffect key——同文本连发（如两次同一失败）也能弹出（批J#4 机制此处此前漏用）
+    fun show(m: String) { msg = m; msgSeq++ }
+    // 批G4：加源失败消息内嵌对话框（不走 Snackbar——dialog window dim 层会遮住它）
+    var addSourceError by remember { mutableStateOf<String?>(null) }
     var showAddSource by remember { mutableStateOf(false) }
     var showBackup by remember { mutableStateOf(false) }
 
-    SnackbarEffect(snackbar, msg)
+    SnackbarEffect(snackbar, msg, msgSeq)
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surfaceContainer,
@@ -73,9 +78,9 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
 
             AutomationBackupSection(st, vm, onShowBackup = { showBackup = true })
 
-            SubscriptionsSection(st, vm, onShowAddSource = { showAddSource = true }, onMsg = { msg = it })
+            SubscriptionsSection(st, vm, onShowAddSource = { showAddSource = true }, onMsg = { show(it) })
 
-            RecoverySection(st, vm, onMsg = { msg = it })
+            RecoverySection(st, vm, onMsg = { show(it) })
 
             AboutSection(st, vm)
 
@@ -91,7 +96,7 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
     if (showBackup) {
         BackupDialog(
             vm = vm,
-            onMessage = { msg = it },
+            onMessage = { show(it) },
             onDismiss = { showBackup = false }
         )
     }
@@ -99,11 +104,19 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
     if (showAddSource) {
         AddSourceDialog(
             onDismiss = { showAddSource = false },
+            error = addSourceError,
             onConfirm = { name, url ->
-                // 批N3：失败不静默——成功才关（批G1：ok 位显式传递，不再解析消息文本）
+                // 批N3：失败不静默——成功才关
+                // 批G4：失败消息内嵌对话框（dialog window 的 dim 层压住 activity 层 Snackbar，
+                // 走 Snackbar 用户看不见——实机截图实证），错误文本直接渲染在对话框内
+                addSourceError = null
                 vm.addSource(name, url) { ok, msgText ->
-                    msg = msgText
-                    if (ok) showAddSource = false
+                    if (ok) {
+                        show(msgText)
+                        showAddSource = false
+                    } else {
+                        addSourceError = msgText
+                    }
                 }
             }
         )
@@ -237,11 +250,14 @@ fun BackupDialog(vm: AppViewModel, onMessage: (String) -> Unit, onDismiss: () ->
 
 
 @Composable
-fun AddSourceDialog(onDismiss: () -> Unit, onConfirm: (String, String) -> Unit) {
+fun AddSourceDialog(onDismiss: () -> Unit, onConfirm: (String, String) -> Unit, error: String? = null) {
     var name by remember { mutableStateOf("") }
     var url by remember { mutableStateOf("") }
-    // 批N3：提交中状态（失败不静默，成功关闭）
+    // 批N3：提交中状态（失败不静默，成功关闭）；批G4：失败态复位提交中+错误内嵌渲染
     var submitting by remember { mutableStateOf(false) }
+    androidx.compose.runtime.LaunchedEffect(error) {
+        if (error != null) submitting = false
+    }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.add_source_title)) },
@@ -268,18 +284,26 @@ fun AddSourceDialog(onDismiss: () -> Unit, onConfirm: (String, String) -> Unit) 
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                if (error != null) {
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        error,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
             }
         },
         confirmButton = {
             TextButton(
                 onClick = {
-                    if (url.isNotBlank()) {
+                    if (url.isNotBlank() && !submitting) {
                         submitting = true
                         onConfirm(name.trim(), url.trim())
                     }
                 },
-                enabled = url.startsWith("http")
-            ) { Text(stringResource(R.string.add)) }
+                enabled = url.startsWith("http") && !submitting
+            ) { Text(if (submitting) stringResource(R.string.adding) else stringResource(R.string.add)) }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } }
     )

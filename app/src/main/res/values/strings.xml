@@ -148,6 +148,7 @@
     <string name="update">更新</string>
     <string name="remove">移除</string>
     <string name="add_source_title">添加规则源</string>
+    <string name="adding">添加中…</string>
     <string name="about">关于</string>
     <string name="add_source_desc">格式与内置快照一致（schemaVersion + sdks），多源并集生效</string>
     <string name="name_optional">名称（可选）</string>

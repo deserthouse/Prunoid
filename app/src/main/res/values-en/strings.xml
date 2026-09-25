@@ -134,6 +134,7 @@
     <string name="update">Update</string>
     <string name="remove">Remove</string>
     <string name="add_source_title">Add rule source</string>
+    <string name="adding">Adding…</string>
     <string name="about">About</string>
     <string name="add_source_desc">Same schema as the built-in snapshot (schemaVersion + sdks); sources merge as a union</string>
     <string name="name_optional">Name (optional)</string>
