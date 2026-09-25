@@ -403,7 +403,8 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                         )
                         SdkMonogram(hit.ruleId, hit.name, Modifier.padding(end = 8.dp), vm.ruleInfo(hit.ruleId)?.iconUrl)
                         Column(Modifier.weight(1f)) {
-                            Text(hit.name, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            // 批P3：审计对象名优先——允许两行
+                            Text(hit.name, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
                             val liveSet = st.liveDisabled[app.packageName]
                             val disN = liveSet?.count { c ->
                                 hit.matchedComponents.any { it == c || (app.packageName + "/" + it) == c }

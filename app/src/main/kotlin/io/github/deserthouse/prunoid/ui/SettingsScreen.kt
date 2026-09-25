@@ -28,6 +28,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.compose.material.icons.outlined.ErrorOutline
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -93,6 +99,8 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
             Spacer(Modifier.height(4.dp))
 
             LanguageSection()
+
+            NotifPermSection()
 
             WorkModeSection(st, vm)
 
@@ -398,6 +406,58 @@ fun AddSourceDialog(onDismiss: () -> Unit, onConfirm: (String, String) -> Unit) 
     )
 }
 @Composable
+private fun NotifPermSection() {
+    // F1：权限状态行。点击跳系统「应用通知」页——自动弹窗在用户点过 Don't allow 后
+    // 永不再现（MainActivity 记忆），这里是唯一的反悔通道。
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    val sdk33 = android.os.Build.VERSION.SDK_INT >= 33
+    var granted by remember {
+        mutableStateOf(
+            !sdk33 || androidx.core.content.ContextCompat.checkSelfPermission(
+                ctx, android.Manifest.permission.POST_NOTIFICATIONS
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        )
+    }
+    // 从系统设置返回时刷新状态（页面在组合内切换、不触发 recreate，需生命周期钩子）
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val obs = androidx.lifecycle.LifecycleEventObserver { _, e ->
+            if (e == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                granted = !sdk33 || androidx.core.content.ContextCompat.checkSelfPermission(
+                    ctx, android.Manifest.permission.POST_NOTIFICATIONS
+                ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(obs)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(obs) }
+    }
+    SectionTitle(stringResource(R.string.notif_perm_title))
+    SettingsCard {
+        SettingRow(
+            icon = Icons.Outlined.Notifications,
+            title = stringResource(R.string.notif_perm_title),
+            subtitle = when {
+                !sdk33 -> stringResource(R.string.notif_perm_legacy)
+                granted -> stringResource(R.string.notif_perm_granted)
+                else -> stringResource(R.string.notif_perm_denied)
+            },
+            onClick = if (sdk33 && !granted) ({
+                ctx.startActivity(android.content.Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                    putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, ctx.packageName)
+                })
+            }) else null
+        ) {
+            Icon(
+                if (granted || !sdk33) Icons.Outlined.CheckCircle else Icons.Outlined.ErrorOutline,
+                contentDescription = null,
+                tint = if (granted || !sdk33) MaterialTheme.colorScheme.primary
+                       else MaterialTheme.colorScheme.error
+            )
+        }
+    }
+}
+
+@Composable
 private fun LanguageSection() {
     // ── 语言（批I：手动覆盖，立即 recreate 生效） ──
     SectionTitle(stringResource(R.string.lang_section))
@@ -552,7 +612,8 @@ private fun AutomationBackupSection(st: AppUiState, vm: AppViewModel, onShowBack
             SettingRow(
                 icon = Icons.Outlined.Autorenew,
                 title = stringResource(R.string.auto_title),
-                subtitle = stringResource(R.string.auto_summary)
+                subtitle = stringResource(R.string.auto_summary),
+                subtitleMaxLines = 4
             ) {
                 Switch(checked = st.autoReapply, onCheckedChange = { vm.setAutoReapply(it) })
             }

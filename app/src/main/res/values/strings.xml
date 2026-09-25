@@ -185,6 +185,10 @@
     <string name="sec_sub">规则订阅</string>
     <string name="sec_recovery">应急通道</string>
     <string name="sec_about">关于</string>
+    <string name="notif_perm_title">Notification permission</string>
+    <string name="notif_perm_granted">Granted — guard notifications can post</string>
+    <string name="notif_perm_denied">Denied — tap to open system settings and allow</string>
+    <string name="notif_perm_legacy">Not required on this Android version</string>
     <string name="stats_cat_center">已识别 SDK</string>
     <string name="stats_prefix_title">未识别组件前缀 Top 5</string>
     <string name="stats_prefix_hint">不在规则库中——勾选禁用属人工判断；欢迎贡献规则</string>
@@ -220,7 +224,7 @@
     <string name="easter_extra_line">等等——上一行是我本人亲手写的，所以人类占比也许勉强能涨到 1%？</string>
     <string name="easter_dry">别点了——一滴也没有了 😭</string>
     <string name="vm_sdk_everywhere_ok">%1$s：已在 %2$d/%3$d 个命中应用写入 %4$d 条组件规则</string>
-    <string name="lang_section">语言 / Language</string>
+    <string name="lang_section">语言</string>
     <string name="sheet_matched_line">命中 %1$d，已禁用 %2$d</string>
     <string name="filter_label">筛选</string>
     <string name="filter_label_n">筛选（%1$d）</string>
