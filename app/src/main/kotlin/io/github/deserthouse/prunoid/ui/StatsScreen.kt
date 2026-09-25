@@ -1,7 +1,5 @@
 package io.github.deserthouse.prunoid.ui
 
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -123,7 +121,7 @@ fun StatsScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
                         // M3E：入场弧线扫入（克制单段 tween）
                         val sweepIn by animateFloatAsState(
                             targetValue = if (catTotal > 0) 1f else 0f,
-                            animationSpec = tween(600, easing = FastOutSlowInEasing),
+                            animationSpec = MotionTokens.chart(),
                             label = "donutSweep"
                         )
                         Canvas(Modifier.fillMaxSize()) {

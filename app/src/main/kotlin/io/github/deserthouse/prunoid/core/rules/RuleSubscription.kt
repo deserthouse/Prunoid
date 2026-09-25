@@ -25,7 +25,8 @@ class RuleSubscription(context: Context) {
         .build()
     private val json = Json { ignoreUnknownKeys = true }
 
-    data class Result(val ok: Boolean, val message: String, val entries: Int = 0)
+    // 批G1：结构化结果——消息文案由 VM 层资源化组装，core 层不持成品串（i18n 清零）
+    data class Result(val ok: Boolean, val entries: Int = 0, val version: String = "", val error: String = "")
 
     private fun cacheFile(id: String) = java.io.File(dir, "src_$id.json")
 
@@ -44,12 +45,12 @@ class RuleSubscription(context: Context) {
                 resp.body?.string() ?: throw IllegalStateException("empty body")
             }
             val snapshot = json.decodeFromString<RuleSnapshot>(body)
-            require(snapshot.sdks.isNotEmpty()) { "规则源为空" }
+            require(snapshot.sdks.isNotEmpty()) { "rule source has no entries" }
             dir.mkdirs()
             val entry = CacheEntry(url, java.time.Instant.now().toString(), snapshot)
             cacheFile(id).writeText(json.encodeToString(CacheEntry.serializer(), entry))
-            Result(true, "订阅成功：${snapshot.sdks.size} 条规则（版本 ${snapshot.generatedAt.ifEmpty { "未知" }}）", snapshot.sdks.size)
-        }.getOrElse { Result(false, "订阅失败：${it.message}") }
+            Result(true, entries = snapshot.sdks.size, version = snapshot.generatedAt)
+        }.getOrElse { Result(false, error = it.message ?: "unknown error") }
     }
 
     fun cached(id: String): CacheEntry? = runCatching {

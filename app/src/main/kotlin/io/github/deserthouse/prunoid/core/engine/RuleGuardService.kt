@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.IBinder
 import android.util.Log
+import io.github.deserthouse.prunoid.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -77,7 +78,7 @@ class RuleGuardService : Service() {
         return Notification.Builder(this, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_menu_manage)
             .setContentTitle("Prunoid")
-            .setContentText("规则守护运行中：应用更新后自动重应用已选规则")
+            .setContentText(getString(R.string.guard_notif_text))
             .setOngoing(true)
             .setContentIntent(pi)
             .build()

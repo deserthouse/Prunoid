@@ -137,12 +137,10 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
         AddSourceDialog(
             onDismiss = { showAddSource = false },
             onConfirm = { name, url ->
-                // 批N3：失败不静默——成功才关（成功判定=消息含成功/Fetched）
-                vm.addSource(name, url) { msgText ->
+                // 批N3：失败不静默——成功才关（批G1：ok 位显式传递，不再解析消息文本）
+                vm.addSource(name, url) { ok, msgText ->
                     msg = msgText
-                    if (msgText.contains("成功") || msgText.contains("Fetched")) {
-                        showAddSource = false
-                    }
+                    if (ok) showAddSource = false
                 }
             }
         )
@@ -748,13 +746,13 @@ private fun SubscriptionsSection(st: AppUiState, vm: AppViewModel, onShowAddSour
                             CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
                         }
                     } else {
-                        IconButton(onClick = { vm.refreshSource(src) { onMsg(it) } }, Modifier.size(40.dp)) {
+                        IconButton(onClick = { vm.refreshSource(src) { _, m -> onMsg(m) } }, Modifier.size(40.dp)) {
                             Icon(Icons.Outlined.Sync, contentDescription = stringResource(R.string.update), Modifier.size(20.dp))
                         }
                     }
                     if (!src.builtin) {
                         IconButton(
-                            onClick = { vm.removeSource(src) { onMsg(it) } },
+                            onClick = { vm.removeSource(src) { _, m -> onMsg(m) } },
                             Modifier.size(40.dp)
                         ) {
                             Icon(

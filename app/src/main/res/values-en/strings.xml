@@ -139,6 +139,7 @@
     <string name="name_optional">Name (optional)</string>
     <string name="add">Add</string>
     <string name="guard_channel">Rule guard</string>
+    <string name="guard_notif_text">Guard active — re-applying selected rules after app updates</string>
     <string name="tab_apps">Apps</string>
     <string name="tab_stats">Stats</string>
     <string name="vm_scan_failed">Scan failed: %1$s</string>
@@ -156,6 +157,8 @@
     <string name="vm_fail_suffix"> — failed: %1$s</string>
     <string name="vm_restore_ok">Restored (IFW removed + pm components re-enabled)</string>
     <string name="vm_restore_fail">Failed: %1$s</string>
+    <string name="vm_sub_ok">Subscribed: %1$d rules (version %2$s)</string>
+    <string name="vm_sub_fail">Subscription failed: %1$s</string>
     <string name="chip_applied">Applied</string>
     <string name="filter_safety">Safety</string>
     <string name="filter_clear">Reset</string>
@@ -215,8 +218,6 @@
     <string name="filter_scope">Scope</string>
     <string name="filter_category">SDK category</string>
     <string name="search_comp_hint">Search component / SDK</string>
-    <string name="disable_unmatched">Disable selected (%1$d components)</string>
-    <string name="unverified_note">Unverified components: none pre-selected; disable at your own risk — consider contributing rules</string>
     <string name="sheet_no_apps">Not detected in any installed app</string>
     <string name="sheet_apps_title">Apps using this SDK (%1$d)</string>
     <string name="sheet_app_disabled">%1$d/%2$d components disabled</string>

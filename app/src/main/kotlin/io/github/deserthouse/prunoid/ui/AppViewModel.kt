@@ -8,6 +8,7 @@ import io.github.deserthouse.prunoid.core.engine.AppliedRulesStore
 import io.github.deserthouse.prunoid.core.engine.DisableEngine
 import io.github.deserthouse.prunoid.core.engine.Engine
 import io.github.deserthouse.prunoid.core.rules.RuleRepository
+import io.github.deserthouse.prunoid.core.rules.RuleSubscription
 import io.github.deserthouse.prunoid.core.rules.Safety
 import io.github.deserthouse.prunoid.core.engine.RuleGuardService
 import io.github.deserthouse.prunoid.core.rules.SettingsRepository
@@ -509,18 +510,19 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     // ── 多源订阅管理 ─────────────────────────────────────────────
-    fun refreshSource(source: SettingsRepository.SubSource, onDone: (String) -> Unit) {
+    // 批G1：回调带 ok 位（UI 判成功不再解析消息文本）；消息一律此处资源化
+    fun refreshSource(source: SettingsRepository.SubSource, onDone: (Boolean, String) -> Unit) {
         viewModelScope.launch {
             val result = withBusy("refresh") { rules.refreshSource(source.id, source.url) }
             if (result.ok) {
                 settings.updateSourceFetched(source.id, java.time.Instant.now().toString())
                 rescan()
             }
-            onDone(result.message)
+            onDone(result.ok, subResultMessage(result))
         }
     }
 
-    fun addSource(name: String, url: String, onDone: (String) -> Unit) {
+    fun addSource(name: String, url: String, onDone: (Boolean, String) -> Unit) {
         viewModelScope.launch {
             val id = "src_" + url.hashCode().let { if (it < 0) -it else it }
             val result = withBusy("addsource") { rules.refreshSource(id, url) }
@@ -536,16 +538,22 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 // 与 refreshSource 内部的 rebuild 竞争曾致 ANR）
                 rescan()
             }
-            onDone(result.message)
+            onDone(result.ok, subResultMessage(result))
         }
     }
 
-    fun removeSource(source: SettingsRepository.SubSource, onDone: (String) -> Unit) {
+    private fun subResultMessage(result: RuleSubscription.Result): String =
+        if (result.ok) appCtx.getString(
+            R.string.vm_sub_ok, result.entries,
+            result.version.ifEmpty { appCtx.getString(R.string.unknown) }
+        ) else appCtx.getString(R.string.vm_sub_fail, result.error)
+
+    fun removeSource(source: SettingsRepository.SubSource, onDone: (Boolean, String) -> Unit) {
         viewModelScope.launch {
-            if (source.builtin) { onDone(appCtx.getString(R.string.vm_source_builtin)); return@launch }
+            if (source.builtin) { onDone(false, appCtx.getString(R.string.vm_source_builtin)); return@launch }
             withContext(Dispatchers.IO) { rules.clearSourceCache(source.id) }
             settings.setSources(_state.value.sources.filterNot { it.id == source.id })
-            onDone(appCtx.getString(R.string.vm_source_removed, source.name))
+            onDone(true, appCtx.getString(R.string.vm_source_removed, source.name))
         }
     }
 
