@@ -23,6 +23,7 @@ import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -428,202 +429,7 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
             // 未识别组件（LibChecker "Unmarked library" 语义）：只读展示，供人审与规则仓 PR
             if (detailTab == 0 && app.unmatched.isNotEmpty()) {
                 item(key = "unmatched") {
-                    var unmatchedOpen by remember { mutableStateOf(false) }
-                    // 展开时卡体常整体落在视口折叠线下（卡顶近屏底），用户只见卡头+分隔线、
-                    // 展开体看似"没渲染"——若卡顶已在视口下半区，把卡顶滚动到视口顶。
-                    LaunchedEffect(unmatchedOpen) {
-                        if (!unmatchedOpen) return@LaunchedEffect
-                        val info = detailListState.layoutInfo.visibleItemsInfo
-                            .firstOrNull { it.key == "unmatched" } ?: return@LaunchedEffect
-                        val viewport = detailListState.layoutInfo.viewportEndOffset -
-                            detailListState.layoutInfo.viewportStartOffset
-                        if (info.offset > viewport * 0.35f) {
-                            // 等展开尺寸动画收敛再滚：目标项生长中时 animateScrollToItem 会被打断而中途停（实测 42ms 即返回）
-                            var last = -1
-                            var guard = 0
-                            while (guard++ < 20) {
-                                val h = detailListState.layoutInfo.visibleItemsInfo
-                                    .firstOrNull { it.key == "unmatched" }?.size ?: break
-                                if (h == last) break
-                                last = h
-                                delay(50)
-                            }
-                            detailListState.animateScrollToItem(info.index)
-                            // 断言落点：动画若再被打断则瞬时校正到卡顶
-                            val after = detailListState.layoutInfo.visibleItemsInfo
-                                .firstOrNull { it.key == "unmatched" }
-                            if (after != null && after.offset > 2) {
-                                detailListState.scrollToItem(info.index)
-                            }
-                        }
-                    }
-                    // 动效对齐 Blocker 克制区间（tween 100~200ms，FastOutSlowIn）
-                    val rot by animateFloatAsState(
-                        targetValue = if (unmatchedOpen) 180f else 0f,
-                        animationSpec = MotionTokens.fastFloat,
-                        label = "unmatchedArrow"
-                    )
-                    val total = app.unmatchedTotalComponents
-                    val groupsTruncated = app.unmatchedTotalGroups > app.unmatched.size
-                    Card(
-                        onClick = { unmatchedOpen = !unmatchedOpen },
-                        Modifier
-                            .fillMaxWidth()
-                            .animateContentSize(MotionTokens.fastSize)
-                    ) {
-                        Column(Modifier.padding(14.dp)) {
-                            Row(
-                                Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column(Modifier.weight(1f)) {
-                                    Text(stringResource(R.string.unmatched_total, total), style = MaterialTheme.typography.titleSmall)
-                                    Text(
-                                        stringResource(R.string.unmatched_desc),
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                    // P1⑨：unmatched 只带前 20 组，组数超限时明示口径防"少报"误读
-                                    if (groupsTruncated) {
-                                        Text(
-                                            stringResource(R.string.unmatched_truncated, app.unmatched.size, app.unmatchedTotalGroups),
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.tertiary
-                                        )
-                                    }
-                                }
-                                // 批E2：勾选后卡头就近禁用（免滚 20 行找按钮）
-                                val selN = unmatchedSel.count { it.value }
-                                if (unmatchedOpen && selN > 0) {
-                                    // 批N2①：批量禁用属危险操作，用 error 语义色
-                                    Button(
-                                        onClick = {
-                                            val selGroups = app.unmatched.filter { unmatchedSel[it.prefix] == true }
-                                            val byType = selGroups.flatMap { g ->
-                                                g.componentTypes.entries.map { (cn, t) -> t to cn }
-                                            }.groupBy({ it.first }, { it.second })
-                                            vm.disableUnmatched(app.packageName, byType) { msg = it }
-                                            unmatchedSel.clear()
-                                        },
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = MaterialTheme.colorScheme.errorContainer,
-                                            contentColor = MaterialTheme.colorScheme.onErrorContainer
-                                        ),
-                                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 4.dp)
-                                    ) {
-                                        Text(stringResource(R.string.disable_selected_n, selN), style = MaterialTheme.typography.labelSmall)
-                                    }
-                                    Spacer(Modifier.width(6.dp))
-                                }
-                                Icon(
-                                    Icons.Outlined.ExpandMore,
-                                    contentDescription = if (unmatchedOpen) stringResource(R.string.collapse) else stringResource(R.string.expand),
-                                    modifier = Modifier
-                                        .padding(start = 6.dp)
-                                        .rotate(rot)
-                                )
-                            }
-                            if (unmatchedOpen) {
-                                Spacer(Modifier.height(8.dp))
-                                HorizontalDivider()
-                                Spacer(Modifier.height(8.dp))
-                                // 批L4：搜索 + 疑似筛选 + 可勾选禁用（默认全不选——未验证组件人拍板）
-                                var unmatchedQuery by remember { mutableStateOf("") }
-                                var suspiciousOnly by remember { mutableStateOf(false) }
-                                val visibleGroups = app.unmatched.filter { g ->
-                                    (unmatchedQuery.isBlank() || g.prefix.contains(unmatchedQuery, true)) &&
-                                        (!suspiciousOnly || g.suspicious)
-                                }
-                                SearchField(
-                                    value = unmatchedQuery,
-                                    onValueChange = { unmatchedQuery = it },
-                                    placeholder = { Text(stringResource(R.string.search_prefix_hint)) },
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                                Row(Modifier.padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    FilterChip(
-                                        selected = suspiciousOnly,
-                                        onClick = { suspiciousOnly = !suspiciousOnly },
-                                        label = { Text(stringResource(R.string.suspicious)) }
-                                    )
-                                }
-                                visibleGroups.forEach { g ->
-                                    Row(
-                                        Modifier
-                                            .fillMaxWidth()
-                                            .padding(vertical = 2.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Checkbox(
-                                            checked = unmatchedSel[g.prefix] == true,
-                                            onCheckedChange = { unmatchedSel[g.prefix] = it }
-                                        )
-                                        Text(
-                                            g.prefix,
-                                            fontFamily = FontFamily.Monospace,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis,
-                                            modifier = Modifier.weight(1f)
-                                        )
-                                        if (g.suspicious) {
-                                                Surface(
-                                                    color = safetyColors(Safety.CAUTION, isDark()).container,
-                                                    contentColor = safetyColors(Safety.CAUTION, isDark()).onContainer,
-                                                    shape = RoundedCornerShape(50)
-                                                ) {
-                                                Text(
-                                                    stringResource(R.string.suspicious),
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.dp)
-                                                )
-                                            }
-                                        }
-                                        Text(
-                                            // 批N2②：改全词（Activity×3），用屏级 lookup 表避免 lambda 内调 composable
-                                            buildString {
-                                                g.componentTypes.values.groupingBy { it }.eachCount()
-                                                    .entries.sortedByDescending { it.value }
-                                                    .forEachIndexed { idx, (t, n) ->
-                                                        if (idx > 0) append(" ")
-                                                        append(tagText(t))
-                                                        append("×")
-                                                        append(n)
-                                                    }
-                                                append(" · ")
-                                                append(g.count)
-                                            },
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                    }
-                                }
-                                // 批E2：禁用操作已就近移至卡头（勾选即可见）
-                                // 批O：组件清单分享（系统分享器出 JSON，零上传零 token）
-                                val ctxShare = androidx.compose.ui.platform.LocalContext.current
-                                OutlinedButton(
-                                    onClick = {
-                                        val json = vm.exportComponentReport(app.packageName)
-                                        val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
-                                            type = "application/json"
-                                            putExtra(android.content.Intent.EXTRA_TEXT, json)
-                                            putExtra(android.content.Intent.EXTRA_SUBJECT, "Prunoid component report: " + app.label)
-                                        }
-                                        runCatching {
-                                            ctxShare.startActivity(android.content.Intent.createChooser(send, null))
-                                        }
-                                    },
-                                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp)
-                                ) {
-                                    Icon(Icons.Outlined.Share, contentDescription = null, modifier = Modifier.size(16.dp))
-                                    Spacer(Modifier.width(6.dp))
-                                    Text(stringResource(R.string.share_report))
-                                }
-                            }
-                        }
-                    }
+                    UnmatchedCard(app, unmatchedSel, detailListState, vm) { msg = it }
                 }
             }
         }
@@ -902,4 +708,212 @@ private fun DetailHeaderCard(
             }
 }
 
+}
+
+/** 未识别组件卡（批G2b 自 AppDetailScreen 抽出）：展开滚动定位/卡内搜索/疑似筛选/
+ *  勾选批量禁用（error 语义色）/组件清单分享。勾选集屏级持有（底部栏让位逻辑共用）。 */
+@Composable
+private fun UnmatchedCard(
+    app: ScannedApp,
+    unmatchedSel: SnapshotStateMap<String, Boolean>,
+    detailListState: androidx.compose.foundation.lazy.LazyListState,
+    vm: AppViewModel,
+    onMessage: (String) -> Unit
+) {
+                    var unmatchedOpen by remember { mutableStateOf(false) }
+                    // 展开时卡体常整体落在视口折叠线下（卡顶近屏底），用户只见卡头+分隔线、
+                    // 展开体看似"没渲染"——若卡顶已在视口下半区，把卡顶滚动到视口顶。
+                    LaunchedEffect(unmatchedOpen) {
+                        if (!unmatchedOpen) return@LaunchedEffect
+                        val info = detailListState.layoutInfo.visibleItemsInfo
+                            .firstOrNull { it.key == "unmatched" } ?: return@LaunchedEffect
+                        val viewport = detailListState.layoutInfo.viewportEndOffset -
+                            detailListState.layoutInfo.viewportStartOffset
+                        if (info.offset > viewport * 0.35f) {
+                            // 等展开尺寸动画收敛再滚：目标项生长中时 animateScrollToItem 会被打断而中途停（实测 42ms 即返回）
+                            var last = -1
+                            var guard = 0
+                            while (guard++ < 20) {
+                                val h = detailListState.layoutInfo.visibleItemsInfo
+                                    .firstOrNull { it.key == "unmatched" }?.size ?: break
+                                if (h == last) break
+                                last = h
+                                delay(50)
+                            }
+                            detailListState.animateScrollToItem(info.index)
+                            // 断言落点：动画若再被打断则瞬时校正到卡顶
+                            val after = detailListState.layoutInfo.visibleItemsInfo
+                                .firstOrNull { it.key == "unmatched" }
+                            if (after != null && after.offset > 2) {
+                                detailListState.scrollToItem(info.index)
+                            }
+                        }
+                    }
+                    // 动效对齐 Blocker 克制区间（tween 100~200ms，FastOutSlowIn）
+                    val rot by animateFloatAsState(
+                        targetValue = if (unmatchedOpen) 180f else 0f,
+                        animationSpec = MotionTokens.fastFloat,
+                        label = "unmatchedArrow"
+                    )
+                    val total = app.unmatchedTotalComponents
+                    val groupsTruncated = app.unmatchedTotalGroups > app.unmatched.size
+                    Card(
+                        onClick = { unmatchedOpen = !unmatchedOpen },
+                        Modifier
+                            .fillMaxWidth()
+                            .animateContentSize(MotionTokens.fastSize)
+                    ) {
+                        Column(Modifier.padding(14.dp)) {
+                            Row(
+                                Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(Modifier.weight(1f)) {
+                                    Text(stringResource(R.string.unmatched_total, total), style = MaterialTheme.typography.titleSmall)
+                                    Text(
+                                        stringResource(R.string.unmatched_desc),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    // P1⑨：unmatched 只带前 20 组，组数超限时明示口径防"少报"误读
+                                    if (groupsTruncated) {
+                                        Text(
+                                            stringResource(R.string.unmatched_truncated, app.unmatched.size, app.unmatchedTotalGroups),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.tertiary
+                                        )
+                                    }
+                                }
+                                // 批E2：勾选后卡头就近禁用（免滚 20 行找按钮）
+                                val selN = unmatchedSel.count { it.value }
+                                if (unmatchedOpen && selN > 0) {
+                                    // 批N2①：批量禁用属危险操作，用 error 语义色
+                                    Button(
+                                        onClick = {
+                                            val selGroups = app.unmatched.filter { unmatchedSel[it.prefix] == true }
+                                            val byType = selGroups.flatMap { g ->
+                                                g.componentTypes.entries.map { (cn, t) -> t to cn }
+                                            }.groupBy({ it.first }, { it.second })
+                                            vm.disableUnmatched(app.packageName, byType) { onMessage(it) }
+                                            unmatchedSel.clear()
+                                        },
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = MaterialTheme.colorScheme.errorContainer,
+                                            contentColor = MaterialTheme.colorScheme.onErrorContainer
+                                        ),
+                                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                                    ) {
+                                        Text(stringResource(R.string.disable_selected_n, selN), style = MaterialTheme.typography.labelSmall)
+                                    }
+                                    Spacer(Modifier.width(6.dp))
+                                }
+                                Icon(
+                                    Icons.Outlined.ExpandMore,
+                                    contentDescription = if (unmatchedOpen) stringResource(R.string.collapse) else stringResource(R.string.expand),
+                                    modifier = Modifier
+                                        .padding(start = 6.dp)
+                                        .rotate(rot)
+                                )
+                            }
+                            if (unmatchedOpen) {
+                                Spacer(Modifier.height(8.dp))
+                                HorizontalDivider()
+                                Spacer(Modifier.height(8.dp))
+                                // 批L4：搜索 + 疑似筛选 + 可勾选禁用（默认全不选——未验证组件人拍板）
+                                var unmatchedQuery by remember { mutableStateOf("") }
+                                var suspiciousOnly by remember { mutableStateOf(false) }
+                                val visibleGroups = app.unmatched.filter { g ->
+                                    (unmatchedQuery.isBlank() || g.prefix.contains(unmatchedQuery, true)) &&
+                                        (!suspiciousOnly || g.suspicious)
+                                }
+                                SearchField(
+                                    value = unmatchedQuery,
+                                    onValueChange = { unmatchedQuery = it },
+                                    placeholder = { Text(stringResource(R.string.search_prefix_hint)) },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                Row(Modifier.padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    FilterChip(
+                                        selected = suspiciousOnly,
+                                        onClick = { suspiciousOnly = !suspiciousOnly },
+                                        label = { Text(stringResource(R.string.suspicious)) }
+                                    )
+                                }
+                                visibleGroups.forEach { g ->
+                                    Row(
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 2.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Checkbox(
+                                            checked = unmatchedSel[g.prefix] == true,
+                                            onCheckedChange = { unmatchedSel[g.prefix] = it }
+                                        )
+                                        Text(
+                                            g.prefix,
+                                            fontFamily = FontFamily.Monospace,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        if (g.suspicious) {
+                                                Surface(
+                                                    color = safetyColors(Safety.CAUTION, isDark()).container,
+                                                    contentColor = safetyColors(Safety.CAUTION, isDark()).onContainer,
+                                                    shape = RoundedCornerShape(50)
+                                                ) {
+                                                Text(
+                                                    stringResource(R.string.suspicious),
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.dp)
+                                                )
+                                            }
+                                        }
+                                        Text(
+                                            // 批N2②：改全词（Activity×3），用屏级 lookup 表避免 lambda 内调 composable
+                                            buildString {
+                                                g.componentTypes.values.groupingBy { it }.eachCount()
+                                                    .entries.sortedByDescending { it.value }
+                                                    .forEachIndexed { idx, (t, n) ->
+                                                        if (idx > 0) append(" ")
+                                                        append(tagText(t))
+                                                        append("×")
+                                                        append(n)
+                                                    }
+                                                append(" · ")
+                                                append(g.count)
+                                            },
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+                                }
+                                // 批E2：禁用操作已就近移至卡头（勾选即可见）
+                                // 批O：组件清单分享（系统分享器出 JSON，零上传零 token）
+                                val ctxShare = androidx.compose.ui.platform.LocalContext.current
+                                OutlinedButton(
+                                    onClick = {
+                                        val json = vm.exportComponentReport(app.packageName)
+                                        val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                                            type = "application/json"
+                                            putExtra(android.content.Intent.EXTRA_TEXT, json)
+                                            putExtra(android.content.Intent.EXTRA_SUBJECT, "Prunoid component report: " + app.label)
+                                        }
+                                        runCatching {
+                                            ctxShare.startActivity(android.content.Intent.createChooser(send, null))
+                                        }
+                                    },
+                                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp)
+                                ) {
+                                    Icon(Icons.Outlined.Share, contentDescription = null, modifier = Modifier.size(16.dp))
+                                    Spacer(Modifier.width(6.dp))
+                                    Text(stringResource(R.string.share_report))
+                                }
+                            }
+                        }
+                    }
 }
