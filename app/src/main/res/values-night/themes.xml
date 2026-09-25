@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 批F5/PD8：暗色 splash 主题（parent 切 Dark） -->
+<resources>
+    <style name="Theme.Prunoid.Starting" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowSplashScreenBackground">@color/splash_background</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <item name="android:windowSplashScreenBehavior">icon_preferred</item>
+        <item name="android:windowBackground">@color/splash_background</item>
+    </style>
+</resources>

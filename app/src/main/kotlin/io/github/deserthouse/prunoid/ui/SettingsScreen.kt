@@ -214,6 +214,7 @@ private fun SettingRow(
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        // 批F4/PD7：非可点击行也给视觉反馈（长按提示）——暂不处理（列表行本身无交互即无反馈需求）
         Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
         Spacer(Modifier.width(16.dp))
         Column(Modifier.weight(1f)) {

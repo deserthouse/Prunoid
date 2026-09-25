@@ -146,7 +146,8 @@ fun SdkMonogram(ruleId: String, name: String, modifier: Modifier = Modifier, ico
     Box(
         modifier
             .size(32.dp)
-            .background(if (hasBrand) brandBg else bgC, RoundedCornerShape(50)),
+            .background(if (hasBrand) brandBg else bgC, RoundedCornerShape(50))
+            .semantics { contentDescription = "SDK: $name" },
         contentAlignment = Alignment.Center
     ) {
         when {
@@ -301,12 +302,15 @@ fun CountdownConfirmTextButton(
         },
         enabled = enabled && (!armed || tick == 0)
     ) {
+        // semantics{} 非组合上下文——文本先在组合期解析（批F4 修正）
+        val btnText = when {
+            armed && tick > 0 -> stringResource(R.string.confirm_wait, tick)
+            armed -> armedLabel
+            else -> label
+        }
         Text(
-            when {
-                armed && tick > 0 -> stringResource(R.string.confirm_wait, tick)
-                armed -> armedLabel
-                else -> label
-            },
+            btnText,
+            modifier = Modifier.semantics { contentDescription = btnText },
             color = MaterialTheme.colorScheme.error
         )
     }

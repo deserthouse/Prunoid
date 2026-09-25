@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 批F5/PD8：splash 暗色背景（修冷启暗色模式闪浅色） -->
+<resources>
+    <color name="splash_background">#1C1B1F</color>
+</resources>
