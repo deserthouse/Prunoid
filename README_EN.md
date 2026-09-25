@@ -72,15 +72,25 @@ Requirements: Android 12+ (API 31), rooted (Magisk or similar).
 
 ## ❓ FAQ
 
-**Will blocking crash apps?** Possibly. Rules carry 4-level grading and side-effect notes; risky ones require explicit opt-in. Every operation is preceded by an automatic backup and can be reverted.
+**Q: Will blocking crash apps?**
 
-**Can apps detect the blocking?** Not with the IFW engine — interception happens at the framework level. The pm engine can be detected and re-enabled by apps.
+A: Possibly. Rules carry 4-level grading and side-effect notes; risky ones require explicit opt-in. Every operation is preceded by an automatic backup and can be reverted.
 
-**Do rules survive app updates?** Yes. IFW rule files are independent of the APK, and the guard service re-applies them incrementally after updates.
+**Q: Can apps detect the blocking?**
 
-**Relationship to Blocker / Thanox?** Prunoid's cold-start ruleset merges blocker-general-rules (Apache-2.0) and LibChecker-Rules anchors; icons & descriptions come from LibChecker-Rules-Bundle (Apache-2.0, see NOTICE). Independent projects, no affiliation.
+A: Not with the IFW engine — interception happens at the framework level. The pm engine can be detected and re-enabled by apps.
 
-**Does it phone home?** Network access only when you actively subscribe/refresh a rule source. No telemetry, no crash reporting, no data upload.
+**Q: Do rules survive app updates?**
+
+A: Yes. IFW rule files are independent of the APK, and the guard service re-applies them incrementally after updates.
+
+**Q: Relationship to Blocker / Thanox?**
+
+A: Prunoid's cold-start ruleset merges blocker-general-rules (Apache-2.0) and LibChecker-Rules anchors; icons & descriptions come from LibChecker-Rules-Bundle (Apache-2.0, see NOTICE). Independent projects, no affiliation.
+
+**Q: Does it phone home?**
+
+A: Network access only when you actively subscribe/refresh a rule source. No telemetry, no crash reporting, no data upload.
 
 ## 📊 Compatibility
 
