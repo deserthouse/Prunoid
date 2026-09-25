@@ -19,7 +19,14 @@ class BootReceiver : BroadcastReceiver() {
             }
         }.getOrDefault(false)
         if (on) {
-            context.startForegroundService(Intent(context, RuleGuardService::class.java))
+            // 批G4 热修：BOOT 重投递到达时 A16 后台 FGS 豁免窗口可能已关
+            // （ForegroundServiceStartNotAllowedException 曾致 receiver 崩溃弹窗）；
+            // 拉起失败不抛——主界面 ensureRuleGuard() 是兜底拉起路径
+            try {
+                context.startForegroundService(Intent(context, RuleGuardService::class.java))
+            } catch (_: android.app.ForegroundServiceStartNotAllowedException) {
+            } catch (_: SecurityException) {
+            }
         }
     }
 }
