@@ -75,7 +75,7 @@ fun chartColor(cat: String, dark: Boolean): Color = when (cat) {
     "framework" -> if (dark) Color(0xFF90CAF9) else Color(0xFF1565C0)
     "infra" -> if (dark) Color(0xFFA1887F) else Color(0xFF6D4C41)
     "security" -> if (dark) Color(0xFFFFF59D) else Color(0xFFF9A825)
-    else -> if (dark) Color(0xFFB0BEC5) else Color(0xFF546E7A)
+    else -> if (dark) Color(0xFFBCAAA4) else Color(0xFF8D6E63)
 }
 
 fun safetyColors(s: Safety, darkTheme: Boolean): SafetyColors = when (s) {

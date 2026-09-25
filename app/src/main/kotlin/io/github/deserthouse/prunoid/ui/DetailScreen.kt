@@ -674,7 +674,14 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                     tint = MaterialTheme.colorScheme.error
                 )
             },
-            title = { Text(if (systemWarn) stringResource(R.string.sys_dialog_title) else stringResource(R.string.apply_rules)) },
+            title = {
+                // 批P5：M3 对话框标题左对齐（judge ⑬）
+                Text(
+                    if (systemWarn) stringResource(R.string.sys_dialog_title) else stringResource(R.string.apply_rules),
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Start
+                )
+            },
             text = {
                 Column {
                     if (systemWarn) {
