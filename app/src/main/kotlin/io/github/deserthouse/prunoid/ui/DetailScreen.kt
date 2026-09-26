@@ -62,12 +62,8 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
     val unmatchedSelCount = unmatchedSel.values.count { it }
     val st by vm.state.collectAsState()
     val pm = LocalContext.current.packageManager
-    // 逐 SDK 勾选：默认勾选 SAFE/CAUTION（RISKY/UNKNOWN 需显式加选）
-    // 批I：默认只勾 SAFE——CAUTION 及以上由用户显式选择（默认全勾过于激进）
-    val defaultSelected = remember(app.packageName) {
-        app.matchedSdks.filter { it.safety == Safety.SAFE }.map { it.ruleId }.toSet()
-    }
-    var selected by remember(app.packageName) { mutableStateOf(defaultSelected) }
+    // 批J1：默认零预选——勾选完全由用户自主（2026-09-26 用户明令撤销 SAFE 预勾）
+    var selected by remember(app.packageName) { mutableStateOf(setOf<String>()) }
     // 分类筛选：null = 全部
     // 批P1#14：列表级 SDK 分类筛选传导进详情（用户"只关心广告"的意图不丢失；详情内可再改）
     var catFilter by remember(app.packageName) {
@@ -177,7 +173,7 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                 CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
                                 Spacer(Modifier.width(8.dp))
                             }
-                            Text(if (selected.isNotEmpty() && selected != defaultSelected) stringResource(R.string.apply_selected, selected.size) else stringResource(R.string.apply_rules))
+                            Text(if (selected.isNotEmpty()) stringResource(R.string.apply_selected, selected.size) else stringResource(R.string.apply_rules))
                         }
                         OutlinedButton(
                             // 批D1：全量回滚补确认
@@ -441,16 +437,13 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
             title = { Text(stringResource(R.string.restore)) },
             text = { Text(stringResource(R.string.restore_app_confirm)) },
             confirmButton = {
-                CountdownConfirmTextButton(
-                    label = stringResource(R.string.restore),
-                    armedLabel = stringResource(R.string.restore_confirm_armed),
-                    enabled = true,
-                    seconds = 3,
-                    onConfirm = {
+                // 批J2：单次确认（用户明令拆除倒计时）
+                TextButton(
+                    onClick = {
                         showRestoreConfirm = false
                         vm.restoreApp(app) { msg = it }
                     }
-                )
+                ) { Text(stringResource(R.string.restore), color = MaterialTheme.colorScheme.error) }
             },
             dismissButton = { TextButton(onClick = { showRestoreConfirm = false }) { Text(stringResource(R.string.cancel)) } }
         )
@@ -504,16 +497,6 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                             (if (excludedRisky > 0) " " + stringResource(R.string.excluded_line, excludedRisky) else "") +
                             stringResource(R.string.engine_line, st.engine.name)
                     )
-                    // 批R7：默认勾选透明化——用户须知道操作包含预勾选项
-                    val defaultSelCount = selected.count { it in defaultSelected }
-                    if (defaultSelCount > 0) {
-                        Spacer(Modifier.height(4.dp))
-                        Text(
-                            stringResource(R.string.confirm_defaults, defaultSelCount),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
                     if (selBreakdown.isNotBlank()) {
                         Spacer(Modifier.height(4.dp))
                         Text(
@@ -525,21 +508,17 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                 }
             },
             confirmButton = {
-                // 批S1：破坏性操作统一倒计时守卫（与 Clear IFW/Restore 同族）
-                CountdownConfirmTextButton(
-                    label = stringResource(if (systemWarn) R.string.risk_continue else R.string.apply),
-                    armedLabel = stringResource(R.string.apply_confirm_armed),
-                    enabled = true,
-                    seconds = 3,
-                    onConfirm = {
+                // 批J2：单次确认（用户明令拆除倒计时）
+                TextButton(
+                    onClick = {
                         showApplyConfirm = false
                         vm.applyRules(app, selected) { m ->
-                        msg = m
-                        // 批C5：操作完成，选择集回落默认预勾（按钮不再停留"待执行"态）
-                        selected = defaultSelected
+                            msg = m
+                            // 批C5/J1：操作完成清空选择集（默认零预选）
+                            selected = emptySet()
+                        }
                     }
-                    }
-                )
+                ) { Text(stringResource(if (systemWarn) R.string.risk_continue else R.string.apply), color = MaterialTheme.colorScheme.error) }
             },
             dismissButton = {
                 TextButton(onClick = { showApplyConfirm = false }) { Text(stringResource(R.string.cancel)) }

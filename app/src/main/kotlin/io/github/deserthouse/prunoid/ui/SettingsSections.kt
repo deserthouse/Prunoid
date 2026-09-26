@@ -551,12 +551,11 @@ internal fun RecoverySection(st: AppUiState, vm: AppViewModel, onMsg: (String) -
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(Modifier.height(4.dp))
-                CountdownConfirmTextButton(
-                    label = stringResource(R.string.clear_ifw),
-                    armedLabel = stringResource(R.string.clear_ifw_confirm),
-                    enabled = !st.busy,
-                    onConfirm = { vm.clearAllIfw { onMsg(it) } }
-                )
+                // 批J2：单次确认（用户明令拆除倒计时）
+                TextButton(
+                    onClick = { vm.clearAllIfw { onMsg(it) } },
+                    enabled = !st.busy
+                ) { Text(stringResource(R.string.clear_ifw), color = MaterialTheme.colorScheme.error) }
                 Spacer(Modifier.height(6.dp))
                 // 批P2#23：卸载前清规则提示（root 工具经典翻车点）
                 Text(

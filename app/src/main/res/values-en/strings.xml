@@ -30,7 +30,6 @@
     <string name="cancel">Cancel</string>
     <string name="recovery_empty">No backups yet (created automatically before applying)</string>
     <string name="clear_ifw">Clear all IFW</string>
-    <string name="clear_ifw_confirm">Confirm clear all</string>
     <string name="restore_selected">Restore selected</string>
     <string name="close">Close</string>
     <string name="no_version">No version</string>
@@ -250,9 +249,6 @@
     <string name="source_official">Official rule source</string>
     <string name="snapshot_meta">Bundled rule snapshot: %1$s (entities)</string>
     <string name="addsource_disclosure">Custom sources count as low confidence — they never outrank official high-confidence rules on id conflict. Only add sources you trust.</string>
-    <string name="apply_confirm_armed">Confirm apply</string>
-    <string name="confirm_defaults">%1$d default-checked safe items are included.</string>
-    <string name="restore_confirm_armed">Confirm restore</string>
     <string name="block_everywhere">Block in all apps (%1$d)</string>
     <string name="unmatched_pending_hint">Unrecognized groups selected — finish "Disable selected" inside the card first.</string>
     <string name="precheck_note">Safe items are pre-checked; risky ones need explicit opt-in.</string>
@@ -268,7 +264,7 @@
     <string name="cons_caution">Use caution — some features may misbehave</string>
     <string name="cons_risky">Risky — the app may crash or lose core features</string>
     <string name="cons_unknown">Unknown impact — not enough community feedback yet</string>
-    <string name="confirm_wait">Wait %1$d s, then tap to confirm</string>    <string name="credit_lcr_name">LibChecker-Rules / LibChecker-Rules-Bundle</string>
+    <string name="credit_lcr_name">LibChecker-Rules / LibChecker-Rules-Bundle</string>
     <string name="credit_lcr_desc">Apache-2.0 · component anchors / brand icons / rich descriptions</string>
     <string name="credit_bgr_name">blocker-general-rules</string>
     <string name="credit_bgr_desc">Apache-2.0 · blocking rules &amp; safety annotations source</string>

@@ -227,19 +227,15 @@ fun BackupDialog(vm: AppViewModel, onMessage: (String) -> Unit, onDismiss: () ->
             title = { Text(stringResource(R.string.restore_selected)) },
             text = { Text(stringResource(R.string.backup_restore_confirm)) },
             confirmButton = {
-                // 批S1 补漏（二轮架构复审抓出）：破坏性操作统一倒计时守卫
-                CountdownConfirmTextButton(
-                    label = stringResource(R.string.restore),
-                    armedLabel = stringResource(R.string.restore_confirm_armed),
-                    enabled = true,
-                    seconds = 3,
-                    onConfirm = {
+                // 批J2：单次确认（用户明令拆除倒计时）
+                TextButton(
+                    onClick = {
                         confirmRestore = false
                         vm.restoreBackup(selected!!) { onMessage(it) }
                         selected = null
                         onDismiss()
                     }
-                )
+                ) { Text(stringResource(R.string.restore), color = MaterialTheme.colorScheme.error) }
             },
             dismissButton = {
                 TextButton(onClick = { confirmRestore = false }) { Text(stringResource(R.string.cancel)) }

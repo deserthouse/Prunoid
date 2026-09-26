@@ -267,59 +267,9 @@ fun ArchiveFieldCard(label: String, content: @Composable ColumnScope.() -> Unit)
     }
 }
 
-/**
- * 倒计时锁定确认按钮（Thanox "Be careful!" 模式）：
- * 首次点击进入倒计时（disabled 递减），归零后才可点确认执行。
- */
-@Composable
-fun CountdownConfirmTextButton(
-    label: String,
-    armedLabel: String,
-    enabled: Boolean,
-    onConfirm: () -> Unit,
-    seconds: Int = 4
-) {
-    var armed by remember { mutableStateOf(false) }
-    var tick by remember { mutableIntStateOf(seconds) }
-    LaunchedEffect(armed) {
-        if (armed) {
-            tick = seconds
-            while (tick > 0) {
-                kotlinx.coroutines.delay(1000)
-                tick--
-            }
-        }
-    }
-    TextButton(
-        onClick = {
-            // 倒计时归零前点击无效——锁定语义：数到 0 才放行
-            if (armed && tick == 0) {
-                armed = false
-                onConfirm()
-            } else if (!armed) {
-                armed = true
-            }
-        },
-        enabled = enabled && (!armed || tick == 0)
-    ) {
-        // semantics{} 非组合上下文——文本先在组合期解析（批F4 修正）
-        val btnText = when {
-            armed && tick > 0 -> stringResource(R.string.confirm_wait, tick)
-            armed -> armedLabel
-            else -> label
-        }
-        Text(
-            btnText,
-            modifier = Modifier.semantics { contentDescription = btnText },
-            color = MaterialTheme.colorScheme.error
-        )
-    }
-}
-
 /** SDK 类别单一来源（批Q2：列表筛选 sheet 与 SDK 库共用，加分类只改这里） */
 val ALL_CATEGORIES = listOf("ads", "push", "analytics", "quality", "social_or_pay", "maps", "infra", "security", "framework", "other")
 
-/** 批N2②：类型 → 全词标签查表（非 composable，可在任意 lambda 使用；文本已本地化由调用方传入 locale） */
 @Composable
 fun tagText(t: String): String = typeLabel(t)
 

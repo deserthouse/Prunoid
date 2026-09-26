@@ -1,10 +1,17 @@
 package io.github.deserthouse.prunoid.ui
+
+import io.github.deserthouse.prunoid.BuildConfig
+
+import kotlinx.coroutines.launch
+
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -38,6 +45,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -106,13 +114,45 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
             }
     }
 
+    val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
                 title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Prunoid", style = MaterialTheme.typography.titleLarge)
+                    // 批I1（OptIcon 样板）：serif 艺术字 wordmark + stage 版本徽章；点标题回顶
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .clip(androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
+                            .clickable {
+                                scope.launch { listState.animateScrollToItem(0) }
+                            }
+                    ) {
+                        Text(
+                            "Prunoid",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Serif
+                        )
+                        Spacer(Modifier.width(10.dp))
+                        // 版本徽章：stage 变色（alpha=tertiary / beta=secondary / 正式=primary）
+                        val stage = BuildConfig.VERSION_NAME.substringAfter('-', "")
+                        val (badgeBg, badgeFg) = when (stage) {
+                            "alpha" -> MaterialTheme.colorScheme.tertiaryContainer to MaterialTheme.colorScheme.onTertiaryContainer
+                            "beta" -> MaterialTheme.colorScheme.secondaryContainer to MaterialTheme.colorScheme.onSecondaryContainer
+                            else -> MaterialTheme.colorScheme.primaryContainer to MaterialTheme.colorScheme.onPrimaryContainer
+                        }
+                        Surface(shape = MaterialTheme.shapes.small, color = badgeBg) {
+                            Text(
+                                "v" + BuildConfig.VERSION_NAME,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = badgeFg,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
                         Spacer(Modifier.width(8.dp))
                         // 批#21：audit 模式全局可读标识
                         if (st.workMode.id.name == "AUDIT") {
@@ -208,7 +248,6 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
                 }
             }
             // 批L2：滚动收起搜索区（上滑即回，OptIcon 同款语义）
-            val listState = rememberLazyListState()
             val scrollUp by remember { derivedStateOf { listState.scrollingUp } }
             val headerVisible by remember { derivedStateOf { listState.firstVisibleItemIndex == 0 || scrollUp } }
             AnimatedVisibility(
@@ -347,7 +386,7 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
                                             else MaterialTheme.colorScheme.surfaceVariant,
                                             contentColor = if (framework) MaterialTheme.colorScheme.onErrorContainer
                                             else MaterialTheme.colorScheme.onSurfaceVariant,
-                                            shape = RoundedCornerShape(50)
+                                            shape = MaterialTheme.shapes.small
                                         ) {
                                             Text(
                                                 if (framework) stringResource(R.string.badge_framework) else stringResource(R.string.badge_system),
@@ -402,31 +441,42 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
                             },
                             trailingContent = {
                                 if (app.matchedSdks.isNotEmpty()) {
-                                    SuggestionChip(
-                                        onClick = { onOpen(app) },
-                                        label = {
+                                    // 批I2（M3E）：元数据徽标=tonal Surface（非 SuggestionChip——那是输入建议语义）；
+                                    // 色点带 surface 描边环保证浅底可见；行整体点击进详情，徽标不再重复交互
+                                    Surface(
+                                        shape = MaterialTheme.shapes.small,
+                                        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                        contentColor = MaterialTheme.colorScheme.onSurface
+                                    ) {
+                                        Column(
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                                        ) {
                                             Row(verticalAlignment = Alignment.CenterVertically) {
                                                 if (worst != null) Box(
                                                     Modifier
                                                         .size(8.dp)
                                                         .background(safetyColors(worst, dark).container, RoundedCornerShape(50))
+                                                        .border(1.dp, MaterialTheme.colorScheme.surfaceContainer, RoundedCornerShape(50))
                                                 )
-                                                Spacer(Modifier.width(4.dp))
-                                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                                    Text(pluralStringResource(R.plurals.badge_sdks, app.matchedSdks.size, app.matchedSdks.size))
-                                                    val adsN = app.matchedSdks.count { it.category == "ads" }
-                                                    val pushN = app.matchedSdks.count { it.category == "push" }
-                                                    if (adsN + pushN > 0) {
-                                                        Text(
-                                                            stringResource(R.string.badge_ads_push_short, adsN, pushN),
-                                                            style = MaterialTheme.typography.labelSmall,
-                                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                                        )
-                                                    }
-                                                }
+                                                Spacer(Modifier.width(5.dp))
+                                                Text(
+                                                    pluralStringResource(R.plurals.badge_sdks, app.matchedSdks.size, app.matchedSdks.size),
+                                                    style = MaterialTheme.typography.labelMedium,
+                                                    fontWeight = FontWeight.Medium
+                                                )
+                                            }
+                                            val adsN = app.matchedSdks.count { it.category == "ads" }
+                                            val pushN = app.matchedSdks.count { it.category == "push" }
+                                            if (adsN + pushN > 0) {
+                                                Text(
+                                                    stringResource(R.string.badge_ads_push_short, adsN, pushN),
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
                                             }
                                         }
-                                    )
+                                    }
                                 }
                             },
                             modifier = Modifier
