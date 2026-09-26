@@ -1,6 +1,7 @@
 package io.github.deserthouse.prunoid.ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
@@ -40,6 +41,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.core.net.toUri
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.deserthouse.prunoid.core.engine.Engine
@@ -61,16 +63,26 @@ internal fun fmtFetched(iso: String): String = runCatching {
 @Composable
 internal fun CreditEntry(project: String, description: String, url: String) {
     val ctx = LocalContext.current
-    Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-        Text(project, style = MaterialTheme.typography.bodyLarge)
+    // 批I3（OptIcon 样板）：名=bodyMedium Medium；URL 行=整行触达（48dp 底）+ 图标推至行尾
+    Column(Modifier.padding(vertical = 6.dp)) {
+        Text(
+            project,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
         Text(
             description,
             style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 16.dp)
         )
         Row(
             Modifier
-                .clip(MaterialTheme.shapes.extraSmall)
+                .fillMaxWidth()
+                .heightIn(min = 48.dp)
+                .clip(MaterialTheme.shapes.medium)
                 .clickable {
                     runCatching {
                         ctx.startActivity(
@@ -78,12 +90,16 @@ internal fun CreditEntry(project: String, description: String, url: String) {
                         )
                     }
                 }
-                .padding(vertical = 4.dp),
+                .padding(horizontal = 16.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(url.removePrefix("https://"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
-            Spacer(Modifier.width(4.dp))
-            Icon(Icons.Outlined.Launch, contentDescription = null, Modifier.size(12.dp), tint = MaterialTheme.colorScheme.primary)
+            Text(
+                url.removePrefix("https://"),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.weight(1f)
+            )
+            Icon(Icons.Outlined.Launch, contentDescription = null, Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
         }
     }
 }
@@ -91,11 +107,13 @@ internal fun CreditEntry(project: String, description: String, url: String) {
 /** OptIcon 同款分组标题（卡片外的小节标题） */
 @Composable
 internal fun SectionTitle(title: String) {
+    // 批I3（OptIcon 样板）：分区标题=primary 色 Medium 字重，上下 16/8 节奏
     Text(
         title,
         style = MaterialTheme.typography.labelLarge,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(start = 4.dp)
+        fontWeight = FontWeight.Medium,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
     )
 }
 
@@ -582,15 +600,27 @@ internal fun AboutSection(st: AppUiState, vm: AppViewModel) {
         Column(Modifier.padding(horizontal = 16.dp, vertical = 6.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                    Icons.Outlined.Info,
+                    Icons.Rounded.Info,
                     contentDescription = null,
                     modifier = Modifier.padding(end = 12.dp),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Column(Modifier.weight(1f)) {
-                    Text("Prunoid", style = MaterialTheme.typography.bodyLarge)
+                    // 批I3（OptIcon 样板）：名/版本/描述 三行结构
                     Text(
-                        "v" + BuildConfig.VERSION_NAME + " · " + stringResource(R.string.about_desc),
+                        "Prunoid",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        "v" + BuildConfig.VERSION_NAME,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        stringResource(R.string.about_desc),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -608,7 +638,8 @@ internal fun AboutSection(st: AppUiState, vm: AppViewModel) {
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .clip(MaterialTheme.shapes.small)
+                    .heightIn(min = 48.dp)
+                    .clip(MaterialTheme.shapes.medium)
                     .clickable {
                         runCatching {
                             ctx.startActivity(
