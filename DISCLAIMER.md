@@ -2,19 +2,10 @@
 
 ## AI 使用声明 / AI Usage Statement
 
-- 本项目的代码、文档、构建脚本与规则数据管线由 AI（大语言模型代理）在人类项目所有者的
-  指令与验收下开发：人类提出需求并验收结果，AI 负责具体实现与迭代。
-  This project is developed with heavy AI assistance: a human owner directs requirements
-  and reviews the results, while an AI agent implements the code, documentation, and the
-  rules data pipeline.
-- 规则数据中的组件特征（包名前缀 / 组件类名）为对公开数据与实机 APK 的客观事实提取；
-  由 AI 参与整理与合并，人类负责合规边界与最终取舍（见规则仓 NOTICE 与 CONTRIBUTING）。
-  Component signatures are objective facts extracted from public datasets and on-device
-  APK analysis; AI assisted with curation, while the human owner is responsible for the
-  licensing boundary and final editorial decisions.
-- 所有提交内容经过项目所有者审阅后发布。如发现错误内容，欢迎提 issue 指正。
-  All published content is reviewed by the project owner. If you spot an inaccuracy,
-  please open an issue.
+- 本项目不含任何人类成分，绝大多数工作都由 **AI** 完成。
+  This project contains no human contribution; the vast majority of the work was done by **AI**.
+- 如发现错误内容，欢迎提 issue 指正。
+  If you spot an inaccuracy, please open an issue.
 
 ## 免责声明 / Disclaimer
 

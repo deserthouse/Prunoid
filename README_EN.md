@@ -143,7 +143,7 @@ Full bilingual statement: [DISCLAIMER.md](DISCLAIMER.md).
 
 ## 🤖 AI Disclosure
 
-> This project was developed with heavy AI (LLM) assistance — architecture, implementation, testing and documentation — under human direction, review and final decision authority ([@deserthouse](https://github.com/deserthouse)).
+> This project contains no human contribution; the vast majority of the work was done by **AI**.
 
 ## ⚖️ License
 
