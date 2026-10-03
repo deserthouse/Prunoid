@@ -27,6 +27,7 @@
     <string name="chip_show_system">含系统 app（只读）</string>
     <string name="chip_hits_only">仅看命中</string>
     <string name="empty_apps">没有可显示的 app</string>
+    <string name="empty_hint">下拉刷新开始扫描</string>
     <string name="empty_no_match">无匹配结果</string>
     <string name="cd_applied">已应用规则</string>
     <!-- 订阅对话框 -->

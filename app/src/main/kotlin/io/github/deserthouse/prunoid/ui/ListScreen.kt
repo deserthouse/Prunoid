@@ -342,31 +342,45 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
             if (st.scanning) {
                 LinearWavyProgressIndicator(Modifier.padding(horizontal = 16.dp, vertical = 6.dp))
             }
-            if (apps.isEmpty() && !st.scanning) {
-                Column(
-                    Modifier.fillMaxSize().padding(bottom = 64.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Icon(
-                        Icons.Outlined.Search,
-                        contentDescription = null,
-                        modifier = Modifier.size(40.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        if (query.isBlank()) stringResource(R.string.empty_apps) else stringResource(R.string.empty_no_match),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            } else {
-                LazyColumn(
-                    state = listState,
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(bottom = 8.dp)
-                ) {
+            // 批R3（审计 B-2）：空态并入 LazyColumn（fillParentMaxSize 居中）——旧实现空态 Column 整体替换
+            // 列表宿主，嵌套滚动链断裂导致空列表下拉扫描必死（首启即空态，而引导卡第一步宣传的恰是下拉）
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = 8.dp)
+            ) {
+                if (apps.isEmpty() && !st.scanning) {
+                    item(key = "empty") {
+                        Box(
+                            Modifier.fillParentMaxSize().padding(bottom = 64.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(
+                                    Icons.Outlined.Search,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(40.dp),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Spacer(Modifier.height(8.dp))
+                                Text(
+                                    if (query.isBlank()) stringResource(R.string.empty_apps) else stringResource(R.string.empty_no_match),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                // 批R3（审计 B-5）：空态补操作指引（此前空态用户无路可走）
+                                if (query.isBlank()) {
+                                    Spacer(Modifier.height(12.dp))
+                                    Text(
+                                        stringResource(R.string.empty_hint),
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+                        }
+                    }
+                } else {
                     items(apps, key = { it.packageName }) { app ->
                         val icon = st.icons[app.packageName]
                         val appliedEntry = st.applied[app.packageName]
