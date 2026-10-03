@@ -67,7 +67,10 @@ data class AppUiState(
     // 批G2c：列表筛选族（批T8 会话态 + hitsOnly/showSystem 收拢）
     val filters: ListFilters = ListFilters(),
     // 批T2：内置快照可溯源（"2026-09-21 · 2003"）
-    val snapshotMeta: String = ""
+    val snapshotMeta: String = "",
+    // 批R4（审计 P-7）：声明式画圈状态入 UiState——原 VM 静态存储 getter 不触发重组，档案卡开关切换后不回显
+    val declared: Set<String> = emptySet(),
+    val declarationsEnabled: Boolean = false
 ) {
     // 批H：busy 由 busyOp 派生（UI 读法不变）
     val busy: Boolean get() = busyOp != null
@@ -357,12 +360,17 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
 
     // ── 批P：声明式（hook 模式）——SDK 画圈写 declarations.json ──
-    val declared: Set<String> get() = io.github.deserthouse.prunoid.core.engine.DeclarationsStore.declaredPrefixes
-    val declarationsEnabled: Boolean get() = io.github.deserthouse.prunoid.core.engine.DeclarationsStore.enabled
+    // 批R4（审计 P-7）：declared/declarationsEnabled 已入 AppUiState（组合读 state，写后 _state.update 回显）
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
             io.github.deserthouse.prunoid.core.engine.DeclarationsStore.read()
+            _state.update {
+                it.copy(
+                    declared = io.github.deserthouse.prunoid.core.engine.DeclarationsStore.declaredPrefixes,
+                    declarationsEnabled = io.github.deserthouse.prunoid.core.engine.DeclarationsStore.enabled
+                )
+            }
         }
     }
 
@@ -379,6 +387,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     prefixes = next.sorted()
                 )
             )
+            if (r.isSuccess) {
+                _state.update {
+                    it.copy(declared = next.sorted().toSet(), declarationsEnabled = next.isNotEmpty())
+                }
+            }
             onDone(if (r.isSuccess) "" else (r.exceptionOrNull()?.message ?: "write failed"))
         }
     }
@@ -391,6 +404,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     prefixes = io.github.deserthouse.prunoid.core.engine.DeclarationsStore.declaredPrefixes.sorted()
                 )
             )
+            _state.update { it.copy(declarationsEnabled = on) }
         }
     }
 
@@ -572,8 +586,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun ruleInfo(ruleId: String) = rules.rule(ruleId)
 
     // ── 备份与应急恢复 ────────────────────────────────────────────
-    fun listBackups(): List<String> =
-        runCatching { kotlinx.coroutines.runBlocking(Dispatchers.IO) { engine.listBackups() } }
+    // 批R4（审计 P-6）：runBlocking 壳拆除改 suspend——组合期调用不再阻塞主线程
+    suspend fun listBackups(): List<String> =
+        runCatching { withContext(Dispatchers.IO) { engine.listBackups() } }
             .getOrDefault(emptyList())
 
     fun restoreBackup(path: String, onDone: (String) -> Unit) {

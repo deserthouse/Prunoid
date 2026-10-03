@@ -99,7 +99,8 @@ fun SdkArchiveSheet(
                 val ruleDecls = remember(hit.ruleId) {
                     vm.ruleInfo(hit.ruleId)?.packPrefixes?.map { it.trimEnd('.') }?.toSet() ?: emptySet()
                 }
-                val declOn = remember(vm.declared) { ruleDecls.isNotEmpty() && ruleDecls.any { it in vm.declared } }
+                // 批R4（审计 P-7）：改读 UiState——原 remember(vm.declared) 的 key 是静态存储读数，永不触发重组，开关不回显
+                val declOn = ruleDecls.isNotEmpty() && ruleDecls.any { it in vmDecl.declared }
                 Switch(checked = declOn, onCheckedChange = { on ->
                     vm.toggleDeclaration(hit.ruleId, on)
                 })

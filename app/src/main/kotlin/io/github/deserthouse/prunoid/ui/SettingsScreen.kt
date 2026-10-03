@@ -126,7 +126,9 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
 @Composable
 fun BackupDialog(vm: AppViewModel, onMessage: (String) -> Unit, onDismiss: () -> Unit) {
     // F3：备份=可选机制。对话框披露用法/路径/恢复点/份数（自由填写，不再滑杆）
-    val backups = remember { vm.listBackups() }
+    // 批R4（审计 P-6）：组合期 runBlocking 改 LaunchedEffect 异步加载（备份多时不再卡主线程）
+    var backups by remember { mutableStateOf<List<String>>(emptyList()) }
+    LaunchedEffect(Unit) { backups = vm.listBackups() }
     // 批J#3：备份快照是全量状态，多选恢复语义不成立——改单选（最后选中者生效）
     var selected by remember { mutableStateOf<String?>(null) }
     var keepText by remember { mutableStateOf(vm.state.value.backupKeep.toString()) }

@@ -153,7 +153,11 @@ internal fun SettingRow(
                 overflow = TextOverflow.Ellipsis
             )
         }
-        action?.invoke()
+        // 批R4（审计 B-3）：动作位前留水平间隙——auto 行长副标题首行曾贴住开关
+        if (action != null) {
+            Spacer(Modifier.width(8.dp))
+            action?.invoke()
+        }
     }
 }
 
@@ -280,11 +284,10 @@ internal fun DeclarativeSection(st: AppUiState, vm: AppViewModel) {
             SettingRow(
                 icon = Icons.Outlined.Extension,
                 title = stringResource(R.string.decl_title),
-                subtitle = if (st.workMode.id.name == "ROOT" || st.workMode.id.name == "AUDIT")
-                    stringResource(R.string.decl_status, vm.declared.size)
-                else stringResource(R.string.decl_status, vm.declared.size)
+                // 批R4（审计 P-7）：声明状态改读 UiState（原 vm.declared 静态读数不触发重组）
+                subtitle = stringResource(R.string.decl_status, st.declared.size)
             ) {
-                Switch(checked = vm.declarationsEnabled, onCheckedChange = { vm.setDeclarationsEnabled(it) })
+                Switch(checked = st.declarationsEnabled, onCheckedChange = { vm.setDeclarationsEnabled(it) })
             }
             Text(
                 stringResource(R.string.decl_note),
