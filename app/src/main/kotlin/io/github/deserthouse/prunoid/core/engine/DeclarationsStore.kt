@@ -43,6 +43,8 @@ object DeclarationsStore {
                 "echo '$json' > $FILE",
                 "chmod 644 $FILE"
             ).exec()
+            // 批S2 诊断探针（N-2 验证中）：shell 身份与写入结果落日志，排查"报成功但文件不可见"
+            android.util.Log.d("SdkPruner", "decl.write: root=${com.topjohnwu.superuser.Shell.getShell().isRoot()} ok=${sh.isSuccess} err=${sh.err} out=${sh.out}")
             check(sh.isSuccess) { "shell write failed: ${sh.err}" }
             enabled = decl.enabled
             declaredPrefixes = decl.prefixes.toSet()

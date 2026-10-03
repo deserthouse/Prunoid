@@ -264,6 +264,8 @@
     <string name="decl_note">需 LSPosed 环境并启用本模块（作用域 system_server）。开启后可在各 SDK 档案卡中标记要声明的 SDK。</string>
     <string name="decl_warning">实验特性：system_server 级 hook，未完成上机验证；启用风险自担。</string>
     <string name="decl_toggle">全局声明（新装应用自动拦截）</string>
+    <string name="decl_need_root">未获得 root 授权——声明功能不可用（需 root + LSPosed 环境）</string>
+    <string name="decl_write_fail">声明写入失败（重试或检查 root 授权）</string>
     <plurals name="badge_apps"><item quantity="other">%d 应用</item></plurals>
     <plurals name="badge_sdks"><item quantity="other">%d SDK</item></plurals>
     <string name="search_prefix_hint">搜索组件前缀</string>

@@ -72,7 +72,7 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
 
             WorkModeSection(st, vm)
 
-            DeclarativeSection(st, vm)
+            DeclarativeSection(st, vm, onMsg = { show(it) })
 
             EnginesSection(st, vm)
 

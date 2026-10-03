@@ -377,7 +377,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     /** 画圈/取消一个 SDK（ruleId → 其全部 packPrefixes 展开写声明文件） */
     fun toggleDeclaration(ruleId: String, on: Boolean, onDone: (String) -> Unit = {}) {
         viewModelScope.launch {
-            val rule = rules.rule(ruleId) ?: return@launch
+            // 批S2 诊断探针：区分 rule 查找失败早退 / shell 写失败
+            val rule = rules.rule(ruleId)
+            android.util.Log.d("SdkPruner", "decl.toggle: id=$ruleId found=${rule != null} prefixes=${rule?.packPrefixes?.size}")
+            if (rule == null) return@launch
             val cur = io.github.deserthouse.prunoid.core.engine.DeclarationsStore.declaredPrefixes
             val next = if (on) cur + rule.packPrefixes.map { it.trimEnd('.') }
                        else cur - rule.packPrefixes.map { it.trimEnd('.') }.toSet()
@@ -396,15 +399,17 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun setDeclarationsEnabled(on: Boolean) {
+    fun setDeclarationsEnabled(on: Boolean, onDone: (String) -> Unit = {}) {
         viewModelScope.launch {
-            io.github.deserthouse.prunoid.core.engine.DeclarationsStore.write(
+            val r = io.github.deserthouse.prunoid.core.engine.DeclarationsStore.write(
                 io.github.deserthouse.prunoid.core.engine.DeclarationsStore.Decl(
                     enabled = on,
                     prefixes = io.github.deserthouse.prunoid.core.engine.DeclarationsStore.declaredPrefixes.sorted()
                 )
             )
-            _state.update { it.copy(declarationsEnabled = on) }
+            // 批S2（审计 N-2）：失败不再谎报回显；错误文本资源化（设置页 Snackbar 直接展示）
+            if (r.isSuccess) _state.update { it.copy(declarationsEnabled = on) }
+            onDone(if (r.isSuccess) "" else appCtx.getString(R.string.decl_write_fail))
         }
     }
 
@@ -525,6 +530,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             settings.setAutoReapply(on)
             val app = getApplication<Application>()
             if (on) {
+                android.util.Log.d("SdkPruner", "vm.setAutoReapply: starting guard")
                 app.startForegroundService(Intent(app, RuleGuardService::class.java))
             } else {
                 app.stopService(Intent(app, RuleGuardService::class.java))

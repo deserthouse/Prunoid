@@ -91,21 +91,44 @@ fun SdkArchiveSheet(
             }
             // 批库链修复④：库上下文不显示锚点口径量化句（与下方扫描集清单自相矛盾）
             // 批P：全局声明开关（所有档案卡可见；写 declarations.json）
-            Row(
-                Modifier.fillMaxWidth().padding(top = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(stringResource(R.string.decl_toggle), style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f))
-                Spacer(Modifier.width(8.dp))
-                val vmDecl = vm.state.collectAsState().value
-                val ruleDecls = remember(hit.ruleId) {
-                    vm.ruleInfo(hit.ruleId)?.packPrefixes?.map { it.trimEnd('.') }?.toSet() ?: emptySet()
+            val vmDecl = vm.state.collectAsState().value
+            var declFail by remember { mutableStateOf(false) }
+            Column(Modifier.fillMaxWidth().padding(top = 8.dp)) {
+                Row(
+                    Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(stringResource(R.string.decl_toggle), style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f))
+                    Spacer(Modifier.width(8.dp))
+                    val ruleDecls = remember(hit.ruleId) {
+                        vm.ruleInfo(hit.ruleId)?.packPrefixes?.map { it.trimEnd('.') }?.toSet() ?: emptySet()
+                    }
+                    // 批R4（审计 P-7）：改读 UiState——原 remember(vm.declared) 的 key 是静态存储读数，永不触发重组，开关不回显
+                    val declOn = ruleDecls.isNotEmpty() && ruleDecls.any { it in vmDecl.declared }
+                    // 批S2（审计 N-2）：无 root 禁用+原因行（原可切但写失败静默零反馈）；
+                    // 有 root 失败也内嵌提示（Snackbar 被 sheet 遮挡，批M3 教训）
+                    Switch(
+                        checked = declOn,
+                        enabled = vmDecl.rootGranted,
+                        onCheckedChange = { on ->
+                            declFail = false
+                            vm.toggleDeclaration(hit.ruleId, on) { err -> if (err.isNotBlank()) declFail = true }
+                        }
+                    )
                 }
-                // 批R4（审计 P-7）：改读 UiState——原 remember(vm.declared) 的 key 是静态存储读数，永不触发重组，开关不回显
-                val declOn = ruleDecls.isNotEmpty() && ruleDecls.any { it in vmDecl.declared }
-                Switch(checked = declOn, onCheckedChange = { on ->
-                    vm.toggleDeclaration(hit.ruleId, on)
-                })
+                if (!vmDecl.rootGranted) {
+                    Text(
+                        stringResource(R.string.decl_need_root),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                } else if (declFail) {
+                    Text(
+                        stringResource(R.string.decl_write_fail),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
             }
             if (!libraryContext) {
                 Row(

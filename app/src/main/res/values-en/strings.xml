@@ -248,6 +248,8 @@
     <string name="decl_note">Requires LSPosed with this module enabled (scope: system_server). Draw circles from SDK archive sheets.</string>
     <string name="decl_warning">Experimental: system_server-level hooking, on-device verification pending; enable at your own risk.</string>
     <string name="decl_toggle">Declare globally (auto-block in future apps)</string>
+    <string name="decl_need_root">Root not granted — declarations unavailable (needs root + LSPosed)</string>
+    <string name="decl_write_fail">Declaration write failed (retry or check root grant)</string>
     <plurals name="badge_apps"><item quantity="one">1 app</item><item quantity="other">%d apps</item></plurals>
     <plurals name="badge_sdks"><item quantity="one">1 SDK</item><item quantity="other">%d SDKs</item></plurals>
     <string name="search_prefix_hint">Search component prefix</string>

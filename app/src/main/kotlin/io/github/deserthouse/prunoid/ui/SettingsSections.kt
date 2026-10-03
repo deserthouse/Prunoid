@@ -276,7 +276,7 @@ internal fun WorkModeSection(st: AppUiState, vm: AppViewModel) {
 
 }
 @Composable
-internal fun DeclarativeSection(st: AppUiState, vm: AppViewModel) {
+internal fun DeclarativeSection(st: AppUiState, vm: AppViewModel, onMsg: (String) -> Unit) {
     // ── 声明式（批P：LSPosed 模式，默认关闭） ──
     SectionTitle(stringResource(R.string.sec_declarative))
     SettingsCard {
@@ -287,7 +287,20 @@ internal fun DeclarativeSection(st: AppUiState, vm: AppViewModel) {
                 // 批R4（审计 P-7）：声明状态改读 UiState（原 vm.declared 静态读数不触发重组）
                 subtitle = stringResource(R.string.decl_status, st.declared.size)
             ) {
-                Switch(checked = st.declarationsEnabled, onCheckedChange = { vm.setDeclarationsEnabled(it) })
+                // 批S2（审计 N-2）：无 root 禁用（原开关可切但写失败静默零反馈）
+                Switch(
+                    checked = st.declarationsEnabled,
+                    enabled = st.rootGranted,
+                    onCheckedChange = { vm.setDeclarationsEnabled(it) { err -> if (err.isNotBlank()) onMsg(err) } }
+                )
+            }
+            if (!st.rootGranted) {
+                Text(
+                    stringResource(R.string.decl_need_root),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                )
             }
             Text(
                 stringResource(R.string.decl_note),
