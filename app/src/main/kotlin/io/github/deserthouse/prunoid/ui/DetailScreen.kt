@@ -136,14 +136,8 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                 .padding(horizontal = 16.dp, vertical = 8.dp)
                         )
                     } else if (systemWarn) {
-                        Text(
-                            stringResource(R.string.system_banner),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = if (isDark()) WarnContainerLight else WarnOnContainerLight,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 8.dp)
-                        )
+                        // 批R5（审计 P-8）：复用共享警示横幅（原为裸文本且深色把 WarnContainerLight 容器色当文字色）
+                        WarnBanner(stringResource(R.string.system_banner), Modifier.fillMaxWidth(), horizontalPadding = 16.dp)
                     }
                     if (unmatchedSelCount > 0) {
                         // 批E1：未识别勾选进行中——SDK 操作栏让位，防误触另一套操作

@@ -195,9 +195,14 @@ fun BackupDialog(vm: AppViewModel, onMessage: (String) -> Unit, onDismiss: () ->
                 Spacer(Modifier.height(10.dp))
                 Text(stringResource(R.string.backup_keep_title), style = MaterialTheme.typography.titleSmall)
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    // 批R5（审计 P-11）：保存给内嵌成功反馈（原 onMessage("") 静默；且 Snackbar 会被对话框 dim 层遮住——批G4 教训）
+                    var keepSaved by remember { mutableStateOf(false) }
                     OutlinedTextField(
                         value = keepText,
-                        onValueChange = { v -> keepText = v.filter { it.isDigit() }.take(5) },
+                        onValueChange = { v ->
+                            keepText = v.filter { it.isDigit() }.take(5)
+                            keepSaved = false
+                        },
                         singleLine = true,
                         modifier = Modifier.width(120.dp)
                     )
@@ -206,10 +211,18 @@ fun BackupDialog(vm: AppViewModel, onMessage: (String) -> Unit, onDismiss: () ->
                         onClick = {
                             val n = keepText.toIntOrNull()?.coerceIn(1, 99999) ?: 10
                             vm.setBackupKeep(n)
-                            onMessage("")
+                            keepSaved = true
                         },
                         enabled = keepText.toIntOrNull() != null
-                    ) { Text(stringResource(R.string.add)) }
+                    ) { Text(stringResource(R.string.save)) }
+                    if (keepSaved) {
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            stringResource(R.string.backup_keep_saved),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 }
                 Text(
                     stringResource(R.string.backup_keep_note),

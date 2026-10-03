@@ -217,18 +217,8 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
         ) {
         Column(Modifier.fillMaxSize()) {
             if (!st.rootGranted) {
-                Surface(
-                    color = if (dark) WarnContainerDark else WarnContainerLight,
-                    contentColor = if (dark) WarnOnContainerDark else WarnOnContainerLight
-                ) {
-                    Text(
-                        stringResource(R.string.vm_no_root),
-                        style = MaterialTheme.typography.labelMedium,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 20.dp, vertical = 8.dp)
-                    )
-                }
+                // 批R5（审计 P-8）：共享警示横幅统一两页视觉
+                WarnBanner(stringResource(R.string.vm_no_root), Modifier.fillMaxWidth())
             }
             if (showGuide) {
                 Card(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {

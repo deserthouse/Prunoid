@@ -25,6 +25,8 @@
     <string name="chip_hits_only">Matched only</string>
     <string name="empty_apps">Nothing to show</string>
     <string name="empty_hint">Pull down to scan</string>
+    <string name="save">Save</string>
+    <string name="backup_keep_saved">Saved</string>
     <string name="empty_no_match">No results</string>
     <string name="cd_applied">Rules applied</string>
     <string name="subscribe">Subscribe</string>

@@ -1,5 +1,6 @@
 package io.github.deserthouse.prunoid.ui
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -18,6 +19,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import io.github.deserthouse.prunoid.R
 import io.github.deserthouse.prunoid.core.engine.AppliedRulesStore
 import io.github.deserthouse.prunoid.core.rules.Safety
@@ -225,13 +227,24 @@ fun SdkArchiveSheet(
                 ArchiveFieldCard(stringResource(R.string.sheet_desc_title)) { Text(it, style = MaterialTheme.typography.bodySmall) }
                 Spacer(Modifier.height(8.dp))
             }
-            info?.sourceLink?.takeIf { it.isNotBlank() }?.let {
+            info?.sourceLink?.takeIf { it.isNotBlank() }?.let { link ->
+                // 批R5（审计 P-11）：sourceLink 改可点（原 tertiary 色形似链接却只读不可点；CreditEntry 同款触达）
+                val ctx = androidx.compose.ui.platform.LocalContext.current
                 ArchiveFieldCard(stringResource(R.string.sheet_links)) {
                     Text(
-                        it,
+                        link,
                         fontFamily = FontFamily.Monospace,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.tertiary
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .clickable {
+                                runCatching {
+                                    ctx.startActivity(
+                                        android.content.Intent(android.content.Intent.ACTION_VIEW, link.toUri())
+                                    )
+                                }
+                            }
+                            .padding(vertical = 2.dp)
                     )
                 }
                 Spacer(Modifier.height(8.dp))

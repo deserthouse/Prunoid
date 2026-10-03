@@ -206,6 +206,23 @@ fun SafetyBadge(s: Safety, modifier: Modifier = Modifier) {
         }
     }
 }
+/** 无 root/系统应用警示横幅（批R5 审计 P-8）：两页统一 Surface+正确明暗配对——详情页曾是裸文本且深色把容器色当文字色 */
+@Composable
+fun WarnBanner(text: String, modifier: Modifier = Modifier, horizontalPadding: androidx.compose.ui.unit.Dp = 20.dp) {
+    val dark = isDark()
+    Surface(
+        color = if (dark) WarnContainerDark else WarnContainerLight,
+        contentColor = if (dark) WarnOnContainerDark else WarnOnContainerLight,
+        modifier = modifier
+    ) {
+        Text(
+            text,
+            style = MaterialTheme.typography.labelMedium,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = horizontalPadding, vertical = 8.dp)
+        )
+    }
+}
+
 @Composable
 fun rememberSnackbar(): SnackbarHostState = remember { SnackbarHostState() }
 

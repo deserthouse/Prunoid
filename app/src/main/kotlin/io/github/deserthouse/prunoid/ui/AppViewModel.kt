@@ -94,7 +94,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             _state.update {
                 it.copy(rootGranted = root)
             }
-            if (!root) setMessage(appCtx.getString(R.string.vm_no_root))
+            // 批R5（审计 B-4）：无 root 提示只走列表页常驻横幅（原来横幅+Snackbar 同文案双份且每次冷启弹）
         }
         viewModelScope.launch {
             var lastSourceKey: String? = null
