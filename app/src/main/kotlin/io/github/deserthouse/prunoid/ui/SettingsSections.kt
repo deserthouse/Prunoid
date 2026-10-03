@@ -254,11 +254,18 @@ internal fun WorkModeSection(st: AppUiState, vm: AppViewModel) {
                 }
             }
             Spacer(Modifier.height(4.dp))
+            // 批R1（审计 B-6）：段选说明如实反映当前能力——配置选了 Root 但未授权时不再虚报 Full capability
+            val rootSelected = st.workMode.id.name == "ROOT"
+            val rootMissing = rootSelected && !st.rootGranted
             Text(
-                if (st.workMode.id.name == "ROOT") stringResource(R.string.wm_root_desc)
-                else stringResource(R.string.wm_audit_desc),
+                when {
+                    rootMissing -> stringResource(R.string.wm_root_noroot)
+                    rootSelected -> stringResource(R.string.wm_root_desc)
+                    else -> stringResource(R.string.wm_audit_desc)
+                },
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = if (rootMissing) MaterialTheme.colorScheme.error
+                        else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

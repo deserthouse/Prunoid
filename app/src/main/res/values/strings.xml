@@ -244,6 +244,8 @@
     <string name="wm_root">Root</string>
     <string name="wm_audit">审计模式</string>
     <string name="wm_root_desc">直写系统禁用规则（IFW / pm），全能力。默认方式。</string>
+    <string name="wm_root_noroot">未获得 root 授权：禁用功能当前不可用（等效仅审计）。在 Magisk → 超级用户 授权 Prunoid 后重进即恢复。</string>
+    <string name="apply_need_root">未获得 root 授权，禁用不可用——在 Magisk → 超级用户 授权 Prunoid 后重进</string>
     <string name="wm_audit_desc">只读审计：扫描/识别/统计可用，禁用操作不可用（无 root 或只想查看时选择）。</string>
     <string name="reapply_open">打开时</string>
     <string name="reapply_realtime">实时</string>

@@ -157,31 +157,45 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                 modifier = Modifier.weight(1f)
                             )
                         }
-                    } else Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Button(
-                            onClick = { showApplyConfirm = true },
-                            enabled = !framework && !st.busy && selected.isNotEmpty()
-                                && st.workMode.capabilities.disablePerApp && st.rootGranted,
-                            modifier = Modifier.weight(1f)
+                    } else Column(Modifier.fillMaxWidth()) {
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            if (st.busy) {
-                                CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
-                                Spacer(Modifier.width(8.dp))
+                            Button(
+                                onClick = { showApplyConfirm = true },
+                                enabled = !framework && !st.busy && selected.isNotEmpty()
+                                    && st.workMode.capabilities.disablePerApp && st.rootGranted,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                if (st.busy) {
+                                    CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
+                                    Spacer(Modifier.width(8.dp))
+                                }
+                                Text(if (selected.isNotEmpty()) stringResource(R.string.apply_selected, selected.size) else stringResource(R.string.apply_rules))
                             }
-                            Text(if (selected.isNotEmpty()) stringResource(R.string.apply_selected, selected.size) else stringResource(R.string.apply_rules))
+                            OutlinedButton(
+                                // 批D1：全量回滚补确认
+                                onClick = { showRestoreConfirm = true },
+                                enabled = !framework && !st.busy && appliedEntry != null
+                                    && st.workMode.capabilities.disablePerApp && st.rootGranted,
+                                modifier = Modifier.weight(1f)
+                            ) { Text(stringResource(R.string.restore)) }
                         }
-                        OutlinedButton(
-                            // 批D1：全量回滚补确认
-                            onClick = { showRestoreConfirm = true },
-                            enabled = !framework && !st.busy && appliedEntry != null
-                                && st.workMode.capabilities.disablePerApp && st.rootGranted,
-                            modifier = Modifier.weight(1f)
-                        ) { Text(stringResource(R.string.restore)) }
+                        // 批R1（审计 B-1）：禁用态必须给原因——零反馈死按钮是走查最高优先缺陷
+                        if (!framework && !st.rootGranted) {
+                            Text(
+                                stringResource(R.string.apply_need_root),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.error,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp)
+                                    .padding(bottom = 10.dp)
+                            )
+                        }
                     }
                 }
             }

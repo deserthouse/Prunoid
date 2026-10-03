@@ -228,6 +228,8 @@
     <string name="wm_root">Root</string>
     <string name="wm_audit">Audit only</string>
     <string name="wm_root_desc">Writes disable rules directly (IFW / pm). Full capability. Default.</string>
+    <string name="wm_root_noroot">Root not granted: blocking is unavailable right now (effectively audit-only). Grant Prunoid in Magisk → Superuser and reopen to restore.</string>
+    <string name="apply_need_root">Root not granted — blocking unavailable. Grant Prunoid in Magisk → Superuser, then reopen</string>
     <string name="wm_audit_desc">Read-only auditing: scan/identify/stats available; disable actions unavailable (no root, or just inspecting).</string>
     <string name="reapply_open">On open</string>
     <string name="reapply_realtime">Realtime</string>
