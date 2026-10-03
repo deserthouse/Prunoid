@@ -278,6 +278,9 @@
     <string name="uninstall_note">提示：卸载 Prunoid 不会移除已写入的 IFW 规则——卸载前请先用上方「清除全部 IFW」。</string>
 <string name="badge_ads_push_short">含 %1$d 广告 · %2$d 推送</string>
 <string name="disable_selected_n">禁用所选（%1$d 组）</string>
+<string name="unmatched_confirm_body">将在「%3$s」禁用 %1$d 组未识别组件（共 %2$d 个组件）。未经验证，可能导致应用功能异常。</string>
+<string name="remove_source_confirm">移除订阅源「%1$s」？其缓存规则将一并清除（不影响内置源）。</string>
+<string name="block_everywhere_confirm">将对 %1$d 个应用批量写入 IFW 禁用规则（系统/框架应用自动跳过）；可随时在各应用详情页恢复。</string>
     <string name="cons_safe">可安全禁用——不影响应用正常功能</string>
     <string name="cons_caution">谨慎禁用——可能导致部分功能异常</string>
     <string name="cons_risky">禁用有风险——应用可能崩溃或核心功能失效</string>

@@ -426,6 +426,7 @@ internal fun AutomationBackupSection(st: AppUiState, vm: AppViewModel, onShowBac
 @Composable
 internal fun SubscriptionsSection(st: AppUiState, vm: AppViewModel, onShowAddSource: () -> Unit, onMsg: (String) -> Unit) {
     // ── 规则订阅 ──
+    var confirmRemoveSrc by remember { mutableStateOf<io.github.deserthouse.prunoid.core.rules.SettingsRepository.SubSource?>(null) }
     SectionTitle(stringResource(R.string.sec_sub))
     SettingsCard {
         Column(Modifier.padding(16.dp)) {
@@ -443,7 +444,7 @@ internal fun SubscriptionsSection(st: AppUiState, vm: AppViewModel, onShowAddSou
                 )
                 Spacer(Modifier.height(4.dp))
             }
-            // F2：OptIcon 式源行——恒定 40dp IconButton 足迹，busy 原位换 spinner
+            // F2：OptIcon 式源行——busy 原位换 spinner；批R2（审计 P-9）：触控恢复 48dp 默认
             st.sources.forEach { src ->
                 Row(
                     Modifier.fillMaxWidth().padding(vertical = 2.dp),
@@ -466,7 +467,22 @@ internal fun SubscriptionsSection(st: AppUiState, vm: AppViewModel, onShowAddSou
                                 )
                             }
                         }
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        // 批R2（审计 P-1）：clickable 接到可见 URL 行（CreditEntry 整行触达写法）；
+                        // 旧实现热区挂在渲染单空格的 Text(" ") 上——可见链接反而点不动
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 48.dp)
+                                .clip(MaterialTheme.shapes.medium)
+                                .clickable {
+                                    runCatching {
+                                        srcCtx.startActivity(
+                                            android.content.Intent(android.content.Intent.ACTION_VIEW, src.url.toUri())
+                                        )
+                                    }
+                                },
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Text(
                                 src.url,
                                 fontFamily = FontFamily.Monospace,
@@ -491,30 +507,18 @@ internal fun SubscriptionsSection(st: AppUiState, vm: AppViewModel, onShowAddSou
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    Text(
-                        " ",
-                        modifier = Modifier.clickable {
-                            runCatching {
-                                srcCtx.startActivity(
-                                    android.content.Intent(android.content.Intent.ACTION_VIEW, src.url.toUri())
-                                )
-                            }
-                        }
-                    )
                     if (st.busy) {
-                        Box(Modifier.size(40.dp), contentAlignment = Alignment.Center) {
+                        Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
                             CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
                         }
                     } else {
-                        IconButton(onClick = { vm.refreshSource(src) { _, m -> onMsg(m) } }, Modifier.size(40.dp)) {
+                        IconButton(onClick = { vm.refreshSource(src) { _, m -> onMsg(m) } }) {
                             Icon(Icons.Outlined.Sync, contentDescription = stringResource(R.string.update), Modifier.size(20.dp))
                         }
                     }
                     if (!src.builtin) {
-                        IconButton(
-                            onClick = { vm.removeSource(src) { _, m -> onMsg(m) } },
-                            Modifier.size(40.dp)
-                        ) {
+                        // 批R2（审计 P-4）：删除源补确认（与 OptIcon 同款缺口，本轮两仓同步补齐）
+                        IconButton(onClick = { confirmRemoveSrc = src }) {
                             Icon(
                                 Icons.Outlined.Delete,
                                 contentDescription = stringResource(R.string.remove),
@@ -532,11 +536,29 @@ internal fun SubscriptionsSection(st: AppUiState, vm: AppViewModel, onShowAddSou
             ) { Text(stringResource(R.string.add_source_title)) }
         }
     }
+    confirmRemoveSrc?.let { srcDel ->
+        AlertDialog(
+            onDismissRequest = { confirmRemoveSrc = null },
+            title = { Text(stringResource(R.string.remove)) },
+            text = { Text(stringResource(R.string.remove_source_confirm, srcDel.name)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        confirmRemoveSrc = null
+                        vm.removeSource(srcDel) { _, m -> onMsg(m) }
+                    }
+                ) { Text(stringResource(R.string.remove), color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = { TextButton(onClick = { confirmRemoveSrc = null }) { Text(stringResource(R.string.cancel)) } }
+        )
+    }
 
 }
 @Composable
 internal fun RecoverySection(st: AppUiState, vm: AppViewModel, onMsg: (String) -> Unit) {
     // ── 应急通道（F3：恢复点管理迁入 + 复制按钮 + 清除全部迁入） ──
+    // 批R2（审计 P-2）：系统级毁灭操作补单次确认——批J2 拆倒计时时此键的确认被一并拆掉（git 考古 5120738）
+    var confirmClearIfw by remember { mutableStateOf(false) }
     SectionTitle(stringResource(R.string.sec_recovery))
     SettingsCard {
         Column(Modifier.padding(vertical = 4.dp)) {
@@ -576,9 +598,8 @@ internal fun RecoverySection(st: AppUiState, vm: AppViewModel, onMsg: (String) -
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(Modifier.height(4.dp))
-                // 批J2：单次确认（用户明令拆除倒计时）
                 TextButton(
-                    onClick = { vm.clearAllIfw { onMsg(it) } },
+                    onClick = { confirmClearIfw = true },
                     enabled = !st.busy
                 ) { Text(stringResource(R.string.clear_ifw), color = MaterialTheme.colorScheme.error) }
                 Spacer(Modifier.height(6.dp))
@@ -590,6 +611,34 @@ internal fun RecoverySection(st: AppUiState, vm: AppViewModel, onMsg: (String) -
                 )
             }
         }
+    }
+    if (confirmClearIfw) {
+        AlertDialog(
+            onDismissRequest = { confirmClearIfw = false },
+            title = { Text(stringResource(R.string.recovery_clear_title)) },
+            text = {
+                Column {
+                    if (st.ifwTotal > 0) {
+                        Text(
+                            stringResource(R.string.recovery_ifw_count, st.ifwTotal),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontFamily = FontFamily.Monospace
+                        )
+                        Spacer(Modifier.height(4.dp))
+                    }
+                    Text(stringResource(R.string.recovery_clear_desc))
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        confirmClearIfw = false
+                        vm.clearAllIfw { onMsg(it) }
+                    }
+                ) { Text(stringResource(R.string.clear_ifw), color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = { TextButton(onClick = { confirmClearIfw = false }) { Text(stringResource(R.string.cancel)) } }
+        )
     }
 
 }

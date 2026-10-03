@@ -262,6 +262,9 @@
     <string name="uninstall_note">Note: uninstalling Prunoid does not remove written IFW rules — run "Clear all IFW" above first for a clean slate.</string>
 <string name="badge_ads_push_short">%1$d ads · %2$d push</string>
 <string name="disable_selected_n">Disable selected (%1$d)</string>
+<string name="unmatched_confirm_body">Will disable %1$d groups of unidentified components (%2$d components) in "%3$s". Unverified — may break app functionality.</string>
+<string name="remove_source_confirm">Remove source "%1$s"? Its cached rules will be cleared (built-in source unaffected).</string>
+<string name="block_everywhere_confirm">Writes IFW disable rules across %1$d apps in bulk (system/framework apps are skipped automatically); reversible anytime from each app\'s detail page.</string>
     <string name="cons_safe">Safe to disable — app keeps working normally</string>
     <string name="cons_caution">Use caution — some features may misbehave</string>
     <string name="cons_risky">Risky — the app may crash or lose core features</string>

@@ -121,6 +121,8 @@ fun SdkArchiveSheet(
                 val userApps = st0.apps.filter { a -> a.matchedSdks.any { it.ruleId == hit.ruleId } }
                 // 批M3：sheet 内嵌状态行（Snackbar 在 sheet 之下会被遮挡，改本地呈现）
                 var sheetStatus by remember { mutableStateOf<String?>(null) }
+                // 批R2（审计 P-5）：跨应用批量写 IFW 补单次确认
+                var confirmEverywhere by remember { mutableStateOf(false) }
                 sheetStatus?.let {
                     Surface(
                         color = MaterialTheme.colorScheme.secondaryContainer,
@@ -150,7 +152,7 @@ fun SdkArchiveSheet(
                         // 批库链修复②：全局禁用按钮（此前 onDisableEverywhere 为死回调从未接入）
                         onDisableEverywhere?.let { cb ->
                             FilledTonalButton(
-                                onClick = cb,
+                                onClick = { confirmEverywhere = true },
                                 enabled = !st0.busy && st0.workMode.capabilities.disablePerApp && st0.rootGranted,
                                 contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 4.dp)
                             ) {
@@ -199,6 +201,22 @@ fun SdkArchiveSheet(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
+                }
+                if (confirmEverywhere) {
+                    AlertDialog(
+                        onDismissRequest = { confirmEverywhere = false },
+                        title = { Text(stringResource(R.string.block_everywhere, userApps.size)) },
+                        text = { Text(stringResource(R.string.block_everywhere_confirm, userApps.size)) },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    confirmEverywhere = false
+                                    onDisableEverywhere?.invoke()
+                                }
+                            ) { Text(stringResource(R.string.risk_continue), color = MaterialTheme.colorScheme.error) }
+                        },
+                        dismissButton = { TextButton(onClick = { confirmEverywhere = false }) { Text(stringResource(R.string.cancel)) } }
+                    )
                 }
             }
             Spacer(Modifier.height(12.dp))

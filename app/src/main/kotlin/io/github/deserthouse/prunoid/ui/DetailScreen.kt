@@ -714,6 +714,8 @@ private fun UnmatchedCard(
     onMessage: (String) -> Unit
 ) {
                     var unmatchedOpen by remember { mutableStateOf(false) }
+                    // 批R2（审计 P-3）：批量禁用未识别组件与 Apply 同级风险，补单次确认
+                    var confirmUnmatched by remember { mutableStateOf(false) }
                     // 展开时卡体常整体落在视口折叠线下（卡顶近屏底），用户只见卡头+分隔线、
                     // 展开体看似"没渲染"——若卡顶已在视口下半区，把卡顶滚动到视口顶。
                     LaunchedEffect(unmatchedOpen) {
@@ -782,14 +784,7 @@ private fun UnmatchedCard(
                                 if (unmatchedOpen && selN > 0) {
                                     // 批N2①：批量禁用属危险操作，用 error 语义色
                                     Button(
-                                        onClick = {
-                                            val selGroups = app.unmatched.filter { unmatchedSel[it.prefix] == true }
-                                            val byType = selGroups.flatMap { g ->
-                                                g.componentTypes.entries.map { (cn, t) -> t to cn }
-                                            }.groupBy({ it.first }, { it.second })
-                                            vm.disableUnmatched(app.packageName, byType) { onMessage(it) }
-                                            unmatchedSel.clear()
-                                        },
+                                        onClick = { confirmUnmatched = true },
                                         colors = ButtonDefaults.buttonColors(
                                             containerColor = MaterialTheme.colorScheme.errorContainer,
                                             contentColor = MaterialTheme.colorScheme.onErrorContainer
@@ -908,5 +903,34 @@ private fun UnmatchedCard(
                                 }
                             }
                         }
+                    }
+                    if (confirmUnmatched) {
+                        val selGroups = app.unmatched.filter { unmatchedSel[it.prefix] == true }
+                        val selCompN = selGroups.flatMap { g -> g.componentTypes.values }.size
+                        AlertDialog(
+                            onDismissRequest = { confirmUnmatched = false },
+                            title = { Text(stringResource(R.string.disable_selected_n, selGroups.size)) },
+                            text = {
+                                Text(
+                                    stringResource(
+                                        R.string.unmatched_confirm_body,
+                                        selGroups.size, selCompN, app.label.ifEmpty { app.packageName }
+                                    )
+                                )
+                            },
+                            confirmButton = {
+                                TextButton(
+                                    onClick = {
+                                        confirmUnmatched = false
+                                        val byType = selGroups.flatMap { g ->
+                                            g.componentTypes.entries.map { (cn, t) -> t to cn }
+                                        }.groupBy({ it.first }, { it.second })
+                                        vm.disableUnmatched(app.packageName, byType) { onMessage(it) }
+                                        unmatchedSel.clear()
+                                    }
+                                ) { Text(stringResource(R.string.risk_continue), color = MaterialTheme.colorScheme.error) }
+                            },
+                            dismissButton = { TextButton(onClick = { confirmUnmatched = false }) { Text(stringResource(R.string.cancel)) } }
+                        )
                     }
 }
