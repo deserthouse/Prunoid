@@ -36,9 +36,11 @@ object DeclarationsStore {
                 }
                 append("]}")
             }
+            // 批R4b：heredoc 在 libsu 单行命令通道里永不闭合→写文件必败（批P 首次上机实证）；
+            // json 由程序生成且前缀已剥引号，单引号 echo 安全
             val sh = com.topjohnwu.superuser.Shell.cmd(
                 "mkdir -p $DIR && chmod 755 $DIR",
-                "cat > $FILE <<'PRUNOID_EOF'\n$json\nPRUNOID_EOF",
+                "echo '$json' > $FILE",
                 "chmod 644 $FILE"
             ).exec()
             check(sh.isSuccess) { "shell write failed: ${sh.err}" }
