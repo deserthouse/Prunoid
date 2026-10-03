@@ -72,6 +72,7 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
                 requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 1)
             }
             val guard = cfg.autoReapply && cfg.workMode == "root" && cfg.reapplyMode == "realtime"
+            android.util.Log.d("SdkPruner", "ensureRuleGuard: guard=$guard mode=${cfg.workMode}/${cfg.reapplyMode}")
             if (guard) startForegroundService(Intent(this@MainActivity, RuleGuardService::class.java))
             else stopService(Intent(this@MainActivity, RuleGuardService::class.java))
         }

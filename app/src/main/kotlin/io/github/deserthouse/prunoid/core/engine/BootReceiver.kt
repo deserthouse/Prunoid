@@ -12,10 +12,15 @@ import kotlinx.coroutines.runBlocking
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != Intent.ACTION_BOOT_COMPLETED) return
+        // 批S1c（N-1 定案修复）：条件对齐 MainActivity.ensureRuleGuard 三元组
+        // （autoReapply && root && realtime）。旧口径只查 autoReapply（默认 true）——
+        // 默认 open 档下 BOOT 也会拉起服务，与主界面随后的 stopService 竞态即 N-1 崩溃源；
+        // 且系统对 force-stop 过的 app 在下次显式启动时补发 BOOT_COMPLETED（平台文档行为），
+        // "强停后再打开"与"重启后打开"都会踩中此路径
         val on = runCatching {
             runBlocking(Dispatchers.IO) {
-                io.github.deserthouse.prunoid.core.rules.SettingsRepository(context)
-                    .settings.first().autoReapply
+                val s = io.github.deserthouse.prunoid.core.rules.SettingsRepository(context).settings.first()
+                s.autoReapply && s.workMode == "root" && s.reapplyMode == "realtime"
             }
         }.getOrDefault(false)
         if (on) {
@@ -23,6 +28,7 @@ class BootReceiver : BroadcastReceiver() {
             // （ForegroundServiceStartNotAllowedException 曾致 receiver 崩溃弹窗）；
             // 拉起失败不抛——主界面 ensureRuleGuard() 是兜底拉起路径
             try {
+                android.util.Log.d("SdkPruner", "bootreceiver: action=${intent.action} starting guard")
                 context.startForegroundService(Intent(context, RuleGuardService::class.java))
             } catch (_: android.app.ForegroundServiceStartNotAllowedException) {
             } catch (_: SecurityException) {
