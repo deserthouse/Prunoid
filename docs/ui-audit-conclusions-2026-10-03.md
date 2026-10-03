@@ -1,6 +1,8 @@
 # Prunoid UI 审查结论汇总（2026-10-03 · 静态+AVD 双篇合一入口）
 
 > 本文是**结论入口**：全部问题、修复路线、样板与共性一页读完；证据与细节按下表取用。
+
+> **处置结果（2026-10-03 当日消费完毕，批R1-R5+R4b，发版 0.17.0/vc25）**：18 项中 16 项已修复（B-1~B-6、P-1~P-9、P-11、依赖清理），P-10/P-12 按本文建议挂起。修复经双实例装机实证（root 基线机 SDK-Pruner_A16_root + 新建 SDK-Pruner_A15_clean 无 root 机）+ 视觉 judge 9/9 PASS；回归基线全绿（On-open 补扫、Apply 量化确认、Stats 环图恒和、库页计数）。验证中新发现三项记档（详见项目内 project_status.md 批R 节）：N-1 无 root 冷启偶发 FGS 崩溃（RuleGuardService 竞态，专项待排查）；N-2 无 root 声明开关写失败静默（功能 root 门控，既有行为）；N-3 TalkBack/大字体矩阵仍挂起。另：P-7 验证炸出批P 遗留写文件 bug（heredoc 在 libsu 必败），已随批 R4b 修复并端到端实证。
 > | 篇章 | 文档 | 内容 |
 > |---|---|---|
 > | 静态代码审计（同日） | 本目录 `ui-audit-2026-10-03.md` | P-1~P-12，file:line 证据 |
