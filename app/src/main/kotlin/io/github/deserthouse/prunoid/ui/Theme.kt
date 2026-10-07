@@ -65,11 +65,13 @@ object MotionTokens {
 
 // 统计图表专用调色板（批Q6）：避开安全语义色相（红/橙/绿/中性灰），
 // 防止"分类占比"被误读为"风险等级"；亮暗两套，色相一一对应。
+// 批U（审查U-7）：quality 原与 infra（浅色 6D4C41）/other（暗色 BCAAA4）完全撞色，
+// 改石板蓝灰（455A64/78909C）——与两族棕色及 framework 亮蓝均拉开。
 fun chartColor(cat: String, dark: Boolean): Color = when (cat) {
     "ads" -> if (dark) Color(0xFFB39DDB) else Color(0xFF5E35B1)
     "push" -> if (dark) Color(0xFFF48FB1) else Color(0xFFAD1457)
     "analytics" -> if (dark) Color(0xFF80DEEA) else Color(0xFF00838F)
-    "quality" -> if (dark) Color(0xFFBCAAA4) else Color(0xFF6D4C41)
+    "quality" -> if (dark) Color(0xFF78909C) else Color(0xFF455A64)
     "social_or_pay" -> if (dark) Color(0xFF9FA8DA) else Color(0xFF3949AB)
     "maps" -> if (dark) Color(0xFF4DD0E1) else Color(0xFF00ACC1)
     "framework" -> if (dark) Color(0xFF90CAF9) else Color(0xFF1565C0)

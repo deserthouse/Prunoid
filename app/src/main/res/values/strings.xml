@@ -20,7 +20,8 @@
     <string name="menu_library">SDK 库</string>
     <string name="menu_settings">设置</string>
     <string name="indexing">正在建立索引…</string>
-    <string name="list_summary">用户应用 %1$d 个 · %2$d 个命中 SDK</string>
+    <string name="list_summary">%1$s · %2$d 个命中 SDK</string>
+    <plurals name="list_apps_count"><item quantity="other">用户应用 %1$d 个</item></plurals>
     <string name="vm_no_root">未获得 root：扫描可用、禁用不可用——打开 Magisk → 超级用户 → 授权 Prunoid 后重进</string>
     <string name="search_hint">搜索 app / 包名 / SDK</string>
     <string name="clear_search">清除搜索</string>

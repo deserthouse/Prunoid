@@ -501,8 +501,9 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                         Spacer(Modifier.height(8.dp))
                     }
                     Text(
+                        // 批U（审查U-6）：分隔空格移进 excluded_line 资源（中文全角括号自带断句不需要半角空格）
                         stringResource(R.string.confirm_line, selHits.size, selComponents.size) +
-                            (if (excludedRisky > 0) " " + stringResource(R.string.excluded_line, excludedRisky) else "") +
+                            (if (excludedRisky > 0) stringResource(R.string.excluded_line, excludedRisky) else "") +
                             stringResource(R.string.engine_line, st.engine.name)
                     )
                     if (selBreakdown.isNotBlank()) {
@@ -870,7 +871,9 @@ private fun UnmatchedCard(
                                             style = MaterialTheme.typography.labelSmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
+                                            overflow = TextOverflow.Ellipsis,
+                                            // 批U（审查U-3）：前缀省略号顶满 weight(1f) 时与行尾标签零间距，加固定间隙
+                                            modifier = Modifier.padding(start = 6.dp)
                                         )
                                     }
                                 }

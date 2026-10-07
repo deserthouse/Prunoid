@@ -200,7 +200,8 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
             Surface(tonalElevation = 2.dp) {
                 Text(
                     if (st.apps.isEmpty()) stringResource(R.string.indexing)
-                    else stringResource(R.string.list_summary, apps.size, hits),
+                    // 批U（审查U-4）：应用数走 plurals（EN "1 user app"/"N user apps"）
+                    else stringResource(R.string.list_summary, pluralStringResource(R.plurals.list_apps_count, apps.size, apps.size), hits),
                     style = MaterialTheme.typography.labelMedium,
                     modifier = Modifier
                         .fillMaxWidth()
