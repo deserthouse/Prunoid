@@ -191,10 +191,10 @@
     <string name="sec_sub">规则订阅</string>
     <string name="sec_recovery">应急通道</string>
     <string name="sec_about">关于</string>
-    <string name="notif_perm_title">Notification permission</string>
-    <string name="notif_perm_granted">Granted — guard notifications can post</string>
-    <string name="notif_perm_denied">Denied — tap to open system settings and allow</string>
-    <string name="notif_perm_legacy">Not required on this Android version</string>
+    <string name="notif_perm_title">通知权限</string>
+    <string name="notif_perm_granted">已授权——守护通知可以发出</string>
+    <string name="notif_perm_denied">已拒绝——点按打开系统设置重新允许</string>
+    <string name="notif_perm_legacy">此 Android 版本无需该权限</string>
     <string name="stats_cat_center">已识别 SDK</string>
     <string name="stats_prefix_title">未识别组件前缀 Top 5</string>
     <string name="stats_prefix_hint">不在规则库中——勾选禁用属人工判断；欢迎贡献规则</string>
