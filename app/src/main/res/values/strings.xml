@@ -225,11 +225,6 @@
     <string name="easter_author_name">澪狼</string>
     <string name="easter_author_handle">@deserthouse</string>
     <string name="easter_author_en">Ling the Wolp</string>
-    <string name="easter_vibe_line">如果程序员可以自称 coder，那我们这些做 vibe coding 的，是不是也可以自称 vibrator？</string>
-    <string name="easter_card_title">关于 vibe coding 的碎碎念</string>
-    <string name="easter_ai_note" formatted="false">Prunoid 不是我的第一个项目，但是第一个真正发布出去的。我是重度 Android 爱好者——说我是个极客我认，我不脸红。我从没觉得自己是个合格的开发者，原因很简单：我一行代码都看不懂。这个项目本质上 100% AI + 0% 人类。欢迎提需求——做不做得成另说，反正我是真的不会，不是不肯。</string>
-    <string name="easter_extra_line">等等——上一行是我本人亲手写的，所以人类占比也许勉强能涨到 1%？</string>
-    <string name="easter_dry">别点了——一滴也没有了 😭</string>
     <string name="vm_sdk_everywhere_ok">%1$s：已在 %2$d/%3$d 个命中应用写入 %4$d 条组件规则</string>
     <string name="lang_section">语言</string>
     <string name="sheet_matched_line">命中 %1$d，已禁用 %2$d</string>

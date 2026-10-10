@@ -744,7 +744,7 @@ internal fun AboutSection(st: AppUiState, vm: AppViewModel) {
                     tint = MaterialTheme.colorScheme.primary
                 )
             }
-            // 解锁后的作者块（二级：碎碎念块 🍆×6→💦→烧断）
+            // 解锁后的作者块（批W：二级碎碎念彩蛋与 vibe 句已移除——只留头像/名字/GitHub 链接）
             androidx.compose.animation.AnimatedVisibility(
                 visible = st.easter.expanded,
                 enter = androidx.compose.animation.expandVertically() + androidx.compose.animation.fadeIn(),
@@ -780,14 +780,7 @@ internal fun AboutSection(st: AppUiState, vm: AppViewModel) {
                             )
                         }
                     }
-                    Spacer(Modifier.height(12.dp))
-                    Text(
-                        stringResource(R.string.easter_vibe_line),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        lineHeight = 18.sp
-                    )
-                    Spacer(Modifier.height(8.dp))
+                    // 批W：vibe 句与碎碎念块已按用户指令移除——作者区只留头像/名字/GitHub 链接
                     Row(
                         Modifier
                             .clip(MaterialTheme.shapes.extraSmall)
@@ -816,40 +809,6 @@ internal fun AboutSection(st: AppUiState, vm: AppViewModel) {
                             Modifier.size(14.dp),
                             tint = MaterialTheme.colorScheme.primary
                         )
-                    }
-                    Spacer(Modifier.height(14.dp))
-                    Column(
-                        Modifier
-                            .fillMaxWidth()
-                            .clip(MaterialTheme.shapes.small)
-                            .clickable { vm.onRambleTapped() }
-                            .padding(horizontal = 4.dp, vertical = 10.dp)
-                    ) {
-                        Text(
-                            stringResource(R.string.easter_card_title),
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(Modifier.height(8.dp))
-                        Text(
-                            stringResource(R.string.easter_ai_note),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            lineHeight = 18.sp
-                        )
-                        androidx.compose.animation.AnimatedVisibility(
-                            visible = st.easter.rambleBurned,
-                            enter = androidx.compose.animation.expandVertically() + androidx.compose.animation.fadeIn(),
-                            exit = androidx.compose.animation.shrinkVertically() + androidx.compose.animation.fadeOut()
-                        ) {
-                            Text(
-                                stringResource(R.string.easter_extra_line),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.primary,
-                                lineHeight = 18.sp,
-                                modifier = Modifier.padding(top = 10.dp)
-                            )
-                        }
                     }
                 }
             }

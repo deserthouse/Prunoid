@@ -33,11 +33,10 @@ data class ListFilters(
     val appliedOnly: Boolean = false
 )
 
-/** About 彩蛋族（批G2c）：🐾×7 解锁 → 作者块展开 → 碎碎念 🍆 烧断（持久化 unlocked/rambleBurned） */
+/** About 彩蛋（批G2c；批W 精简）：🐾×7 解锁 → 作者块展开（头像/名字/GitHub 链接） */
 data class EasterState(
     val unlocked: Boolean = false,
-    val expanded: Boolean = false,
-    val rambleBurned: Boolean = false
+    val expanded: Boolean = false
 )
 
 data class AppUiState(
@@ -110,7 +109,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     st.copy(
                         backupKeep = s.backupKeep,
                         autoReapply = s.autoReapply,
-                        easter = EasterState(unlocked = s.easterUnlocked, rambleBurned = s.easterRambleBurned),
+                        easter = EasterState(unlocked = s.easterUnlocked),
                         workMode = io.github.deserthouse.prunoid.core.engine.WorkModeInfo.fromTag(s.workMode),
                         reapplyMode = s.reapplyMode,
                         backupEnabled = s.backupEnabled,
@@ -176,7 +175,6 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     // ── 彩蛋（对齐 OptIcon）：tap 计数仅存内存，解锁持久化 ──
     private var aboutTapCount = 0
-    private var rambleTapCount = 0
 
     fun onAboutCardTapped() {
         if (_state.value.easter.unlocked) {
@@ -410,23 +408,6 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             // 批S2（审计 N-2）：失败不再谎报回显；错误文本资源化（设置页 Snackbar 直接展示）
             if (r.isSuccess) _state.update { it.copy(declarationsEnabled = on) }
             onDone(if (r.isSuccess) "" else appCtx.getString(R.string.decl_write_fail))
-        }
-    }
-
-    fun onRambleTapped() {
-        if (_state.value.easter.rambleBurned) {
-            setMessage(appCtx.getString(R.string.easter_dry))
-            return
-        }
-        rambleTapCount++
-        if (rambleTapCount < 7) {
-            setMessage("🍆".repeat(rambleTapCount))
-            return
-        }
-        rambleTapCount = 0
-        viewModelScope.launch {
-            settings.setEasterRambleBurned(true)
-            _state.update { it.copy(easter = it.easter.copy(rambleBurned = true), message = "💦") }
         }
     }
 
