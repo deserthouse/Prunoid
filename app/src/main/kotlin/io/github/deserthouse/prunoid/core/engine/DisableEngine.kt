@@ -99,6 +99,20 @@ class DisableEngine(
         fun isForbidden(packageName: String): Boolean =
             packageName in SYSTEM_PREFIXES || SYSTEM_PREFIXES.any { packageName.startsWith(it) }
 
+        // 批X1（审查 R03）：真实包属性判定——前缀表只是附加保护，不能代替 FLAG_SYSTEM
+        private val systemFlagCache = java.util.concurrent.ConcurrentHashMap<String, Boolean>()
+
+        fun isSystemPackage(context: Context, packageName: String): Boolean =
+            systemFlagCache.getOrPut(packageName) {
+                runCatching {
+                    (context.packageManager.getApplicationInfo(packageName, 0).flags and
+                        android.content.pm.ApplicationInfo.FLAG_SYSTEM) != 0
+                }.getOrDefault(false)
+            }
+
+        fun isBlockedTarget(context: Context, packageName: String): Boolean =
+            isForbidden(packageName) || isSystemPackage(context, packageName)
+
         private fun ifwPath(pkg: String) = "/data/system/ifw/$pkg.xml"
         private const val IFW_DIR = "/data/system/ifw"
         private const val PKG_RESTRICTIONS = "/data/system/users/0/package-restrictions.xml"
@@ -210,7 +224,7 @@ class DisableEngine(
     suspend fun applyIfw(pkg: String, byType: Map<String, List<String>>): Result<Int> =
         withContext(Dispatchers.IO) {
             runCatching {
-                require(!isForbidden(pkg)) { "system app blocked by whitelist: $pkg" }
+                require(!isBlockedTarget(context, pkg)) { "system app blocked by whitelist: $pkg" }
                 val named = byType.mapValues { (_, comps) -> comps.map { "$pkg/$it" } }
                 // 批P0#8：合并语义——保留文件中既有 filter（含其他工具写入），叠加本次目标
                 val existing = Shell.cmd("cat ${ifwPath(pkg)} 2>/dev/null").exec().out.joinToString("\n")
@@ -233,7 +247,7 @@ class DisableEngine(
     suspend fun removeIfw(pkg: String, removeComponents: Set<String>? = null): Result<Unit> =
         withContext(Dispatchers.IO) {
             runCatching {
-                require(!isForbidden(pkg)) { "system app blocked by whitelist: $pkg" }
+                require(!isBlockedTarget(context, pkg)) { "system app blocked by whitelist: $pkg" }
                 if (removeComponents != null) {
                     // 批J#1：参数语义修正（二轮实测删过头的根因=形参名 keep 实为删除集导致调用方传反）。
                     // 移除 removeComponents 的 filter，外部/其他来源的幸存
@@ -266,7 +280,7 @@ class DisableEngine(
     suspend fun applyPm(pkg: String, componentNames: List<String>): Result<Int> =
         withContext(Dispatchers.IO) {
             runCatching {
-                require(!isForbidden(pkg)) { "system app blocked by whitelist: $pkg" }
+                require(!isBlockedTarget(context, pkg)) { "system app blocked by whitelist: $pkg" }
                 if (componentNames.isEmpty()) return@runCatching 0
                 val cmds = componentNames.joinToString("; ") { "pm disable $pkg/$it" }
                 val r = Shell.cmd(cmds).exec()

@@ -11,6 +11,12 @@
         tools:ignore="QueryAllPackagesPermission" />
 
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <!-- 批X1（审查 R02）：应急清除广播的 signature 级守卫——只有同签名应用或 root/shell 可发 -->
+    <permission
+        android:name="io.github.deserthouse.prunoid.permission.RECOVERY_BROADCAST"
+        android:protectionLevel="signature" />
+
     <application
         android:label="Prunoid"
         android:icon="@mipmap/ic_launcher"
@@ -57,6 +63,7 @@
         <receiver
             android:name=".core.engine.RecoveryReceiver"
             android:exported="true"
+            android:permission="io.github.deserthouse.prunoid.permission.RECOVERY_BROADCAST"
             tools:ignore="ExportedReceiver">
             <intent-filter>
                 <action android:name="io.github.deserthouse.prunoid.action.CLEAR_IFW" />

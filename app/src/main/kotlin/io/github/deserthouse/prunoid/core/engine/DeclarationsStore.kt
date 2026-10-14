@@ -15,6 +15,8 @@ object DeclarationsStore {
 
     private const val DIR = "/data/misc/prunoid"
     private const val FILE = "$DIR/declarations.json"
+    // 批X1（审查 R01）：前缀白名单——订阅内容是外部输入，禁止任何 shell 元字符进入命令串
+    private val PREFIX_RE = Regex("^[A-Za-z0-9_.\\$-]+$")
 
     /** 当前声明的 SDK 前缀集合（内存缓存；读文件需 root，app 侧启动时拉一次） */
     @Volatile var declaredPrefixes: Set<String> = emptySet()
@@ -25,8 +27,12 @@ object DeclarationsStore {
     data class Decl(val enabled: Boolean, val prefixes: List<String>)
 
     /** root 写声明（由主 app 调用；prefixes = 各规则 packPrefixes 的并集展开） */
-    suspend fun write(decl: Decl): Result<Unit> = withContext(Dispatchers.IO) {
+    suspend fun write(srcDir: java.io.File, decl: Decl): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
+            // 批X1（审查 R01）：订阅前缀是外部输入——先过白名单（单引号曾可逃逸 echo 闭串执行任意命令）
+            decl.prefixes.forEachIndexed { _, p ->
+                check(PREFIX_RE.matches(p)) { "illegal prefix: $p" }
+            }
             val json = buildString {
                 append("{").append('"').append("enabled").append("\":").append(decl.enabled)
                     .append(",\"prefixes\":[")
@@ -36,18 +42,23 @@ object DeclarationsStore {
                 }
                 append("]}")
             }
-            // 批R4b：heredoc 在 libsu 单行命令通道里永不闭合→写文件必败（批P 首次上机实证）；
-            // json 由程序生成且前缀已剥引号，单引号 echo 安全
-            val sh = com.topjohnwu.superuser.Shell.cmd(
-                "mkdir -p $DIR && chmod 755 $DIR",
-                "echo '$json' > $FILE",
-                "chmod 644 $FILE"
-            ).exec()
-            // 批S2 诊断探针（N-2 验证中）：shell 身份与写入结果落日志，排查"报成功但文件不可见"
-            android.util.Log.d("SdkPruner", "decl.write: root=${com.topjohnwu.superuser.Shell.getShell().isRoot()} ok=${sh.isSuccess} err=${sh.err} out=${sh.out}")
-            check(sh.isSuccess) { "shell write failed: ${sh.err}" }
-            enabled = decl.enabled
-            declaredPrefixes = decl.prefixes.toSet()
+            // 批X1（审查 R01）：内容先落 app 私有目录，shell 只做受控 cp——订阅内容不再进入命令串；
+            // R4b 的单引号 echo 路线就此废弃
+            val tmp = java.io.File(srcDir, "declarations.stage.json")
+            tmp.writeText(json)
+            try {
+                val sh = com.topjohnwu.superuser.Shell.cmd(
+                    "mkdir -p $DIR && chmod 755 $DIR",
+                    "cp $tmp $FILE && chmod 644 $FILE"
+                ).exec()
+                // 批S2 诊断探针（N-2 验证中）：shell 身份与写入结果落日志，排查"报成功但文件不可见"
+                android.util.Log.d("SdkPruner", "decl.write: root=${com.topjohnwu.superuser.Shell.getShell().isRoot()} ok=${sh.isSuccess} err=${sh.err} out=${sh.out}")
+                check(sh.isSuccess) { "shell write failed: ${sh.err}" }
+                enabled = decl.enabled
+                declaredPrefixes = decl.prefixes.toSet()
+            } finally {
+                tmp.delete()
+            }
         }
     }
 

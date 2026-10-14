@@ -579,7 +579,7 @@ internal fun RecoverySection(st: AppUiState, vm: AppViewModel, onMsg: (String) -
     SettingsCard {
         Column(Modifier.padding(vertical = 4.dp)) {
             val clipboard = androidx.compose.ui.platform.LocalClipboardManager.current
-            val cmd = "adb shell am broadcast -a io.github.deserthouse.prunoid.action.CLEAR_IFW --ez confirm true"
+            val cmd = "adb shell su 0 am broadcast -a io.github.deserthouse.prunoid.action.CLEAR_IFW --ez confirm true"
             SettingRow(
                 icon = Icons.Outlined.ContentCopy,
                 title = stringResource(R.string.recovery_cmd_title),

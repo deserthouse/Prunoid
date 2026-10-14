@@ -44,8 +44,8 @@
     <!-- 详情页 -->
     <string name="no_version">无版本号</string>
     <string name="back">返回</string>
+    <string name="sys_block_banner">系统预装应用：出于防变砖安全边界不可禁用（批X1 起全面硬拦）</string>
     <string name="framework_banner">框架/系统核心组件：安全层白名单硬拦截，不可修改（防 bootloop 设计）</string>
-    <string name="system_banner">系统应用：修改可能影响系统功能，操作将被要求二次风险确认</string>
     <string name="apply_selected">应用所选 %1$d 项</string>
     <string name="apply_rules">应用规则</string>
     <string name="restore">恢复</string>
@@ -72,9 +72,6 @@
     <string name="expand">展开</string>
     <string name="suspicious">疑似广告/统计</string>
     <!-- 系统应用警告 -->
-    <string name="sys_dialog_title">警告：正在修改系统应用</string>
-    <string name="sys_dialog_body">「%1$s」是系统应用。禁用其组件可能导致该应用甚至系统功能异常。</string>
-    <string name="sys_dialog_note">如出现问题，可在本应用内恢复，或通过备份/应急通道回滚。</string>
     <string name="confirm_line">将禁用 %1$d 个 SDK 的 %2$d 个组件</string>
     <string name="excluded_line">（未勾选的 %1$d 个风险 SDK 不在本次操作内）</string>
     <string name="engine_line">，引擎 %1$s。开启「备份与恢复」后应用前自动留快照。</string>

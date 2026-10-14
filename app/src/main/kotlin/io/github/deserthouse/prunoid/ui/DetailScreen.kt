@@ -74,7 +74,8 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
     var detailTab by remember { mutableStateOf(0) }   // 0=SDK 视图 1=组件视图
     var compTypeFilter by remember { mutableStateOf<String?>(null) }  // 组件视图类型过滤
     val appliedEntry = st.applied[app.packageName]
-    // 安全分层：白名单命中（框架/核心）= 硬拦截；其余系统 app = 警告后可操作
+    // 安全分层：白名单命中（框架/核心）= 硬拦截；批X1（审查 R03）：其余系统预装包也一律硬拦
+    // （真实包属性判定在引擎执行层 isBlockedTarget，此处 UI 同步收紧——"警告后可操作"路线废除）
     val framework = DisableEngine.isForbidden(app.packageName)
     val systemWarn = app.isSystem && !framework
 
@@ -136,8 +137,8 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                 .padding(horizontal = 16.dp, vertical = 8.dp)
                         )
                     } else if (systemWarn) {
-                        // 批R5（审计 P-8）：复用共享警示横幅（原为裸文本且深色把 WarnContainerLight 容器色当文字色）
-                        WarnBanner(stringResource(R.string.system_banner), Modifier.fillMaxWidth(), horizontalPadding = 16.dp)
+                        // 批X1（审查 R03）：系统预装包一律硬拦（原"警告后可操作"路线废除）；横幅复用共享组件
+                        WarnBanner(stringResource(R.string.sys_block_banner), Modifier.fillMaxWidth(), horizontalPadding = 16.dp)
                     }
                     if (unmatchedSelCount > 0) {
                         // 批E1：未识别勾选进行中——SDK 操作栏让位，防误触另一套操作
@@ -160,7 +161,7 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                         ) {
                             Button(
                                 onClick = { showApplyConfirm = true },
-                                enabled = !framework && !st.busy && selected.isNotEmpty()
+                                enabled = !framework && !systemWarn && !st.busy && selected.isNotEmpty()
                                     && st.workMode.capabilities.disablePerApp && st.rootGranted,
                                 modifier = Modifier.weight(1f)
                             ) {
@@ -173,7 +174,7 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                             OutlinedButton(
                                 // 批D1：全量回滚补确认
                                 onClick = { showRestoreConfirm = true },
-                                enabled = !framework && !st.busy && appliedEntry != null
+                                enabled = !framework && !systemWarn && !st.busy && appliedEntry != null
                                     && st.workMode.capabilities.disablePerApp && st.rootGranted,
                                 modifier = Modifier.weight(1f)
                             ) { Text(stringResource(R.string.restore)) }
@@ -474,32 +475,16 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
     if (showApplyConfirm) {
         AlertDialog(
             onDismissRequest = { showApplyConfirm = false },
-            icon = {
-                if (systemWarn) Icon(
-                    Icons.Outlined.WarningAmber,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.error
-                )
-            },
             title = {
-                // 批P5：M3 对话框标题左对齐（judge ⑬）
+                // 批P5：M3 对话框标题左对齐（judge ⑬）；批X1：systemWarn 分支移除（系统包已被硬拦到不了这里）
                 Text(
-                    if (systemWarn) stringResource(R.string.sys_dialog_title) else stringResource(R.string.apply_rules),
+                    stringResource(R.string.apply_rules),
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Start
                 )
             },
             text = {
                 Column {
-                    if (systemWarn) {
-                        Text(
-                            stringResource(R.string.sys_dialog_body, app.label) +
-                                stringResource(R.string.sys_dialog_note),
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                        Spacer(Modifier.height(8.dp))
-                    }
                     Text(
                         // 批U（审查U-6）：分隔空格移进 excluded_line 资源（中文全角括号自带断句不需要半角空格）
                         stringResource(R.string.confirm_line, selHits.size, selComponents.size) +
@@ -527,7 +512,7 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                             selected = emptySet()
                         }
                     }
-                ) { Text(stringResource(if (systemWarn) R.string.risk_continue else R.string.apply), color = MaterialTheme.colorScheme.error) }
+                ) { Text(stringResource(R.string.apply), color = MaterialTheme.colorScheme.error) }
             },
             dismissButton = {
                 TextButton(onClick = { showApplyConfirm = false }) { Text(stringResource(R.string.cancel)) }

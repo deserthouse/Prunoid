@@ -59,9 +59,13 @@ class RuleGuardService : Service() {
             },
             Context.RECEIVER_NOT_EXPORTED
         )
+        // 系统 受保护广播 → NOT_EXPORTED；应急清除需外部 adb 触发 → RECEIVER_EXPORTED +
+        // 批X1（审查 R02）：signature 权限守卫——三方应用无法再借道清空全部 IFW
         registerReceiver(
             recoveryReceiver,
             IntentFilter(RecoveryReceiver.ACTION),
+            "io.github.deserthouse.prunoid.permission.RECOVERY_BROADCAST",
+            null,
             Context.RECEIVER_EXPORTED
         )
         // API 34+ 规范：显式声明与 manifest 一致的 FGS 类型

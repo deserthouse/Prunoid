@@ -14,7 +14,8 @@ object AutoReapply {
 
     fun shouldHandle(context: Context, pkg: String?): Boolean {
         if (pkg == null || pkg == context.packageName) return false
-        return !DisableEngine.isForbidden(pkg)
+        // 批X1（审查 R03）：前缀表 + 真实包属性双重判定
+        return !DisableEngine.isForbidden(pkg) && !DisableEngine.isSystemPackage(context, pkg)
     }
 
     fun process(context: Context, pkg: String) = runBlocking(Dispatchers.IO) {

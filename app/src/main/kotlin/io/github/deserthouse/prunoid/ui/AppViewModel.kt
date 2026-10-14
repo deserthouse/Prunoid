@@ -2,6 +2,7 @@ package io.github.deserthouse.prunoid.ui
 
 import io.github.deserthouse.prunoid.R
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.deserthouse.prunoid.core.engine.AppliedRulesStore
@@ -205,7 +206,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 // 白名单（系统/框架）应用一律跳过——安全层语义，不做半写
                 val targets = _state.value.apps
                     .filter { a -> a.matchedSdks.any { it.ruleId == ruleId } }
-                    .filter { !DisableEngine.isForbidden(it.packageName) }
+                    .filter { !DisableEngine.isForbidden(it.packageName) && !it.isSystem }
                 if (targets.isEmpty()) return@withBusy appCtx.getString(R.string.vm_no_targets)
                 if (_state.value.backupEnabled) engine.backup(_state.value.backupKeep).getOrNull() else null
                 var ok = 0
@@ -379,10 +380,18 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             val rule = rules.rule(ruleId)
             android.util.Log.d("SdkPruner", "decl.toggle: id=$ruleId found=${rule != null} prefixes=${rule?.packPrefixes?.size}")
             if (rule == null) return@launch
+            // 批X1（审查 R01）：订阅前缀是外部输入，进白名单前先拒并反馈
+            val badPrefix = rule.packPrefixes.firstOrNull { !it.matches(Regex("^[A-Za-z0-9_.\\$-]+$")) }
+            if (badPrefix != null) {
+                Log.d("SdkPruner", "decl.toggle: illegal prefix $badPrefix")
+                onDone(appCtx.getString(R.string.decl_write_fail))
+                return@launch
+            }
             val cur = io.github.deserthouse.prunoid.core.engine.DeclarationsStore.declaredPrefixes
             val next = if (on) cur + rule.packPrefixes.map { it.trimEnd('.') }
                        else cur - rule.packPrefixes.map { it.trimEnd('.') }.toSet()
             val r = io.github.deserthouse.prunoid.core.engine.DeclarationsStore.write(
+                getApplication<Application>().filesDir,
                 io.github.deserthouse.prunoid.core.engine.DeclarationsStore.Decl(
                     enabled = next.isNotEmpty(),
                     prefixes = next.sorted()
@@ -400,6 +409,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun setDeclarationsEnabled(on: Boolean, onDone: (String) -> Unit = {}) {
         viewModelScope.launch {
             val r = io.github.deserthouse.prunoid.core.engine.DeclarationsStore.write(
+                getApplication<Application>().filesDir,
                 io.github.deserthouse.prunoid.core.engine.DeclarationsStore.Decl(
                     enabled = on,
                     prefixes = io.github.deserthouse.prunoid.core.engine.DeclarationsStore.declaredPrefixes.sorted()
@@ -625,7 +635,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             val msg = withBusy("apply") {
                 if (!rootGate()) return@withBusy appCtx.getString(R.string.vm_need_root)
-                if (DisableEngine.isForbidden(scanned.packageName)) return@withBusy appCtx.getString(R.string.vm_forbidden)
+                if (DisableEngine.isForbidden(scanned.packageName) || scanned.isSystem) return@withBusy appCtx.getString(R.string.vm_forbidden)
                 val selected = scanned.matchedSdks.filter { it.ruleId in selectedRuleIds }
                 val targets = selected.flatMap { it.matchedComponents }
                 if (targets.isEmpty()) return@withBusy appCtx.getString(R.string.vm_no_targets)
