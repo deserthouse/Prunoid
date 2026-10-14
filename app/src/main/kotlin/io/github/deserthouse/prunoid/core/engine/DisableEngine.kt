@@ -149,7 +149,7 @@ class DisableEngine(
             pkgs.forEach { append(" ").append(it) }
             append("; do echo \"==IFW \$p\"; cat ")
             append(IFW_DIR)
-            append("/\$p.xml 2>/dev/null; echo \"==PM \$p\"; dumpsys package \$p 2>/dev/null | sed -n '/Disabled components:/,/Enabled components:/p'; done; ")
+            append("/\$p.xml 2>/dev/null; done; ")
             append("echo ==TOTAL; grep -h -o component-filter ")
             append(IFW_DIR)
             append("/*.xml 2>/dev/null | wc -l")
@@ -159,36 +159,46 @@ class DisableEngine(
         val live = HashMap<String, MutableSet<String>>()
         var total = 0
         var cur: String? = null
-        var inPm = false
         for (line in out) {
             when {
                 line.startsWith("==IFW ") -> {
-                    cur = line.removePrefix("==IFW ").trim(); inPm = false
+                    cur = line.removePrefix("==IFW ").trim()
                     if (cur.isNotEmpty()) live.getOrPut(cur) { mutableSetOf() }
                 }
-                line.startsWith("==PM ") -> {
-                    cur = line.removePrefix("==PM ").trim(); inPm = true
-                    if (cur.isNotEmpty()) live.getOrPut(cur) { mutableSetOf() }
-                }
-                line.startsWith("==TOTAL") -> inPm = false
-                else -> {
-                    val set = cur?.let { live.getOrPut(it) { mutableSetOf() } } ?: continue
-                    if (inPm) {
-                        // dumpsys 缩进行形如 "    com.pkg/.Cls"
-                        val t = line.trim()
-                        if (t.contains("/")) set.add(t.substringAfter('/'))
-                    } else {
-                        // IFW xml：<component-filter name="pkg/.Cls"
-                        val m = Regex("component-filter\\s+name=\"([^\"]+)\"").find(line) ?: continue
-                        set.add(m.groupValues[1].substringAfter('/'))
-                    }
+                line.startsWith("==TOTAL") -> cur = null
+                cur != null -> {
+                    // IFW xml：<component-filter name="pkg/.Cls"
+                    val m = Regex("component-filter\\s+name=\"([^\"]+)\"").find(line) ?: continue
+                    live.getOrPut(cur) { mutableSetOf() }.add(m.groupValues[1].substringAfter('/'))
                 }
             }
         }
         // ==TOTAL 行取 wc 数
         out.lastOrNull()?.trim()?.toIntOrNull()?.let { total = it }
+        // 批X2（审查 R13）：A16 实机采样定案——dumpsys package 不输出 disabledComponents/enabledComponents 段
+        // （旧 sed 解析在 A16 全盲），PM 现场改走 PackageManager API 直查（应用侧 getComponentEnabledSetting，无 shell/无格式依赖）
+        for (pkg in pkgs) {
+            val pmDisabled = readPmDisabled(pkg)
+            if (pmDisabled.isNotEmpty()) live.getOrPut(pkg) { mutableSetOf() }.addAll(pmDisabled)
+        }
         android.util.Log.d("PrunoidLive", "parsed live=" + live.size + " total=" + total)
         live.mapValues { it.value.toSet() } to total
+    }
+
+    /** 批X2（审查 R13）：PM 现场直查——应用侧 getComponentEnabledSetting，无 shell/无 dumpsys 格式依赖。
+     *  返回该包当前被 PM 禁用的组件全类名集（含 DISABLED / DISABLED_USER 两态）。 */
+    private fun readPmDisabled(pkg: String): Set<String> {
+        val pm = context.packageManager
+        return buildSet {
+            for ((cls, _) in enumerateComponents(context, pkg)) {
+                val st = runCatching {
+                    pm.getComponentEnabledSetting(android.content.ComponentName(pkg, cls))
+                }.getOrDefault(PackageManager.COMPONENT_ENABLED_STATE_DEFAULT)
+                if (st == PackageManager.COMPONENT_ENABLED_STATE_DISABLED ||
+                    st == PackageManager.COMPONENT_ENABLED_STATE_DISABLED_USER
+                ) add(cls)
+            }
+        }
     }
 
     // ── 安全层：操作前全量备份（IFW 规则目录 + pm 组件限制状态，单个 tar 归档） ──

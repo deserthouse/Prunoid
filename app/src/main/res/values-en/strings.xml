@@ -255,7 +255,7 @@
     <string name="precheck_note">Nothing is pre-checked; review each SDK and tick what you want (select-all available).</string>
     <string name="restore_app_confirm">Restores all blocking applied by Prunoid in this app (IFW rules removed + pm re-enabled). Rules written by other tools are kept.</string>
     <string name="guide_title">Start in three steps</string>
-    <string name="guide_body">1) Pull down to scan; 2) open an app and tick SDKs to block (safe ones pre-checked); 3) tap "Apply rules". Engines and rule sources live in Settings.</string>
+    <string name="guide_body">1) Pull down to scan; 2) open an app and tick SDKs to block (nothing pre-checked — review each yourself); 3) tap "Apply rules". Engines and rule sources live in Settings.</string>
     <string name="guide_got_it">Got it</string>
     <string name="audit_badge">Read-only</string>
     <string name="uninstall_note">Note: uninstalling Prunoid does not remove written IFW rules — run "Clear all IFW" above first for a clean slate.</string>

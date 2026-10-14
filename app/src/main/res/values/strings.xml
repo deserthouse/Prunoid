@@ -271,7 +271,7 @@
     <string name="precheck_note">默认不勾选任何 SDK；请自行评估后勾选（可用「全选筛选结果」全选）</string>
     <string name="restore_app_confirm">将按本工具的应用记录回滚该应用的全部禁用（IFW 规则移除 + pm 重启用）；其他工具写入的规则会保留。</string>
     <string name="guide_title">三步开始</string>
-    <string name="guide_body">1) 下拉刷新扫描应用；2) 进入应用勾选要禁用的 SDK（安全项已预选）；3) 点「应用规则」。设置里可切换引擎与订阅规则源。</string>
+    <string name="guide_body">1) 下拉刷新扫描应用；2) 进入应用勾选要禁用的 SDK（默认不勾选，由你逐项评估）；3) 点「应用规则」。设置里可切换引擎与订阅规则源。</string>
     <string name="guide_got_it">知道了</string>
     <string name="audit_badge">只读模式</string>
     <string name="uninstall_note">提示：卸载 Prunoid 不会移除已写入的 IFW 规则——卸载前请先用上方「清除全部 IFW」。</string>
