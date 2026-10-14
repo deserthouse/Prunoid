@@ -67,7 +67,7 @@ Requirements: Android 12+ (API 31), rooted (Magisk or similar).
 1. Install the APK, grant notification permission (guard service)
 2. Grant root access
 3. Open any app → review matched SDKs (archive sheet shows description / side effects / contributors)
-4. Check the SDKs to block (safe/caution pre-checked) → Apply
+4. Check the SDKs to block (nothing pre-checked — review each SDK yourself) → Apply
 5. Something broke? Restore from the in-app emergency dialog, or clear all IFW rules over adb
 
 ## ❓ FAQ
