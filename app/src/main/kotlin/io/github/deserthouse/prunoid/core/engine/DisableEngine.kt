@@ -212,7 +212,8 @@ class DisableEngine(
     /** 备份保留策略：按文件名时间戳降序，只留最近 keep 份（用户可在设置中调） */
     private fun pruneBackups(dir: String, keep: Int) {
         val files = Shell.cmd("ls -1 $dir/backup_*.tar.gz 2>/dev/null").exec().out.toList().sortedDescending()
-        files.drop(keep.coerceIn(3, 30)).forEach { Shell.cmd("rm -f $it").exec() }
+        // 批X4（审查 PN-15）：UI 允许 1~99999，引擎不再静默夹断到 3~30
+        files.drop(keep.coerceAtLeast(1)).forEach { Shell.cmd("rm -f $it").exec() }
     }
 
     // ── 安全层：恢复备份（tar 解包回原路径 + 归属/上下文修复） ─────
@@ -271,8 +272,10 @@ class DisableEngine(
     suspend fun applyIfw(pkg: String, byType: Map<String, List<String>>): Result<Int> =
         withContext(Dispatchers.IO) {
             runCatching {
+                // 批X4（审查 R09）：生产入口与 build() 对齐——provider 不受 IFW 支持且如实从计数剔除
+                val filtered = byType.filterKeys { it != "provider" }
                 require(!isBlockedTarget(context, pkg)) { "system app blocked by whitelist: $pkg" }
-                val named = byType.mapValues { (_, comps) -> comps.map { "$pkg/$it" } }
+                val named = filtered.mapValues { (_, comps) -> comps.map { "$pkg/$it" } }
                 // 批P0#8：合并语义——保留文件中既有 filter（含其他工具写入），叠加本次目标
                 val existing = Shell.cmd("cat ${ifwPath(pkg)} 2>/dev/null").exec().out.joinToString("\n")
                 val merged = linkedMapOf<String, MutableSet<String>>()
@@ -293,7 +296,7 @@ class DisableEngine(
                 } finally {
                     java.io.File(tmp).delete()
                 }
-                byType.values.sumOf { it.size }
+                filtered.values.sumOf { it.size }
             }
         }
 

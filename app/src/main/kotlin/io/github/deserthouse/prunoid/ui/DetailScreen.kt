@@ -507,10 +507,10 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                 TextButton(
                     onClick = {
                         showApplyConfirm = false
-                        vm.applyRules(app, selected) { m ->
+                        // 批X2（审查 PN-06）：成功才清空选择——失败保留重试入口
+                        vm.applyRules(app, selected) { ok, m ->
                             msg = m
-                            // 批C5/J1：操作完成清空选择集（默认零预选）
-                            selected = emptySet()
+                            if (ok) selected = emptySet()
                         }
                     }
                 ) { Text(stringResource(R.string.apply), color = MaterialTheme.colorScheme.error) }
@@ -697,6 +697,8 @@ private fun UnmatchedCard(
                     var unmatchedOpen by remember { mutableStateOf(false) }
                     // 批R2（审计 P-3）：批量禁用未识别组件与 Apply 同级风险，补单次确认
                     var confirmUnmatched by remember { mutableStateOf(false) }
+                    // 批X4（审查 PN-20）：能力/忙碌门控所需状态
+                    val unmatchedState by vm.state.collectAsState()
                     // 展开时卡体常整体落在视口折叠线下（卡顶近屏底），用户只见卡头+分隔线、
                     // 展开体看似"没渲染"——若卡顶已在视口下半区，把卡顶滚动到视口顶。
                     LaunchedEffect(unmatchedOpen) {
@@ -762,10 +764,13 @@ private fun UnmatchedCard(
                                 }
                                 // 批E2：勾选后卡头就近禁用（免滚 20 行找按钮）
                                 val selN = unmatchedSel.count { it.value }
+                                val unmatchedBusy = unmatchedState.busy
+                                val unmatchedAllowed = unmatchedState.rootGranted && unmatchedState.workMode.capabilities.disablePerApp && !unmatchedBusy
                                 if (unmatchedOpen && selN > 0) {
                                     // 批N2①：批量禁用属危险操作，用 error 语义色
                                     Button(
                                         onClick = { confirmUnmatched = true },
+                                        enabled = unmatchedAllowed,
                                         colors = ButtonDefaults.buttonColors(
                                             containerColor = MaterialTheme.colorScheme.errorContainer,
                                             contentColor = MaterialTheme.colorScheme.onErrorContainer
@@ -908,8 +913,11 @@ private fun UnmatchedCard(
                                         val byType = selGroups.flatMap { g ->
                                             g.componentTypes.entries.map { (cn, t) -> t to cn }
                                         }.groupBy({ it.first }, { it.second })
-                                        vm.disableUnmatched(app.packageName, byType) { onMessage(it) }
-                                        unmatchedSel.clear()
+                                        // 批X2（审查 PN-06）：失败保留选择重试
+                                        vm.disableUnmatched(app.packageName, byType) { ok, m ->
+                                            onMessage(m)
+                                            if (ok) unmatchedSel.clear()
+                                        }
                                     }
                                 ) { Text(stringResource(R.string.risk_continue), color = MaterialTheme.colorScheme.error) }
                             },

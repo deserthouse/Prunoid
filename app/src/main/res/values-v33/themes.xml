@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 批X4：windowSplashScreenBehavior 需 API 33——从 values/values-night 收编至此（lint errors 修复） -->
+<resources>
+    <style name="Theme.Prunoid.Starting" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowSplashScreenBackground">@color/splash_background</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <item name="android:windowSplashScreenBehavior">icon_preferred</item>
+        <item name="android:windowBackground">@color/splash_background</item>
+    </style>
+</resources>

@@ -3,6 +3,7 @@ package io.github.deserthouse.prunoid.core.scanner
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
+import io.github.deserthouse.prunoid.core.engine.DisableEngine
 import io.github.deserthouse.prunoid.core.rules.RuleRepository
 import io.github.deserthouse.prunoid.core.rules.Safety
 import io.github.deserthouse.prunoid.core.rules.safety
@@ -55,6 +56,7 @@ class Scanner(
     context: Context,
     private val rules: RuleRepository
 ) {
+    private val ctx = context
     private val pm = context.packageManager
 
     private val componentIndex: Map<String, Pair<String, String>> by lazy {
@@ -75,17 +77,8 @@ class Scanner(
             PackageManager.GET_RECEIVERS or PackageManager.GET_PROVIDERS
         for (app in pm.getInstalledApplications(PackageManager.GET_META_DATA)) {
             if (app.packageName == "io.github.deserthouse.prunoid") continue
-            val comps: List<Pair<String, String>> = try {
-                val pkg = pm.getPackageInfo(app.packageName, flags)
-                val pairs = mutableListOf<Pair<String, String>>()
-                pkg.activities?.let { names -> names.forEach { pairs.add(it.name to "activity") } }
-                pkg.services?.let { names -> names.forEach { pairs.add(it.name to "service") } }
-                pkg.receivers?.let { names -> names.forEach { pairs.add(it.name to "receiver") } }
-                pkg.providers?.let { names -> names.forEach { pairs.add(it.name to "provider") } }
-                pairs
-            } catch (_: Exception) {
-                emptyList()
-            }
+            // 批X2（审查 R07）：统一枚举含 MATCH_DISABLED_COMPONENTS——PM 已禁组件不得从扫描消失
+            val comps = DisableEngine.enumerateComponents(ctx, app.packageName)
             out.add(scanOne(app, comps))
         }
         return out.sortedWith(compareByDescending<ScannedApp> { it.matchedSdks.size }.thenBy { it.label })

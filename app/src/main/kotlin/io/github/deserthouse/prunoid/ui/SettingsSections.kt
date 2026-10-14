@@ -330,7 +330,8 @@ internal fun EnginesSection(st: AppUiState, vm: AppViewModel) {
             SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                 Engine.entries.forEachIndexed { i, e ->
                     SegmentedButton(
-                        selected = st.engine == e,
+                        // 批X4（审查 PN-16）：设置页显示持久默认引擎（与详情页临时选择分离）
+                        selected = st.defaultEngine == e,
                         onClick = { vm.setDefaultEngine(e.name) },
                         shape = SegmentedButtonDefaults.itemShape(index = i, count = Engine.entries.size)
                     ) { Text(engineLabel(e)) }

@@ -27,7 +27,15 @@ class RuleGuardService : Service() {
             val pkg = intent.data?.schemeSpecificPart ?: return
             if (AutoReapply.shouldHandle(context, pkg)) {
                 Log.d("SdkPruner", "guard: package event $pkg")
-                AutoReapply.process(context, pkg)
+                // 批X4（审查 R12）：goAsync + 后台线程——root 工作不再阻塞主线程（原 runBlocking 在主线程等待）
+                val pending = goAsync()
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        AutoReapply.process(context, pkg)
+                    } finally {
+                        pending.finish()
+                    }
+                }
             }
         }
     }
