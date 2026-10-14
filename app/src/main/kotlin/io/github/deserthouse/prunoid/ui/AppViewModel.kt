@@ -121,6 +121,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     )
                 }
                 if (sourcesChanged && !first) rescan()
+                // 批X3（审查 R10/PN-02）：三元组变化即刻驱动守护服务生命周期——
+                // 原实现只在 Activity onCreate 判定一次，模式切换后旧服务/旧 receiver 不受约束
+                syncGuardService(s.autoReapply && s.workMode == "root" && s.reapplyMode == "realtime")
             }
         }
         rescan()
@@ -173,6 +176,19 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun setWorkMode(tag: String) { viewModelScope.launch { settings.setWorkMode(tag) } }
     fun setReapplyMode(tag: String) { viewModelScope.launch { settings.setReapplyMode(tag) } }
     fun setBackupEnabled(on: Boolean) { viewModelScope.launch { settings.setBackupEnabled(on) } }
+
+    /** 批X3（审查 R10/PN-02）：守护服务与三元组同步（幂等——重复 start/startForegroundService 无害） */
+    private var guardRunning: Boolean? = null
+    private fun syncGuardService(shouldRun: Boolean) {
+        if (guardRunning == shouldRun) return
+        guardRunning = shouldRun
+        val app = getApplication<Application>()
+        if (shouldRun) {
+            app.startForegroundService(Intent(app, RuleGuardService::class.java))
+        } else {
+            app.stopService(Intent(app, RuleGuardService::class.java))
+        }
+    }
 
     // ── 彩蛋（对齐 OptIcon）：tap 计数仅存内存，解锁持久化 ──
     private var aboutTapCount = 0
@@ -378,6 +394,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun toggleDeclaration(ruleId: String, on: Boolean, onDone: (String) -> Unit = {}) {
         viewModelScope.launch {
             // 批S2 诊断探针：区分 rule 查找失败早退 / shell 写失败
+            // 批X3（审查 PN-01）：声明写入受工作方式门控——audit 承诺"只读"，不得写声明文件
+            if (!rootGate()) {
+                onDone(appCtx.getString(R.string.vm_need_root))
+                return@launch
+            }
             val rule = rules.rule(ruleId)
             android.util.Log.d("SdkPruner", "decl.toggle: id=$ruleId found=${rule != null} prefixes=${rule?.packPrefixes?.size}")
             if (rule == null) return@launch
@@ -409,6 +430,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     fun setDeclarationsEnabled(on: Boolean, onDone: (String) -> Unit = {}) {
         viewModelScope.launch {
+            // 批X3（审查 PN-01）：同上，audit 模式下声明总开关写入一并拒绝
+            if (!rootGate()) {
+                onDone(appCtx.getString(R.string.vm_need_root))
+                return@launch
+            }
             val r = io.github.deserthouse.prunoid.core.engine.DeclarationsStore.write(
                 getApplication<Application>().filesDir,
                 io.github.deserthouse.prunoid.core.engine.DeclarationsStore.Decl(

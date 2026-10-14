@@ -290,7 +290,7 @@ internal fun DeclarativeSection(st: AppUiState, vm: AppViewModel, onMsg: (String
                 // 批S2（审计 N-2）：无 root 禁用（原开关可切但写失败静默零反馈）
                 Switch(
                     checked = st.declarationsEnabled,
-                    enabled = st.rootGranted,
+                    enabled = st.rootGranted && st.workMode.id.name == "ROOT",
                     onCheckedChange = { vm.setDeclarationsEnabled(it) { err -> if (err.isNotBlank()) onMsg(err) } }
                 )
             }

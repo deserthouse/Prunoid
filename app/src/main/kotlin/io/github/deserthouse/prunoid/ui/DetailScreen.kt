@@ -229,6 +229,7 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                             SegmentedButton(
                                 selected = st.engine == e,
                                 onClick = { vm.selectEngine(e) },
+                                enabled = !st.busy,
                                 shape = SegmentedButtonDefaults.itemShape(
                                     index = i, count = Engine.entries.size
                                 )

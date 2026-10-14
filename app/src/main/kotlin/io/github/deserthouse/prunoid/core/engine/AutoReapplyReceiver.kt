@@ -16,10 +16,12 @@ class AutoReapplyReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val pkg = intent.data?.schemeSpecificPart ?: return
         // 自动重应用开关关闭时，静态兜底通道一并静默
-        val autoOn = kotlinx.coroutines.runBlocking {
-            io.github.deserthouse.prunoid.core.rules.SettingsRepository(context).settings.first().autoReapply
+        // 批X3（审查 R10/PN-02）：静态兜底通道对齐三元组（原只查 autoReapply，audit/open 下仍会走重应用）
+        val allowed = kotlinx.coroutines.runBlocking {
+            val s = io.github.deserthouse.prunoid.core.rules.SettingsRepository(context).settings.first()
+            s.autoReapply && s.workMode == "root" && s.reapplyMode == "realtime"
         }
-        if (!autoOn) return
+        if (!allowed) return
         if (AutoReapply.shouldHandle(context, pkg)) {
             Log.d("SdkPruner", "static receiver: package event $pkg")
             val pending = goAsync()

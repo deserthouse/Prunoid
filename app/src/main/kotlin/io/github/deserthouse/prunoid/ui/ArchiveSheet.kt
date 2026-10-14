@@ -109,7 +109,7 @@ fun SdkArchiveSheet(
                     // 有 root 失败也内嵌提示（Snackbar 被 sheet 遮挡，批M3 教训）
                     Switch(
                         checked = declOn,
-                        enabled = vmDecl.rootGranted,
+                        enabled = vmDecl.rootGranted && vmDecl.workMode.id.name == "ROOT",
                         onCheckedChange = { on ->
                             declFail = false
                             vm.toggleDeclaration(hit.ruleId, on) { err -> if (err.isNotBlank()) declFail = true }
