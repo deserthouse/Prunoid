@@ -1,6 +1,7 @@
 package io.github.deserthouse.prunoid.core.engine
 
 import android.content.Context
+import android.content.pm.PackageManager
 import com.topjohnwu.superuser.Shell
 import io.github.deserthouse.prunoid.core.rules.RuleRepository
 import kotlinx.coroutines.Dispatchers
@@ -113,6 +114,27 @@ class DisableEngine(
         fun isBlockedTarget(context: Context, packageName: String): Boolean =
             isForbidden(packageName) || isSystemPackage(context, packageName)
 
+        /** 批X2（审查 R07）：统一组件枚举——必须含 MATCH_DISABLED_COMPONENTS，
+         *  否则 PM 已禁用组件会从扫描消失，自动重应用误判"已卸载"而覆盖账本 */
+        fun enumerateComponents(context: Context, pkg: String): List<Pair<String, String>> {
+            val pm = context.packageManager
+            val flags = PackageManager.GET_ACTIVITIES or
+                PackageManager.GET_SERVICES or
+                PackageManager.GET_RECEIVERS or
+                PackageManager.GET_PROVIDERS or
+                PackageManager.MATCH_DISABLED_COMPONENTS
+            return runCatching {
+                buildList {
+                    pm.getPackageInfo(pkg, flags)?.let {
+                        it.activities?.forEach { a -> add(a.name to "activity") }
+                        it.services?.forEach { sr -> add(sr.name to "service") }
+                        it.receivers?.forEach { rc -> add(rc.name to "receiver") }
+                        it.providers?.forEach { pr -> add(pr.name to "provider") }
+                    }
+                }
+            }.getOrDefault(emptyList())
+        }
+
         private fun ifwPath(pkg: String) = "/data/system/ifw/$pkg.xml"
         private const val IFW_DIR = "/data/system/ifw"
         private const val PKG_RESTRICTIONS = "/data/system/users/0/package-restrictions.xml"
@@ -196,12 +218,33 @@ class DisableEngine(
     // ── 安全层：恢复备份（tar 解包回原路径 + 归属/上下文修复） ─────
     suspend fun restoreBackup(backupPath: String): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
-            val r = Shell.cmd(
-                "tar -xzf $backupPath -C / && " +
-                "chown -R system:system $IFW_DIR && chmod 644 $IFW_DIR/*.xml; " +
-                "chown system:system $PKG_RESTRICTIONS && restorecon -R $IFW_DIR $PKG_RESTRICTIONS"
+            // 批X2（审查 R11）：差异还原——纯解包不会删除备份后新建的 IFW 文件，恢复会"假成功"。
+            // 流程：隔离目录解包 → 备份内的受管文件逐个还原 → 当前受管文件中备份没有的删除 → 校验
+            val stage = "/data/local/tmp/prunoid_restore"
+            val pre = Shell.cmd(
+                "rm -rf $stage && mkdir -p $stage && tar -xzf $backupPath -C $stage"
             ).exec()
-            check(r.isSuccess) { "restore failed: ${r.err}" }
+            check(pre.isSuccess) { "restore unpack failed: ${pre.err}" }
+            val restore = StringBuilder("set -e")
+            val ifwStage = "$stage$IFW_DIR"
+            val backupFiles = Shell.cmd("ls $ifwStage/*.xml 2>/dev/null").exec().out
+                .map { it.trim().substringAfterLast('/') }.filter { it.isNotEmpty() }
+            if (backupFiles.isNotEmpty()) {
+                restore.append("\nmkdir -p $IFW_DIR")
+                backupFiles.forEach { f ->
+                    restore.append("\ncp $ifwStage/$f $IFW_DIR/$f && chown system:system $IFW_DIR/$f && chmod 644 $IFW_DIR/$f")
+                }
+            }
+            val current = Shell.cmd("ls $IFW_DIR/*.xml 2>/dev/null").exec().out
+                .map { it.trim().substringAfterLast('/') }.filter { it.isNotEmpty() }
+            (current - backupFiles.toSet()).forEach { extra ->
+                restore.append("\nrm -f $IFW_DIR/$extra")
+            }
+            restore.append("\ntest -f $stage$PKG_RESTRICTIONS && cp $stage$PKG_RESTRICTIONS $PKG_RESTRICTIONS && chown system:system $PKG_RESTRICTIONS || true")
+            restore.append("\nrestorecon -R $IFW_DIR $PKG_RESTRICTIONS 2>/dev/null || true")
+            val fin = Shell.cmd(restore.toString()).exec()
+            check(fin.isSuccess) { "restore apply failed: ${fin.err}" }
+            Shell.cmd("rm -rf $stage").exec()
             Unit
         }
     }
@@ -215,7 +258,11 @@ class DisableEngine(
         runCatching {
             val res = Shell.cmd("ls $IFW_DIR/*.xml 2>/dev/null").exec()
             val files = res.out.toList()
-            if (files.isNotEmpty()) Shell.cmd("rm -f ${files.joinToString(" ")}").exec()
+            if (files.isNotEmpty()) {
+                // 批X2（审查 PN-05）：删除结果必须检查
+                val rm = Shell.cmd("rm -f " + files.joinToString(" ")).exec()
+                check(rm.isSuccess) { "ifw clear failed: rc=" + rm.code }
+            }
             files.size
         }
     }
@@ -235,11 +282,17 @@ class DisableEngine(
                     ?: return@runCatching 0
                 val tmp = "${context.cacheDir.absolutePath}/ifw_$pkg.xml"
                 java.io.File(tmp).writeText(xml)
-                val r = Shell.cmd(
-                    "mkdir -p $IFW_DIR && cp $tmp ${ifwPath(pkg)} && " +
-                    "chmod 644 ${ifwPath(pkg)} && restorecon ${ifwPath(pkg)} 2>/dev/null; rm -f $tmp"
-                ).exec()
-                check(r.isSuccess) { "ifw write failed: ${r.err}" }
+                // 批X2（审查 R06）：同目录 .tmp + mv 原子替换；全 && 链真实传播退出码（原 "; rm -f" 会掩盖失败）
+                try {
+                    val r = Shell.cmd(
+                        "mkdir -p $IFW_DIR && cp $tmp ${ifwPath(pkg)}.tmp && " +
+                        "chmod 644 ${ifwPath(pkg)}.tmp && (restorecon ${ifwPath(pkg)}.tmp 2>/dev/null || true) && " +
+                        "mv ${ifwPath(pkg)}.tmp ${ifwPath(pkg)}"
+                    ).exec()
+                    check(r.isSuccess) { "ifw write failed: ${r.err}" }
+                } finally {
+                    java.io.File(tmp).delete()
+                }
                 byType.values.sumOf { it.size }
             }
         }
@@ -259,14 +312,18 @@ class DisableEngine(
                     }
                     val xml = IfwXmlBuilder.buildByTag(rebuilt)
                     if (xml == null) {
-                        Shell.cmd("rm -f ${ifwPath(pkg)}").exec()
+                        check(Shell.cmd("rm -f ${ifwPath(pkg)}").exec().isSuccess) { "ifw remove failed" }
                     } else {
+                        // 批X2（审查 R06）：同目录原子替换 + 结果检查
                         val tmp = "${context.cacheDir.absolutePath}/ifw_$pkg.xml"
                         java.io.File(tmp).writeText(xml)
-                        Shell.cmd("cp $tmp ${ifwPath(pkg)} && chmod 644 ${ifwPath(pkg)} && rm -f $tmp").exec()
+                        check(
+                            Shell.cmd("cp $tmp ${ifwPath(pkg)}.tmp && chmod 644 ${ifwPath(pkg)}.tmp && mv ${ifwPath(pkg)}.tmp ${ifwPath(pkg)}").exec().isSuccess
+                        ) { "ifw rewrite failed" }
+                        java.io.File(tmp).delete()
                     }
                 } else {
-                    Shell.cmd("rm -f ${ifwPath(pkg)}").exec()
+                    check(Shell.cmd("rm -f ${ifwPath(pkg)}").exec().isSuccess) { "ifw remove failed" }
                 }
                 Unit
             }

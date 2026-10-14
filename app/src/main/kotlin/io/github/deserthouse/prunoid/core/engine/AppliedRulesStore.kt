@@ -13,7 +13,9 @@ class AppliedRulesStore(context: Context) {
         val engine: String,               // IFW | PM
         val components: List<String>,     // 组件全类名
         val types: Map<String, String>,   // 组件全类名 -> 类型（IFW 分组用）
-        val at: Long = 0                  // 应用时间（epoch ms；旧条目为 0 则不展示时间）
+        val at: Long = 0,                 // 应用时间（epoch ms；旧条目为 0 则不展示时间）
+        // 批X2（审查 R05）：产生本条记录的规则 id 集——自动重应用只在此范围内扩展，不再全量 SAFE/CAUTION
+        val ruleIds: Set<String> = emptySet()
     )
 
     private val file = java.io.File(context.filesDir, "applied_rules.json")
@@ -31,10 +33,34 @@ class AppliedRulesStore(context: Context) {
         file.writeText(json.encodeToString(Store.serializer(), store))
     }
 
-    fun record(pkg: String, engine: String, components: List<String>, types: Map<String, String>) {
-        if (components.isEmpty()) return
+    /** 批X2（审查 R04）：合并语义——新增组件并入既有记录（不覆盖同包其他 SDK 的目标） */
+    fun recordMerge(
+        pkg: String, engine: String,
+        addedComponents: List<String>,
+        addedTypes: Map<String, String>,
+        addedRuleIds: Set<String> = emptySet()
+    ) {
+        if (addedComponents.isEmpty() && addedRuleIds.isEmpty()) return
         val store = load()
-        store.entries[pkg] = AppliedEntry(engine, components, types, System.currentTimeMillis())
+        val old = store.entries[pkg]
+        store.entries[pkg] = AppliedEntry(
+            engine = engine,
+            components = (old?.components.orEmpty() + addedComponents).distinct(),
+            types = old?.types.orEmpty() + addedTypes,
+            at = System.currentTimeMillis(),
+            ruleIds = old?.ruleIds.orEmpty() + addedRuleIds
+        )
+        save(store)
+    }
+
+    /** 批X2（审查 R04）：替换语义——components 为空 = 该包已无本工具目标，删除记录（旧实现空集直接 return 是 R04-b 根因） */
+    fun recordReplace(pkg: String, engine: String, components: List<String>, types: Map<String, String>, ruleIds: Set<String> = emptySet()) {
+        val store = load()
+        if (components.isEmpty()) {
+            store.entries.remove(pkg)
+        } else {
+            store.entries[pkg] = AppliedEntry(engine, components, types, System.currentTimeMillis(), ruleIds)
+        }
         save(store)
     }
 

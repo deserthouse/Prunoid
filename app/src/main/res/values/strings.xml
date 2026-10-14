@@ -168,6 +168,7 @@
     <string name="vm_clear_fail">清除失败：%1$s</string>
     <string name="vm_need_root">需要 root</string>
     <string name="vm_forbidden">系统 app 已被白名单拦截</string>
+    <string name="vm_op_fail">操作失败——请重试（若失去 root 请先授权）</string>
     <string name="vm_no_targets">无可应用的组件目标</string>
     <string name="vm_apply_ok">%1$s 规则 %2$d 条已应用</string>
     <string name="vm_apply_backup">（已自动备份）</string>

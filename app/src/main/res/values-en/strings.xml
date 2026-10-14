@@ -152,6 +152,7 @@
     <string name="vm_clear_fail">Clear failed: %1$s</string>
     <string name="vm_need_root">Root required</string>
     <string name="vm_forbidden">System app blocked by whitelist</string>
+    <string name="vm_op_fail">Operation failed — retry (grant root if lost)</string>
     <string name="vm_no_targets">No component targets to apply</string>
     <string name="vm_apply_ok">%1$s rules applied: %2$d</string>
     <string name="vm_apply_backup">(backup created automatically)</string>

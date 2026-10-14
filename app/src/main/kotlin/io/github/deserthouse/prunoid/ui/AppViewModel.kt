@@ -224,11 +224,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     if (r.isSuccess) {
                         ok++
                         touched.add(a.packageName)
-                        // 合并记录：不覆盖该 app 其他 SDK 的条目
-                        applied.record(
+                        // 批X2（审查 R04）：合并语义走 recordMerge，目标以 ruleIds 记账
+                        applied.recordMerge(
                             a.packageName, Engine.IFW.name,
-                            (prev?.components.orEmpty() + hit.matchedComponents).distinct(),
-                            (prev?.types.orEmpty() + hit.componentTypes)
+                            hit.matchedComponents, hit.componentTypes,
+                            addedRuleIds = setOf(ruleId)
                         )
                     }
                 }
@@ -263,22 +263,26 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                         .filterKeys { it != "provider" }
                     if (byType.isEmpty()) return@withBusy appCtx.getString(R.string.vm_no_targets)
                     val r = engine.applyIfw(pkg, byType)
-                    if (r.isSuccess) applied.record(
+                    // 批X2（审查 R04/PN-06）：合并语义 + 失败如实反馈（不再静默成功）
+                    if (r.isSuccess) applied.recordMerge(
                         pkg, Engine.IFW.name,
-                        (prev?.components.orEmpty() + hit.matchedComponents).distinct(),
-                        (prev?.types.orEmpty() + hit.componentTypes)
-                    )
+                        hit.matchedComponents, hit.componentTypes,
+                        addedRuleIds = setOf(ruleId)
+                    ) else return@withBusy appCtx.getString(R.string.vm_op_fail)
                 } else {
                     // off：仅移除该 SDK 命中的组件（IFW 定向移除 + pm enable）；
                     // 外部/其他来源 filter 幸存（removeIfw 语义批J#1 已修正）
                     val removed: Set<String> = hit.matchedComponents.toSet()
-                    engine.enablePm(pkg, removed.toList())
-                    engine.removeIfw(pkg, removeComponents = removed)
-                    if (prev != null) applied.record(
-                        pkg, prev.engine,
-                        prev.components.filter { it !in removed },
-                        prev.types.filterKeys { it !in removed }
-                    ) else applied.remove(pkg)
+                    val r1 = engine.enablePm(pkg, removed.toList())
+                    val r2 = engine.removeIfw(pkg, removeComponents = removed)
+                    // 批X2：写失败不谎报；账本替换语义——空集自动删除（修 R04-b 复活问题）
+                    check(r1.isSuccess && r2.isSuccess) { "sdk off failed" }
+                    applied.recordReplace(
+                        pkg, prev?.engine ?: Engine.IFW.name,
+                        prev?.components.orEmpty().filter { it !in removed },
+                        prev?.types.orEmpty().filterKeys { it !in removed },
+                        ruleIds = prev?.ruleIds.orEmpty() - ruleId
+                    )
                 }
                 val liveAfter = engine.readLiveDisabled(listOf(pkg)).first
                 _state.update {
@@ -307,15 +311,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 if (comps.isEmpty()) return@withBusy appCtx.getString(R.string.vm_no_targets)
                 if (_state.value.backupEnabled) engine.backup(_state.value.backupKeep).getOrNull() else null
                 val r = engine.applyIfw(pkg, byType)
-                if (r.isSuccess) {
-                    // 批E1：合并记录——不覆盖该 app 其他 SDK 的 applied 条目
-                    val prev = applied.get(pkg)
-                    applied.record(
-                        pkg, Engine.IFW.name,
-                        (prev?.components.orEmpty() + comps).distinct(),
-                        (prev?.types.orEmpty() + byType.entries.flatMap { (t, cs) -> cs.map { it to t } }.toMap())
-                    )
-                }
+                check(r.isSuccess) { "unmatched apply failed: ${r.exceptionOrNull()?.message}" }
+                // 批E1/X2：合并语义
+                applied.recordMerge(
+                    pkg, Engine.IFW.name, comps,
+                    byType.entries.flatMap { (t, cs) -> cs.map { it to t } }.toMap()
+                )
                 val liveAfter = if (r.isSuccess) engine.readLiveDisabled(listOf(pkg)).first else null
                 _state.update {
                     it.copy(
@@ -641,17 +642,19 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 if (targets.isEmpty()) return@withBusy appCtx.getString(R.string.vm_no_targets)
                 val backup = if (_state.value.backupEnabled) engine.backup(_state.value.backupKeep).getOrNull() else null
                 val byType = byTypeForVM(scanned, selectedRuleIds)
-                val r = when (_state.value.engine) {
+                // 批X2（审查 PN-03）：入口捕获引擎快照——执行/记账/结果引用同一份，消灭重读漂移
+                val engineSnapshot = _state.value.engine
+                val r = when (engineSnapshot) {
                     Engine.IFW -> engine.applyIfw(scanned.packageName, byType)
                     Engine.PM -> engine.applyPm(scanned.packageName, targets)
                 }
-                // 记录已应用目标，供 PACKAGE_REPLACED 后自动增量重应用
-                if (r.isSuccess) {
-                    applied.record(
-                        scanned.packageName, _state.value.engine.name, targets,
-                        byType.entries.flatMap { (t, cs) -> cs.map { it to t } }.toMap()
-                    )
-                }
+                // 批X2（审查 R04/R05）：合并记账（不覆盖同包其他 SDK）+ ruleIds 身份入账
+                check(r.isSuccess) { "apply failed: ${r.exceptionOrNull()?.message}" }
+                applied.recordMerge(
+                    scanned.packageName, engineSnapshot.name, targets,
+                    byType.entries.flatMap { (t, cs) -> cs.map { it to t } }.toMap(),
+                    addedRuleIds = selectedRuleIds
+                )
                 // 批G：写入后单包重读现场（展示层以现场为准）
                 val liveAfter = if (r.isSuccess) engine.readLiveDisabled(listOf(scanned.packageName)).first else null
                 _state.update {
@@ -680,9 +683,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 val r1 = engine.removeIfw(scanned.packageName, removeComponents = entry?.components?.toSet())
                 val r2 = entry?.components?.let { engine.enablePm(scanned.packageName, it) }
                     ?: Result.success(0)
-                applied.remove(scanned.packageName)
-                _state.update { it.copy(applied = applied.all()) }
+                // 批X2（审查 PN-07）：失败不删恢复账本——现场仍禁用时必须保留重试依据
                 val ok = r1.isSuccess && r2.isSuccess
+                if (ok && entry != null) applied.remove(scanned.packageName)
+                _state.update { it.copy(applied = applied.all()) }
                 // 批G：恢复后单包重读现场
                 val liveAfterR = if (ok) engine.readLiveDisabled(listOf(scanned.packageName)).first else null
                 _state.update {
