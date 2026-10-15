@@ -81,6 +81,11 @@ fun StatsScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        // 批AA5（M3E 评审 E05）：页面标题与其他主页面一致（此前统计页无标题区）
+        Text(
+            stringResource(R.string.stats_title),
+            style = MaterialTheme.typography.titleLarge
+        )
         // 总量卡
         Card(Modifier.fillMaxWidth()) {
             Row(
@@ -116,72 +121,19 @@ fun StatsScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
             Column(Modifier.padding(16.dp)) {
                 Text(stringResource(R.string.stats_cat_title), style = MaterialTheme.typography.titleSmall)
                 Spacer(Modifier.height(12.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(Modifier.size(148.dp), contentAlignment = Alignment.Center) {
-                        // M3E：入场弧线扫入（克制单段 tween）
-                        val sweepIn by animateFloatAsState(
-                            targetValue = if (catTotal > 0) 1f else 0f,
-                            animationSpec = MotionTokens.chart(),
-                            label = "donutSweep"
-                        )
-                        Canvas(Modifier.fillMaxSize()) {
-                            val stroke = 26.dp.toPx()
-                            val inset = stroke / 2
-                            val arcSize = Size(size.width - stroke, size.height - stroke)
-                            var start = -90f
-                            if (catTotal > 0) {
-                                catDist.forEach { (cat, n) ->
-                                    val sweep = n.toFloat() / catTotal * 360f * sweepIn
-                                    drawArc(
-                                        color = categoryColor(cat, dark),
-                                        startAngle = start,
-                                        sweepAngle = sweep,
-                                        useCenter = false,
-                                        topLeft = Offset(inset, inset),
-                                        size = arcSize,
-                                        style = Stroke(width = stroke)
-                                    )
-                                    start += sweep
-                                }
-                            } else {
-                                drawArc(
-                                    color = Color.Gray.copy(alpha = 0.2f),
-                                    startAngle = 0f, sweepAngle = 360f, useCenter = false,
-                                    topLeft = Offset(inset, inset), size = arcSize,
-                                    style = Stroke(width = stroke)
-                                )
-                            }
-                        }
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("$catTotal", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary)
-                            Text(
-                                stringResource(R.string.stats_cat_center),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
+                // 批AA5（M3E 评审 E05）：响应式排列——宽度足够时环图与图例并排，
+                // 窄内容区上下排列（不靠缩小文字维持横排）
+                val wide = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp >= 400
+                if (wide) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        DonutChart(catDist, catTotal, dark, Modifier.size(148.dp))
+                        Spacer(Modifier.width(16.dp))
+                        LegendList(catDist, catPct, dark, Modifier.weight(1f))
                     }
-                    Spacer(Modifier.width(16.dp))
-                    // 图例
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        catDist.forEach { (cat, n) ->
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(Modifier.size(9.dp).background(categoryColor(cat, dark), RoundedCornerShape(50)))
-                                Spacer(Modifier.width(6.dp))
-                                Text(
-                                    categoryLabel(cat),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    modifier = Modifier.weight(1f)
-                                )
-                                Text(
-                                    "$n · ${catPct[cat] ?: 0}%",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontFamily = FontFamily.Monospace,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                    }
+                } else {
+                    DonutChart(catDist, catTotal, dark, Modifier.size(148.dp).align(Alignment.CenterHorizontally))
+                    Spacer(Modifier.height(12.dp))
+                    LegendList(catDist, catPct, dark, Modifier.fillMaxWidth())
                 }
             }
         }
@@ -251,6 +203,89 @@ fun StatsScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+
+// 批AA5：环图与图例提取为独立 Composable——响应式排列（宽并排/窄上下）复用同一渲染
+@Composable
+private fun DonutChart(
+    catDist: List<Map.Entry<String, Int>>,
+    catTotal: Int,
+    dark: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Box(modifier, contentAlignment = Alignment.Center) {
+        // E10：数据从空到有的过渡（保留原行为，注释如实——非每次入场动画）
+        val sweepIn by animateFloatAsState(
+            targetValue = if (catTotal > 0) 1f else 0f,
+            animationSpec = MotionTokens.chart(),
+            label = "donutSweep"
+        )
+        Canvas(Modifier.fillMaxSize()) {
+            val stroke = 26.dp.toPx()
+            val inset = stroke / 2
+            val arcSize = Size(size.width - stroke, size.height - stroke)
+            var start = -90f
+            if (catTotal > 0) {
+                catDist.forEach { (cat, n) ->
+                    val sweep = n.toFloat() / catTotal * 360f * sweepIn
+                    drawArc(
+                        color = categoryColor(cat, dark),
+                        startAngle = start,
+                        sweepAngle = sweep,
+                        useCenter = false,
+                        topLeft = Offset(inset, inset),
+                        size = arcSize,
+                        style = Stroke(width = stroke)
+                    )
+                    start += sweep
+                }
+            } else {
+                drawArc(
+                    color = Color.Gray.copy(alpha = 0.2f),
+                    startAngle = 0f, sweepAngle = 360f, useCenter = false,
+                    topLeft = Offset(inset, inset), size = arcSize,
+                    style = Stroke(width = stroke)
+                )
+            }
+        }
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text("$catTotal", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary)
+            Text(
+                stringResource(R.string.stats_cat_center),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun LegendList(
+    catDist: List<Map.Entry<String, Int>>,
+    catPct: Map<String, Int>,
+    dark: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        catDist.forEach { (cat, n) ->
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.size(9.dp).background(categoryColor(cat, dark), RoundedCornerShape(50)))
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    categoryLabel(cat),
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.weight(1f)
+                )
+                Text(
+                    "$n · ${catPct[cat] ?: 0}%",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontFamily = FontFamily.Monospace,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }

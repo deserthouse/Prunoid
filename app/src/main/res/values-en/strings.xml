@@ -59,6 +59,9 @@
     <string name="select_all_filtered">Select all filtered</string>
     <string name="select_none">Select none</string>
     <string name="cd_detail">Details</string>
+    <string name="detail_tech">Technical details</string>
+    <string name="sel_count_line">%1$d SDK(s) · %2$d components selected</string>
+    <string name="cd_open_sheet">Open SDK archive</string>
     <string name="unmatched_total">Unrecognized components %1$d</string>
     <string name="unmatched_desc">Not in the rule base — selecting these for blocking is your own judgment; consider contributing a rule</string>
     <string name="unmatched_truncated">Showing top %1$d of %2$d groups</string>
@@ -106,6 +109,7 @@
     <string name="stats_blocked">Components disabled</string>
     <string name="stats_apps">Apps scanned (incl. system)</string>
     <string name="stats_cat_title">SDK category distribution</string>
+    <string name="stats_title">Stats</string>
     <string name="stats_rank_title">Top SDKs on device</string>
     <string name="installed_at">Installed %1$s</string>
     <string name="updated_at">Updated %1$s</string>
@@ -217,6 +221,8 @@
     <string name="filter_category">SDK category</string>
     <string name="search_comp_hint">Search component / SDK</string>
     <string name="sheet_no_apps">Not detected in any installed app</string>
+    <string name="sheet_apps_show_all">Show all %1$d apps</string>
+    <string name="search_app_hint">Search app name or package</string>
     <string name="sheet_apps_title">Apps using this SDK (%1$d)</string>
     <string name="sheet_app_disabled">%1$d/%2$d components disabled</string>
     <string name="sheet_app_pending">Not disabled</string>

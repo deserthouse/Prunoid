@@ -25,6 +25,7 @@ import io.github.deserthouse.prunoid.core.engine.AppliedRulesStore
 import io.github.deserthouse.prunoid.core.rules.Safety
 import io.github.deserthouse.prunoid.core.scanner.ScannedApp
 import io.github.deserthouse.prunoid.core.scanner.SdkHit
+import io.github.deserthouse.prunoid.ui.SearchField
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -145,6 +146,13 @@ fun SdkArchiveSheet(
                 val st0 = vm.state.collectAsState().value
                 val liveSet0 = st0.liveDisabled
                 val userApps = st0.apps.filter { a -> a.matchedSdks.any { it.ruleId == hit.ruleId } }
+                // 批AA3（M3E 评审 E03）：清单可检索+可展开全集——批量覆盖全集但只能看前 30 的矛盾解除
+                var appQuery by remember { mutableStateOf("") }
+                var showAllApps by remember { mutableStateOf(false) }
+                val filteredApps = if (appQuery.isBlank()) userApps
+                else userApps.filter { a ->
+                    a.label.contains(appQuery, true) || a.packageName.contains(appQuery, true)
+                }
                 // 批M3：sheet 内嵌状态行（Snackbar 在 sheet 之下会被遮挡，改本地呈现）
                 var sheetStatus by remember { mutableStateOf<String?>(null) }
                 // 批R2（审计 P-5）：跨应用批量写 IFW 补单次确认
@@ -189,8 +197,19 @@ fun SdkArchiveSheet(
                             }
                         }
                     }
+                    // 批AA3：大集合检索（>10 才显示，小清单免打扰）
+                    if (userApps.size > 10) {
+                        Spacer(Modifier.height(4.dp))
+                        SearchField(
+                            value = appQuery,
+                            onValueChange = { appQuery = it },
+                            placeholder = { Text(stringResource(R.string.search_app_hint)) },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                     Spacer(Modifier.height(4.dp))
-                    userApps.take(30).forEach { a ->
+                    val shown = if (showAllApps || appQuery.isNotBlank()) filteredApps else filteredApps.take(30)
+                    shown.forEach { a ->
                         val disN = liveSet0[a.packageName]?.count { c ->
                             a.matchedSdks.filter { it.ruleId == hit.ruleId }.any { h ->
                                 h.matchedComponents.any { it == c || (a.packageName + "/" + it) == c }
@@ -220,10 +239,16 @@ fun SdkArchiveSheet(
             )
                         }
                     }
-                    if (userApps.size > 30) {
+                    // 批AA3：剩余项改为展开入口（原"还有 N 个"只读文本=批量覆盖全集却只能看 30 的矛盾）
+                    if (appQuery.isBlank() && filteredApps.size > 30 && !showAllApps) {
+                        TextButton(onClick = { showAllApps = true }) {
+                            Text(stringResource(R.string.sheet_apps_show_all, filteredApps.size))
+                        }
+                    }
+                    if (appQuery.isNotBlank() && filteredApps.isEmpty()) {
                         Text(
-                            stringResource(R.string.sheet_apps_more, userApps.size - 30),
-                            style = MaterialTheme.typography.labelSmall,
+                            stringResource(R.string.sheet_no_apps),
+                            style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }

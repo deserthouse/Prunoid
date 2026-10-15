@@ -263,14 +263,16 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
                 Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                FilledTonalButton(onClick = { showFilterSheet = true }, modifier = Modifier.weight(1f)) {
+                // 批AA6（M3E 评审 E06）：控制区紧凑化——按钮按内容取宽（原 weight(1f) 等宽双钮
+                // 在宽屏拉伸为两条大按钮，视觉重量盖过下方列表）
+                FilledTonalButton(onClick = { showFilterSheet = true }) {
                     Icon(Icons.Outlined.FilterList, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(6.dp))
                     Text(if (activeFilterCount > 0) stringResource(R.string.filter_label_n, activeFilterCount)
                          else stringResource(R.string.filter_label))
                 }
-                Box(Modifier.weight(1f)) {
-                    FilledTonalButton(onClick = { sortMenu = true }, modifier = Modifier.fillMaxWidth()) {
+                Box {
+                    FilledTonalButton(onClick = { sortMenu = true }) {
                         Icon(Icons.Outlined.Sort, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
                         Text(stringResource(sortMode.labelRes), maxLines = 1, overflow = TextOverflow.Ellipsis)

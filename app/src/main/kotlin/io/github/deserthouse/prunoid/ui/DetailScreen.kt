@@ -153,6 +153,26 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                             )
                         }
                     } else Column(Modifier.fillMaxWidth()) {
+                        // 批AA7（M3E 评审 E11）：选择计数随勾选持续可见——滚动后仍知道选了什么；
+                        // M=当前引擎实际支持组件数（IFW 剔除 provider/native，与 Y2 记账口径同源）
+                        if (selected.isNotEmpty()) {
+                            val selEffComps = if (st.engine == Engine.IFW) {
+                                selHits.sumOf { h ->
+                                    h.matchedComponents.count { c ->
+                                        val t = h.componentTypes[c] ?: ""
+                                        t != "provider" && t != "native"
+                                    }
+                                }
+                            } else selComponents.size
+                            Text(
+                                stringResource(R.string.sel_count_line, selHits.size, selEffComps),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp)
+                            )
+                        }
                         Row(
                             Modifier
                                 .fillMaxWidth()
@@ -391,12 +411,17 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
             }
             if (detailTab == 0) items(visibleSdks, key = { it.ruleId }) { hit ->
                 val checked = hit.ruleId in selected
-                // 整卡 = 打开 SDK 档案卡弹层；仅左侧复选框独立点选
+                // 批AA2（M3E 评审 E02 方案一）：整行点击=选择（常用动作优先），行尾独立图标进
+                // SDK 档案（原 ExpandMore 暗示原地展开而实为模态档案，图标语义一并修正）；
+                // 选中态 tonal 容器持续可见——滚动中可辨认已选集合；风险徽标保持语义色不参与选择反馈
                 Card(
-                    onClick = { sheetFor = hit },
+                    onClick = { selected = if (checked) selected - hit.ruleId else selected + hit.ruleId },
                     Modifier
                         .fillMaxWidth()
-                        .animateItem()
+                        .animateItem(),
+                    colors = if (checked) CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer
+                    ) else CardDefaults.cardColors()
                 ) {
                     Row(
                         Modifier.padding(horizontal = 10.dp, vertical = 12.dp),
@@ -424,11 +449,13 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                             )
                         }
                         SafetyBadge(hit.safety)
-                        Icon(
-                            Icons.Outlined.ExpandMore,
-                            contentDescription = stringResource(R.string.cd_detail),
-                            modifier = Modifier.padding(start = 6.dp)
-                        )
+                        IconButton(onClick = { sheetFor = hit }) {
+                            Icon(
+                                Icons.Outlined.Info,
+                                contentDescription = stringResource(R.string.cd_open_sheet),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -531,6 +558,9 @@ private fun DetailHeaderCard(
     versionName: String,
     onOpenSheet: (SdkHit) -> Unit
 ) {
+    // 批AA1（M3E 评审 E01）：技术元数据（Target/Min/体积/时间/快捷头像）折叠——
+    // 首屏让位给"对象+识别范围+当前状态"，选择任务优先
+    var techOpen by remember { mutableStateOf(false) }
             Card(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp)) {
                         Row(
@@ -556,38 +586,7 @@ private fun DetailHeaderCard(
                                     style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.primary
                                 )
-                                // 大头部补充行（LibChecker 式）：Target/Min/Size
-                                val appInfo = remember(app.packageName) {
-                                    runCatching { pm.getApplicationInfo(app.packageName, 0) }.getOrNull()
-                                }
-                                val apkSizeMb = remember(app.packageName) {
-                                    appInfo?.sourceDir?.let {
-                                        runCatching { java.io.File(it).length() / 1048576 }.getOrNull()
-                                    }
-                                }
-                                Text(
-                                    buildString {
-                                        append("Target ${appInfo?.targetSdkVersion ?: "?"} · Min ${appInfo?.minSdkVersion ?: "?"}")
-                                        if (apkSizeMb != null) append(" · ${apkSizeMb} MB")
-                                    },
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                // 安装/更新时间行（AppChecker 走查吸收点；数据取自扫描结果）
-                                if (app.lastUpdateTime > 0L) {
-                                    val fmt = remember { java.text.DateFormat.getDateTimeInstance(java.text.DateFormat.SHORT, java.text.DateFormat.SHORT) }
-                                    Text(
-                                        buildString {
-                                            append(stringResource(R.string.installed_at, fmt.format(java.util.Date(app.firstInstallTime))))
-                                            if (app.lastUpdateTime != app.firstInstallTime) {
-                                                append(" · ")
-                                                append(stringResource(R.string.updated_at, fmt.format(java.util.Date(app.lastUpdateTime))))
-                                            }
-                                        },
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
+                                // 批AA1：Target/Min/体积/安装时间折叠进"技术详情"（首屏让位选择任务）
                             }
                         }
                         // 安全分布 mini-dots + 已应用状态行
@@ -615,33 +614,8 @@ private fun DetailHeaderCard(
                                 }
                             }
                         }
-                        // 已检出 SDK 快捷条（LibChecker 式）：点头像直达档案卡
-                        if (app.matchedSdks.isNotEmpty()) {
-                            Spacer(Modifier.height(8.dp))
-                            Row(
-                                Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                app.matchedSdks.take(10).forEach { hit ->
-                                    // 批F2/PD2：48dp 最小触达 + clip(CircleShape) 修圆头像方波纹
-                                    SdkMonogram(
-                                        hit.ruleId, hit.name,
-                                        Modifier
-                                            .clip(androidx.compose.foundation.shape.CircleShape)
-                                            .clickable { onOpenSheet(hit) }
-                                            .padding(8.dp)
-                                    )
-                                }
-                                val rest = app.matchedSdks.size - 10
-                                if (rest > 0) {
-                                    Text(
-                                        "+$rest",
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
-                        }
+                        // 批AA1：已检出 SDK 快捷条折叠进技术详情（与下方列表功能重复，档案入口由
+                        // 选择行行尾图标承担）
                         // 批G：现场口径行独立于 applied 记账显示（IFW+pm 两处，来源不限本应用）
                         val liveN = st.liveDisabled[app.packageName]?.size ?: -1
                         if (liveN >= 0) {
@@ -677,6 +651,88 @@ private fun DetailHeaderCard(
                                     style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.primary
                                 )
+                            }
+                        }
+                        // 批AA1：技术详情折叠区——Target/Min/体积、安装/更新时间、SDK 快捷条
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .clip(MaterialTheme.shapes.small)
+                                .clickable { techOpen = !techOpen }
+                                .padding(vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Outlined.ExpandMore,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(Modifier.width(4.dp))
+                            Text(
+                                stringResource(R.string.detail_tech),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        if (techOpen) {
+                            Column(Modifier.fillMaxWidth()) {
+                                val appInfo = remember(app.packageName) {
+                                    runCatching { pm.getApplicationInfo(app.packageName, 0) }.getOrNull()
+                                }
+                                val apkSizeMb = remember(app.packageName) {
+                                    appInfo?.sourceDir?.let {
+                                        runCatching { java.io.File(it).length() / 1048576 }.getOrNull()
+                                    }
+                                }
+                                Text(
+                                    buildString {
+                                        append("Target ${appInfo?.targetSdkVersion ?: "?"} · Min ${appInfo?.minSdkVersion ?: "?"}")
+                                        if (apkSizeMb != null) append(" · ${apkSizeMb} MB")
+                                    },
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                if (app.lastUpdateTime > 0L) {
+                                    val fmt = remember { java.text.DateFormat.getDateTimeInstance(java.text.DateFormat.SHORT, java.text.DateFormat.SHORT) }
+                                    Text(
+                                        buildString {
+                                            append(stringResource(R.string.installed_at, fmt.format(java.util.Date(app.firstInstallTime))))
+                                            if (app.lastUpdateTime != app.firstInstallTime) {
+                                                append(" · ")
+                                                append(stringResource(R.string.updated_at, fmt.format(java.util.Date(app.lastUpdateTime))))
+                                            }
+                                        },
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                // 已检出 SDK 快捷条（点头像直达档案卡）
+                                if (app.matchedSdks.isNotEmpty()) {
+                                    Spacer(Modifier.height(8.dp))
+                                    Row(
+                                        Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        app.matchedSdks.take(10).forEach { hit ->
+                                            // 批F2/PD2：48dp 最小触达 + clip(CircleShape) 修圆头像方波纹
+                                            SdkMonogram(
+                                                hit.ruleId, hit.name,
+                                                Modifier
+                                                    .clip(androidx.compose.foundation.shape.CircleShape)
+                                                    .clickable { onOpenSheet(hit) }
+                                                    .padding(8.dp)
+                                            )
+                                        }
+                                        val rest = app.matchedSdks.size - 10
+                                        if (rest > 0) {
+                                            Text(
+                                                "+$rest",
+                                                style = MaterialTheme.typography.labelMedium,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+                                }
                             }
                         }
             }

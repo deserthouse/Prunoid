@@ -65,6 +65,9 @@
     <string name="select_all_filtered">全选筛选结果</string>
     <string name="select_none">全不选</string>
     <string name="cd_detail">详情</string>
+    <string name="detail_tech">技术详情</string>
+    <string name="sel_count_line">已选 %1$d 个 SDK · %2$d 个组件</string>
+    <string name="cd_open_sheet">查看 SDK 档案</string>
     <string name="unmatched_total">未识别组件 %1$d</string>
     <string name="unmatched_desc">不在规则库中——勾选禁用属人工判断、风险自担；欢迎提交规则</string>
     <string name="unmatched_truncated">仅显示前 %1$d 组（共 %2$d 组）</string>
@@ -119,6 +122,7 @@
     <string name="stats_blocked">已禁用组件</string>
     <string name="stats_apps">含系统应用</string>
     <string name="stats_cat_title">SDK 分类分布</string>
+    <string name="stats_title">统计</string>
     <string name="stats_rank_title">在机 SDK 排行</string>
     <string name="installed_at">安装于 %1$s</string>
     <string name="updated_at">更新于 %1$s</string>
@@ -233,6 +237,8 @@
     <string name="filter_category">SDK 分类</string>
     <string name="search_comp_hint">搜索组件 / SDK 名</string>
     <string name="sheet_no_apps">当前在机应用中未检出此 SDK</string>
+    <string name="sheet_apps_show_all">显示全部 %1$d 个应用</string>
+    <string name="search_app_hint">搜索应用名或包名</string>
     <string name="sheet_apps_title">使用此 SDK 的应用（%1$d）</string>
     <string name="sheet_app_disabled">已禁用 %1$d/%2$d 组件</string>
     <string name="sheet_app_pending">未禁用</string>

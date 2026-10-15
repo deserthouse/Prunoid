@@ -66,13 +66,11 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
 
             Spacer(Modifier.height(4.dp))
 
-            LanguageSection()
-
-            NotifPermSection()
-
+            // 批AA4（M3E 评审 E04）：按用户任务重排——工作环境 → 执行与自动化 → 规则订阅 →
+            // 恢复 → 实验能力 → 偏好与关于；分区内容与 SectionTitle 样式不动（批I3 拍板维持）
             WorkModeSection(st, vm)
 
-            DeclarativeSection(st, vm, onMsg = { show(it) })
+            NotifPermSection()
 
             EnginesSection(st, vm)
 
@@ -81,6 +79,10 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
             SubscriptionsSection(st, vm, onShowAddSource = { showAddSource = true }, onMsg = { show(it) })
 
             RecoverySection(st, vm, onMsg = { show(it) })
+
+            DeclarativeSection(st, vm, onMsg = { show(it) })
+
+            LanguageSection()
 
             AboutSection(st, vm)
 
