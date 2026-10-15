@@ -661,9 +661,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 engine.restoreBackup(path).fold(
                     onSuccess = {
                         ok = true
-                        // 批Z0（D1 裁决）：还原=全局时点——快照后新建的 IFW 已被差异还原删除，
-                        // 对应账本条目一并终止（PM 条目保留），防止下次包更新按账本复活已回滚规则
-                        withContext(Dispatchers.IO) { applied.removeEngine(Engine.IFW.name) }
+                        // 批Z0（D1 裁决）：还原=全局时点——快照归档含 IFW 目录与 pm 状态，
+                        // 快照后的全部本工具修改（双引擎）都被回滚，账本同步全清；
+                        // 否则下次包更新按账本复活已回滚规则。应急清除（仅清 IFW）则保留 PM 条目，
+                        // 两入口语义不同源自归档覆盖面不同。
+                        withContext(Dispatchers.IO) {
+                            applied.removeEngine(Engine.IFW.name)
+                            applied.removeEngine(Engine.PM.name)
+                        }
                         appCtx.getString(R.string.vm_restore_backup_ok)
                     },
                     onFailure = { appCtx.getString(R.string.vm_restore_backup_fail, it.message ?: "") }
