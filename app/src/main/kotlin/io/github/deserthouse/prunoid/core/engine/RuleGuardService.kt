@@ -47,9 +47,18 @@ class RuleGuardService : Service() {
                 return
             }
             Log.w("SdkPruner", "guard: recovery clearing all IFW")
+            // 批Y3 补 goAsync：协程生命周期不再悬在 onReceive 返回之后（前台进程侥幸可用，后台即断）
+            val pending = goAsync()
             CoroutineScope(Dispatchers.IO).launch {
-                val n = engine.clearAllIfw().getOrDefault(-1)
-                Log.w("SdkPruner", "guard: recovery cleared $n IFW files")
+                try {
+                    val n = engine.clearAllIfw().getOrDefault(-1)
+                    // 批Y3（架构评审 C4）：与 RecoveryReceiver 同语义——应急清除终止 IFW 自动管理
+                    // （PM 条目保留），防止包更新按账本复活刚清掉的规则
+                    AppliedRulesStore(context).removeEngine(Engine.IFW.name)
+                    Log.w("SdkPruner", "guard: recovery cleared $n IFW files, IFW ledger entries removed")
+                } finally {
+                    pending.finish()
+                }
             }
         }
     }
