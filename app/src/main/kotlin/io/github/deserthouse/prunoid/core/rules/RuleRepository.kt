@@ -33,6 +33,12 @@ class RuleRepository(context: Context, initialSources: List<SettingsRepository.S
     var prefixIndex: Map<String, List<String>> = emptyMap()
         private set
 
+    /** 批Z4（架构评审 A6）：规则代次——每次 rebuild 递增；扫描捕获代次，
+     *  扫描期间重建则旧代次结果不回写 UI 状态 */
+    @Volatile
+    var generation: Long = 0
+        private set
+
     @Volatile
     private var builtinAliases: Map<String, String> = emptyMap()
 
@@ -56,6 +62,7 @@ class RuleRepository(context: Context, initialSources: List<SettingsRepository.S
      * 置信度高者胜（high>medium>low，平手保留先入），新 id 追加（并集语义）。
      */
     fun rebuild(sources: List<SettingsRepository.SubSource>) {
+        generation++
         val rules = MultiSourceMerger.mergeMultiSource(
             snapshot.sdks,
             sources.map { it.id }.mapNotNull { id -> subscription.cached(id)?.snapshot?.sdks }
@@ -104,9 +111,17 @@ class RuleRepository(context: Context, initialSources: List<SettingsRepository.S
         private set
 
     fun setSources(sources: List<SettingsRepository.SubSource>) {
+        // 批Z4：源集合未变（含普通偏好触发的 settings emission）不重建索引，
+        // 也不递增 generation——语言/备份份数等偏好不再引发规则重建
+        val key = sources.joinToString("|") { it.id + "@" + it.url }
+        if (key == lastSourcesKey) return
+        lastSourcesKey = key
         subscribedSources = sources
         rebuild(sources)
     }
+
+    @Volatile
+    private var lastSourcesKey: String? = null
 
     companion object {
         val json = Json { ignoreUnknownKeys = true }

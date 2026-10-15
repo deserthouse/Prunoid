@@ -158,6 +158,7 @@
     <string name="vm_apply_backup">(backup created automatically)</string>
     <string name="vm_fail_suffix"> — failed: %1$s</string>
     <string name="vm_restore_ok">Restored (IFW removed + pm components re-enabled)</string>
+    <string name="vm_restore_skip_pre">; skipped %1$d component(s) already disabled before (not set by this tool)</string>
     <string name="vm_restore_fail">Failed: %1$s</string>
     <string name="vm_sub_ok">Subscribed: %1$d rules (version %2$s)</string>
     <string name="vm_sub_fail">Subscription failed: %1$s</string>
@@ -195,7 +196,7 @@
     <string name="backup_path_note">Optional feature: even without backups you can roll back via per-app restore / clear-all-IFW / the adb emergency command.</string>
     <string name="backup_points_title">Restore points (new → old)</string>
     <string name="backup_keep_note">Any count is fine; older backups beyond the limit are pruned automatically. Disk usage is a natural consequence — your call.</string>
-    <string name="backup_restore_confirm">The selected archive will be unpacked back to the original paths (overwriting current IFW rules and pm state) with ownership fixed. Continue?</string>
+    <string name="backup_restore_confirm">The selected archive will be unpacked back to the original paths (overwriting current IFW rules and pm state) with ownership fixed. Note: restore is a global point-in-time operation — IFW rules written after the snapshot (including rules from other tools) will be revoked. Continue?</string>
     <string name="recovery_cmd_title">Emergency command (tap to copy)</string>
     <string name="recovery_cmd_sub">If the UI cannot be reached, run this on a computer to clear all IFW rules</string>
     <string name="recovery_clear_title">Clear all IFW rules</string>

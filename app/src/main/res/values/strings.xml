@@ -174,6 +174,7 @@
     <string name="vm_apply_backup">（已自动备份）</string>
     <string name="vm_fail_suffix"> — 失败：%1$s</string>
     <string name="vm_restore_ok">已恢复（IFW 规则移除 + pm 组件重启用）</string>
+    <string name="vm_restore_skip_pre">；跳过 %1$d 项原本已禁用（非本工具设置）</string>
     <string name="vm_restore_fail">失败：%1$s</string>
     <string name="vm_sub_ok">订阅成功：%1$d 条规则（版本 %2$s）</string>
     <string name="vm_sub_fail">订阅失败：%1$s</string>
@@ -211,7 +212,7 @@
     <string name="backup_path_note">此为可选功能：不使用本工具的备份也可通过单 app 恢复 / 清除全部 IFW / adb 应急命令回滚。</string>
     <string name="backup_points_title">恢复点（新 → 旧）</string>
     <string name="backup_keep_note">份数自由填写；超出的旧备份自动清理。磁盘占用为天然后果，请按需取舍。</string>
-    <string name="backup_restore_confirm">将把所选归档解回原路径（覆盖现有 IFW 规则与 pm 状态）并修复归属。继续？</string>
+    <string name="backup_restore_confirm">将把所选归档解回原路径（覆盖现有 IFW 规则与 pm 状态）并修复归属。注意：还原按全局时点进行，快照之后写入的 IFW 规则（含其他工具）将被撤销。继续？</string>
     <string name="recovery_cmd_title">应急命令（点击复制）</string>
     <string name="recovery_cmd_sub">UI 无法进入时，在电脑上执行以下命令清除全部 IFW 规则</string>
     <string name="recovery_clear_title">清除全部 IFW 规则</string>

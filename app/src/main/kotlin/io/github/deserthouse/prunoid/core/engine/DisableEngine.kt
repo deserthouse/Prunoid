@@ -190,7 +190,12 @@ class DisableEngine(
 
     /** 批X2（审查 R13）：PM 现场直查——应用侧 getComponentEnabledSetting，无 shell/无 dumpsys 格式依赖。
      *  返回该包当前被 PM 禁用的组件全类名集（含 DISABLED / DISABLED_USER 两态）。 */
-    private fun readPmDisabled(pkg: String): Set<String> {
+    /** 批Z3：PM 现场直查（公开）——applyPm 前读取"写入前已禁用"集（恢复所有权用） */
+    suspend fun readPmDisabled(pkg: String): Set<String> = withContext(Dispatchers.IO) {
+        runCatching { readPmDisabledInternal(pkg) }.getOrDefault(emptySet())
+    }
+
+    private fun readPmDisabledInternal(pkg: String): Set<String> {
         val pm = context.packageManager
         return buildSet {
             for ((cls, _) in enumerateComponents(context, pkg)) {

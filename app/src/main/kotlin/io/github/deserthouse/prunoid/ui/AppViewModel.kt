@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import io.github.deserthouse.prunoid.core.engine.AppliedRulesStore
 import io.github.deserthouse.prunoid.core.engine.DisableEngine
 import io.github.deserthouse.prunoid.core.engine.Engine
+import io.github.deserthouse.prunoid.core.engine.OpCoordinator
 import io.github.deserthouse.prunoid.core.rules.RuleRepository
 import io.github.deserthouse.prunoid.core.rules.RuleSubscription
 import io.github.deserthouse.prunoid.core.rules.Safety
@@ -162,10 +163,16 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /** 批H：操作级 busy 包装——finally 保底清零（异常不再永久卡死全 UI） */
-    private suspend fun <T> withBusy(op: String, block: suspend () -> T): T =
+    private suspend fun <T> withBusy(op: String, locked: Boolean = false, block: suspend () -> T): T =
         try {
             _state.update { it.copy(busyOp = op) }
-            withContext(Dispatchers.IO) { block() }
+            if (locked) {
+                // 批Z2（架构评审 A4）：写操作走 OpCoordinator 全局写锁——与 AutoReapply/
+                // 声明写入共锁串行；locked=false 的读类操作（订阅刷新）不占锁
+                OpCoordinator.write { withContext(Dispatchers.IO) { block() } }
+            } else {
+                withContext(Dispatchers.IO) { block() }
+            }
         } finally {
             _state.update { it.copy(busyOp = null) }
         }
@@ -216,7 +223,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     /** 批I：跨应用统一禁用某 SDK——对规则库中命中该 SDK 的所有已安装应用写 IFW（组件取规则全量，覆盖未来更新） */
     fun disableSdkEverywhere(ruleId: String, onDone: (String) -> Unit) {
         viewModelScope.launch {
-            val msg = withBusy("everywhere") {
+            val msg = withBusy("everywhere", locked = true) {
                 if (!rootGate()) return@withBusy appCtx.getString(R.string.vm_need_root)
                 val rule = rules.rule(ruleId) ?: return@withBusy appCtx.getString(R.string.vm_no_targets)
                 // 批库链修复①：目标组件改用各 app 扫描命中的真实组件
@@ -271,7 +278,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     /** 批库链修复③：per-app × 单 SDK 粒度开关（库页档案卡行开关专用） */
     fun setSdkForApp(pkg: String, ruleId: String, on: Boolean, onDone: (String) -> Unit) {
         viewModelScope.launch {
-            val msg = withBusy(if (on) "sdk-on" else "sdk-off") {
+            val msg = withBusy(if (on) "sdk-on" else "sdk-off", locked = true) {
                 if (!rootGate()) return@withBusy appCtx.getString(R.string.vm_need_root)
                 val app = _state.value.apps.firstOrNull { it.packageName == pkg }
                     ?: return@withBusy appCtx.getString(R.string.vm_no_targets)
@@ -294,16 +301,21 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     ) else return@withBusy appCtx.getString(R.string.vm_op_fail)
                 } else {
                     // off：仅移除该 SDK 命中的组件（IFW 定向移除 + pm enable）；
-                    // 外部/其他来源 filter 幸存（removeIfw 语义批J#1 已修正）
+                    // 外部/其他来源 filter 幸存（removeIfw 语义批J#1 已修正）。
+                    // 批Z1：SDK 组件可能分布在双桶——按桶清理后整体替换
                     val removed: Set<String> = hit.matchedComponents.toSet()
                     val r1 = engine.enablePm(pkg, removed.toList())
                     val r2 = engine.removeIfw(pkg, removeComponents = removed)
-                    // 批X2：写失败不谎报；账本替换语义——空集自动删除（修 R04-b 复活问题）
-                    check(r1.isSuccess && r2.isSuccess) { "sdk off failed" }
-                    applied.recordReplace(
-                        pkg, prev?.engine ?: Engine.IFW.name,
-                        prev?.components.orEmpty().filter { it !in removed },
-                        prev?.types.orEmpty().filterKeys { it !in removed },
+                    // 批X2：写失败不谎报；账本替换语义——双桶全空自动删除（修 R04-b 复活问题）
+                    check(r1.isSuccess && r2.isSuccess)
+                    fun minus(b: AppliedRulesStore.EngineChange?) = b?.copy(
+                        components = b.components.filter { it !in removed },
+                        types = b.types.filterKeys { it !in removed }
+                    )?.takeIf { b2 -> b2.components.isNotEmpty() }
+                    applied.replaceBuckets(
+                        pkg,
+                        ifw = minus(prev?.ifw),
+                        pm = minus(prev?.pm),
                         ruleIds = prev?.ruleIds.orEmpty() - ruleId
                     )
                 }
@@ -328,7 +340,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
      *  批Y1（架构评审 C2）：结构化回调——拒绝/失败返回 (false, msg)，仅成功 (true, msg)；UI 据此保留/清空选择 */
     fun disableUnmatched(pkg: String, byType: Map<String, List<String>>, onDone: (Boolean, String) -> Unit) {
         viewModelScope.launch {
-            val (ok, msg) = withBusy("unmatched") {
+            val (ok, msg) = withBusy("unmatched", locked = true) {
                 if (!rootGate()) return@withBusy Pair(false, appCtx.getString(R.string.vm_need_root))
                 if (DisableEngine.isForbidden(pkg)) return@withBusy Pair(false, appCtx.getString(R.string.vm_forbidden))
                 // 批Y2（架构评审 C3）：IFW 不支持 provider——执行/记账/回执同源过滤
@@ -422,13 +434,16 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             val cur = io.github.deserthouse.prunoid.core.engine.DeclarationsStore.declaredPrefixes
             val next = if (on) cur + rule.packPrefixes.map { it.trimEnd('.') }
                        else cur - rule.packPrefixes.map { it.trimEnd('.') }.toSet()
-            val r = io.github.deserthouse.prunoid.core.engine.DeclarationsStore.write(
-                getApplication<Application>().filesDir,
-                io.github.deserthouse.prunoid.core.engine.DeclarationsStore.Decl(
-                    enabled = next.isNotEmpty(),
-                    prefixes = next.sorted()
+            // 批Z2：声明写入与其他 root 写入口共锁
+            val r = OpCoordinator.write {
+                io.github.deserthouse.prunoid.core.engine.DeclarationsStore.write(
+                    getApplication<Application>().filesDir,
+                    io.github.deserthouse.prunoid.core.engine.DeclarationsStore.Decl(
+                        enabled = next.isNotEmpty(),
+                        prefixes = next.sorted()
+                    )
                 )
-            )
+            }
             if (r.isSuccess) {
                 _state.update {
                     it.copy(declared = next.sorted().toSet(), declarationsEnabled = next.isNotEmpty())
@@ -445,13 +460,16 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 onDone(appCtx.getString(R.string.vm_need_root))
                 return@launch
             }
-            val r = io.github.deserthouse.prunoid.core.engine.DeclarationsStore.write(
-                getApplication<Application>().filesDir,
-                io.github.deserthouse.prunoid.core.engine.DeclarationsStore.Decl(
-                    enabled = on,
-                    prefixes = io.github.deserthouse.prunoid.core.engine.DeclarationsStore.declaredPrefixes.sorted()
+            // 批Z2：声明写入与其他 root 写入口共锁
+            val r = OpCoordinator.write {
+                io.github.deserthouse.prunoid.core.engine.DeclarationsStore.write(
+                    getApplication<Application>().filesDir,
+                    io.github.deserthouse.prunoid.core.engine.DeclarationsStore.Decl(
+                        enabled = on,
+                        prefixes = io.github.deserthouse.prunoid.core.engine.DeclarationsStore.declaredPrefixes.sorted()
+                    )
                 )
-            )
+            }
             // 批S2（审计 N-2）：失败不再谎报回显；错误文本资源化（设置页 Snackbar 直接展示）
             if (r.isSuccess) _state.update { it.copy(declarationsEnabled = on) }
             onDone(if (r.isSuccess) "" else appCtx.getString(R.string.decl_write_fail))
@@ -463,6 +481,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             _state.update { it.copy(scanning = true) }
             // 批X4（审查 R08/PN-17）：扫描索引随每次重扫重建——订阅刷新后新规则当场生效
             scanner = Scanner(appCtx, rules)
+            // 批Z4（架构评审 A6）：捕获规则代次——扫描期间重建则旧代次结果不回写
+            val genAtStart = rules.generation
             val apps = try {
                 withContext(Dispatchers.IO) {
                     val out = scanner.scanAll()
@@ -481,6 +501,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 return@launch
             }
             android.util.Log.d("SdkPruner", "scan done: ${apps.size} apps, ${apps.sumOf { it.matchedSdks.size }} hits")
+            // 批Z4：扫描期间规则已重建 → 本轮结果为旧代次，丢弃不回写（避免旧索引结果覆盖新状态）
+            if (rules.generation != genAtStart) {
+                android.util.Log.d("SdkPruner", "scan discarded: rules generation changed during scan (${genAtStart} -> ${rules.generation})")
+                _state.update { it.copy(scanning = false) }
+                return@launch
+            }
             _state.update { it.copy(scanning = false, apps = apps, applied = withContext(Dispatchers.IO) { applied.all() }) }
             // 图标后台预载（getApplicationIcon 是 binder 调用，100+ app 不能放组合期主线程）
             viewModelScope.launch(Dispatchers.IO) {
@@ -631,10 +657,13 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun restoreBackup(path: String, onDone: (String) -> Unit) {
         viewModelScope.launch {
             var ok = false
-            val msg = withBusy("backup") {
+            val msg = withBusy("backup", locked = true) {
                 engine.restoreBackup(path).fold(
                     onSuccess = {
                         ok = true
+                        // 批Z0（D1 裁决）：还原=全局时点——快照后新建的 IFW 已被差异还原删除，
+                        // 对应账本条目一并终止（PM 条目保留），防止下次包更新按账本复活已回滚规则
+                        withContext(Dispatchers.IO) { applied.removeEngine(Engine.IFW.name) }
                         appCtx.getString(R.string.vm_restore_backup_ok)
                     },
                     onFailure = { appCtx.getString(R.string.vm_restore_backup_fail, it.message ?: "") }
@@ -649,7 +678,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun clearAllIfw(onDone: (String) -> Unit) {
         viewModelScope.launch {
             var ok = false
-            val msg = withBusy("clearifw") {
+            val msg = withBusy("clearifw", locked = true) {
                 engine.clearAllIfw().fold(
                     onSuccess = { n ->
                         ok = true
@@ -689,7 +718,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     /** 应用用户勾选的 SDK（默认勾选 SAFE/CAUTION；用户可显式加选 RISKY/UNKNOWN） */
     fun applyRules(scanned: ScannedApp, selectedRuleIds: Set<String>, onDone: (Boolean, String) -> Unit) {
         viewModelScope.launch {
-            val withBusyResult = withBusy("apply") {
+            val withBusyResult = withBusy("apply", locked = true) {
                 if (!rootGate()) return@withBusy Pair(false, appCtx.getString(R.string.vm_need_root))
                 if (DisableEngine.isForbidden(scanned.packageName) || scanned.isSystem) return@withBusy Pair(false, appCtx.getString(R.string.vm_forbidden))
                 val selected = scanned.matchedSdks.filter { it.ruleId in selectedRuleIds }
@@ -706,9 +735,15 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 if (engineSnapshot == Engine.IFW && effByType.isEmpty()) {
                     return@withBusy Pair(false, appCtx.getString(R.string.vm_no_targets))
                 }
+                var preExistingTargets: List<String> = emptyList()
                 val r = when (engineSnapshot) {
                     Engine.IFW -> engine.applyIfw(scanned.packageName, effByType)
-                    Engine.PM -> engine.applyPm(scanned.packageName, targets)
+                    // 批Z3（架构评审 A5）：写入前现场读——已禁用的组件记 preExisting（非本工具新增，恢复跳过）
+                    Engine.PM -> {
+                        val pre = engine.readPmDisabled(scanned.packageName)
+                        preExistingTargets = targets.filter { it in pre }
+                        engine.applyPm(scanned.packageName, targets)
+                    }
                 }
                 // 批X2（审查 R04/R05）：合并记账（不覆盖同包其他 SDK）+ ruleIds 身份入账
                 if (r.isFailure) return@withBusy Pair(false, appCtx.getString(R.string.vm_op_fail))
@@ -722,7 +757,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     applied.recordMerge(
                         scanned.packageName, engineSnapshot.name, targets,
                         byType.entries.flatMap { (t, cs) -> cs.map { it to t } }.toMap(),
-                        addedRuleIds = selectedRuleIds
+                        addedRuleIds = selectedRuleIds,
+                        preExisting = preExistingTargets
                     )
                 }
                 // 批G：写入后单包重读现场（展示层以现场为准）
@@ -746,14 +782,20 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     fun restoreApp(scanned: ScannedApp, onDone: (String) -> Unit) {
         viewModelScope.launch {
-            val msg = withBusy("restore") {
+            val msg = withBusy("restore", locked = true) {
                 // 按 applied 记录回滚（当时真实写入集），不用当前扫描重算——
-                // 否则规则更新/显式加选的组件会成为恢复盲区
+                // 否则规则更新/显式加选的组件会成为恢复盲区。
+                // 批Z1/Z3（架构评审 A3/A5）：按引擎桶分别恢复；PM 跳过 preExisting
+                // （写入前已禁用的组件非本工具新增，恢复保持原状并披露）。
                 val entry = applied.get(scanned.packageName)
+                val ifwCh = entry?.ifw
+                val pmCh = entry?.pm
                 // 批P0#8：保留删除——只移除本工具 applied 的 filter，外部/其他来源 IFW 规则幸存
-                val r1 = engine.removeIfw(scanned.packageName, removeComponents = entry?.components?.toSet())
-                val r2 = entry?.components?.let { engine.enablePm(scanned.packageName, it) }
-                    ?: Result.success(0)
+                val r1 = if (ifwCh != null) engine.removeIfw(scanned.packageName, removeComponents = ifwCh.components.toSet())
+                else Result.success(0)
+                val pmTargets = pmCh?.components?.filter { it !in pmCh.preExisting.toSet() }.orEmpty()
+                val skippedPre = (pmCh?.components?.size ?: 0) - pmTargets.size
+                val r2 = engine.enablePm(scanned.packageName, pmTargets)
                 // 批X2（审查 PN-07）：失败不删恢复账本——现场仍禁用时必须保留重试依据
                 val ok = r1.isSuccess && r2.isSuccess
                 if (ok && entry != null) applied.remove(scanned.packageName)
@@ -765,7 +807,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                         liveDisabled = liveAfterR?.let { l -> it.liveDisabled + (scanned.packageName to (l[scanned.packageName] ?: emptySet())) } ?: it.liveDisabled
                     )
                 }
-                if (ok) appCtx.getString(R.string.vm_restore_ok) else appCtx.getString(R.string.vm_restore_fail, r1.exceptionOrNull()?.message ?: r2.exceptionOrNull()?.message ?: "")
+                if (ok) {
+                    appCtx.getString(R.string.vm_restore_ok) +
+                        if (skippedPre > 0) appCtx.getString(R.string.vm_restore_skip_pre, skippedPre) else ""
+                } else appCtx.getString(R.string.vm_restore_fail, r1.exceptionOrNull()?.message ?: r2.exceptionOrNull()?.message ?: "")
             }
             onDone(msg)
         }
