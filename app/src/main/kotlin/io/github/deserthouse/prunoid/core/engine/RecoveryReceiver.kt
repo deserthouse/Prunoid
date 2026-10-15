@@ -25,7 +25,10 @@ class RecoveryReceiver : BroadcastReceiver() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val n = DisableEngine(context, RuleRepository(context)).clearAllIfw()
-                Log.w("SdkPruner", "recovery: cleared $n IFW files")
+                // 批Y3（架构评审 C4）：应急清除=终止 IFW 自动管理——失效账本条目同步移除
+                // （PM 条目保留），防止包更新按账本复活刚清掉的规则
+                AppliedRulesStore(context).removeEngine(Engine.IFW.name)
+                Log.w("SdkPruner", "recovery: cleared $n IFW files, IFW ledger entries removed")
             } finally {
                 pending.finish()
             }

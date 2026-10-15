@@ -50,10 +50,13 @@ object IfwXmlBuilder {
         return out
     }
 
-    /** 由 tag->filters 重建 XML；空则 null */
+    /** 由 tag->filters 重建 XML；空则 null。
+     *  批Y2（架构评审 C1/C3 加固）：IFW 仅认 activity/service/receiver——非法键（如
+     *  账本污染产生的类名伪标签、native/provider 漏网）在构建边界丢弃，防畸形 XML */
     fun buildByTag(byTag: Map<String, Set<String>>): String? {
+        val allowed = setOf("activity", "service", "receiver")
         val groups = byTag.mapNotNull { (tag, comps) ->
-            if (comps.isEmpty()) return@mapNotNull null
+            if (tag !in allowed || comps.isEmpty()) return@mapNotNull null
             "  <$tag block=\"true\" log=\"true\">\n" +
                 comps.sorted().joinToString("\n") { "    <component-filter name=\"$it\" />" } +
                 "\n  </$tag>"

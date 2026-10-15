@@ -69,6 +69,15 @@ class AppliedRulesStore(context: Context) {
         if (store.entries.remove(pkg) != null) save(store)
     }
 
+    /** 批Y3（架构评审 C4）：移除指定引擎的全部条目——应急清 IFW 后调用；
+     *  其他引擎（PM）条目保留：pm 禁用状态不受清 IFW 影响，其管理意图仍然有效 */
+    fun removeEngine(engine: String) {
+        val store = load()
+        val before = store.entries.size
+        store.entries.values.removeAll { it.engine == engine }
+        if (store.entries.size != before) save(store)
+    }
+
     fun get(pkg: String): AppliedEntry? = load().entries[pkg]
 
     fun all(): Map<String, AppliedEntry> = load().entries

@@ -82,17 +82,29 @@ object AutoReapply {
             }
 
             val engine = DisableEngine(context, rules)
+            // 批Y2（架构评审 C3）：IFW 只写它支持的类型——provider 在执行/记账前剔除（同源）；
+            // 全 provider=无可写目标，保留账本不空转
+            val (writeByType, writeComps) = if (entry.engine == "IFW") {
+                val eff = byType.filterKeys { it != "provider" }
+                eff to eff.values.flatten()
+            } else {
+                byType to byType.values.flatten()
+            }
+            if (writeByType.isEmpty()) {
+                Log.d("SdkPruner", "auto-reapply: nothing writable for $pkg, keeping ledger")
+                return
+            }
             when (entry.engine) {
-                "IFW" -> engine.applyIfw(pkg, byType).getOrThrow()
-                "PM" -> engine.applyPm(pkg, byType.values.flatten()).getOrThrow()
+                "IFW" -> engine.applyIfw(pkg, writeByType).getOrThrow()
+                "PM" -> engine.applyPm(pkg, writeComps).getOrThrow()
             }
             // 批X2（审查 R06）：写入成功才记账（merge 语义）
             store.recordMerge(
                 pkg, entry.engine,
-                byType.values.flatten(),
-                byType.entries.flatMap { (t, cs) -> cs.map { it to t } }.toMap()
+                writeComps,
+                writeByType.entries.flatMap { (t, cs) -> cs.map { it to t } }.toMap()
             )
-            Log.d("SdkPruner", "auto-reapply: done $pkg (${byType.values.sumOf { it.size }} comps)")
+            Log.d("SdkPruner", "auto-reapply: done $pkg (${writeComps.size} comps)")
         } catch (e: Exception) {
             Log.e("SdkPruner", "auto-reapply failed for $pkg", e)
         }

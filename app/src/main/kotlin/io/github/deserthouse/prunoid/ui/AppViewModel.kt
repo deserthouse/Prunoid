@@ -232,9 +232,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 val touched = mutableListOf<String>()
                 targets.forEach { a ->
                     val hit = a.matchedSdks.first { it.ruleId == ruleId }
+                    // 批Y2（架构评审 C3）：IFW 只写它支持的类型——native/provider 在计划层剔除，
+                    // 执行/记账/回执同源（原记账 hit.matchedComponents 含 provider，IFW 文件少于账本）
                     val byType = hit.componentTypes.entries
                         .groupBy({ it.value }, { it.key })
-                        .filterKeys { it != "native" }
+                        .filterKeys { it != "native" && it != "provider" }
                     if (byType.isEmpty()) return@forEach
                     total++
                     val prev = applied.get(a.packageName)
@@ -245,7 +247,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                         // 批X2（审查 R04）：合并语义走 recordMerge，目标以 ruleIds 记账
                         applied.recordMerge(
                             a.packageName, Engine.IFW.name,
-                            hit.matchedComponents, hit.componentTypes,
+                            byType.values.flatten(),
+                            byType.entries.flatMap { (t, cs) -> cs.map { it to t } }.toMap(),
                             addedRuleIds = setOf(ruleId)
                         )
                     }
@@ -276,15 +279,17 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     ?: return@withBusy appCtx.getString(R.string.vm_no_targets)
                 val prev = applied.get(pkg)
                 if (on) {
+                    // 批Y2（架构评审 C3）：native/provider 一并剔除——记账与写入同源（原记账含 provider）
                     val byType: Map<String, List<String>> = hit.componentTypes.entries
                         .groupBy({ it.value }, { it.key })
-                        .filterKeys { it != "provider" }
+                        .filterKeys { it != "provider" && it != "native" }
                     if (byType.isEmpty()) return@withBusy appCtx.getString(R.string.vm_no_targets)
                     val r = engine.applyIfw(pkg, byType)
                     // 批X2（审查 R04/PN-06）：合并语义 + 失败如实反馈（不再静默成功）
                     if (r.isSuccess) applied.recordMerge(
                         pkg, Engine.IFW.name,
-                        hit.matchedComponents, hit.componentTypes,
+                        byType.values.flatten(),
+                        byType.entries.flatMap { (t, cs) -> cs.map { it to t } }.toMap(),
                         addedRuleIds = setOf(ruleId)
                     ) else return@withBusy appCtx.getString(R.string.vm_op_fail)
                 } else {
@@ -319,21 +324,24 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         return hit.matchedComponents.any { c -> live.any { it == c || it == app.packageName + "/" + c } }
     }
 
-    /** 批L4：禁用勾选的未识别组件（IFW 按类型分组；记 applied 供恢复） */
+    /** 批L4：禁用勾选的未识别组件（IFW 按类型分组；记 applied 供恢复）。
+     *  批Y1（架构评审 C2）：结构化回调——拒绝/失败返回 (false, msg)，仅成功 (true, msg)；UI 据此保留/清空选择 */
     fun disableUnmatched(pkg: String, byType: Map<String, List<String>>, onDone: (Boolean, String) -> Unit) {
         viewModelScope.launch {
-            val msg = withBusy("unmatched") {
-                if (!rootGate()) return@withBusy appCtx.getString(R.string.vm_need_root)
-                if (DisableEngine.isForbidden(pkg)) return@withBusy appCtx.getString(R.string.vm_forbidden)
-                val comps = byType.values.flatten()
-                if (comps.isEmpty()) return@withBusy appCtx.getString(R.string.vm_no_targets)
+            val (ok, msg) = withBusy("unmatched") {
+                if (!rootGate()) return@withBusy Pair(false, appCtx.getString(R.string.vm_need_root))
+                if (DisableEngine.isForbidden(pkg)) return@withBusy Pair(false, appCtx.getString(R.string.vm_forbidden))
+                // 批Y2（架构评审 C3）：IFW 不支持 provider——执行/记账/回执同源过滤
+                val eff = byType.filterKeys { it != "provider" }
+                val comps = eff.values.flatten()
+                if (comps.isEmpty()) return@withBusy Pair(false, appCtx.getString(R.string.vm_no_targets))
                 if (_state.value.backupEnabled) engine.backup(_state.value.backupKeep).getOrNull() else null
-                val r = engine.applyIfw(pkg, byType)
-                if (r.isFailure) return@withBusy appCtx.getString(R.string.vm_op_fail)
+                val r = engine.applyIfw(pkg, eff)
+                if (r.isFailure) return@withBusy Pair(false, appCtx.getString(R.string.vm_op_fail))
                 // 批E1/X2：合并语义
                 applied.recordMerge(
                     pkg, Engine.IFW.name, comps,
-                    byType.entries.flatMap { (t, cs) -> cs.map { it to t } }.toMap()
+                    eff.entries.flatMap { (t, cs) -> cs.map { it to t } }.toMap()
                 )
                 val liveAfter = engine.readLiveDisabled(listOf(pkg)).first
                 _state.update {
@@ -342,9 +350,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                         liveDisabled = liveAfter.let { l -> it.liveDisabled + (pkg to (l[pkg] ?: emptySet())) }
                     )
                 }
-                appCtx.getString(R.string.vm_apply_ok, "IFW", r.getOrDefault(0))
+                Pair(true, appCtx.getString(R.string.vm_apply_ok, "IFW", r.getOrDefault(0)))
             }
-            onDone(true, msg)
+            onDone(ok, msg)
         }
     }
 
@@ -640,13 +648,29 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     fun clearAllIfw(onDone: (String) -> Unit) {
         viewModelScope.launch {
+            var ok = false
             val msg = withBusy("clearifw") {
                 engine.clearAllIfw().fold(
-                    onSuccess = { appCtx.getString(R.string.vm_ifw_cleared, it) },
+                    onSuccess = { n ->
+                        ok = true
+                        // 批Y3（架构评审 C4）：应急清除=终止 IFW 自动管理——失效账本条目同步移除
+                        // （PM 条目保留：pm 禁用不受清 IFW 影响），否则下次包更新按账本复活已清规则
+                        withContext(Dispatchers.IO) { applied.removeEngine(Engine.IFW.name) }
+                        appCtx.getString(R.string.vm_ifw_cleared, n)
+                    },
                     onFailure = { appCtx.getString(R.string.vm_clear_fail, it.message ?: "") }
                 )
             }
             _state.update { it.copy(applied = withContext(Dispatchers.IO) { applied.all() }) }
+            if (ok) {
+                // 批Y3：现场重读——IFW 已清，剩余禁用=pm 状态；IFW 总数以现读为准
+                val pkgs = _state.value.liveDisabled.keys.toList()
+                val (live, total) = withContext(Dispatchers.IO) {
+                    if (pkgs.isEmpty()) emptyMap<String, Set<String>>() to 0
+                    else engine.readLiveDisabled(pkgs).let { (m, t) -> m.mapValues { e -> e.value.toSet() } to t }
+                }
+                _state.update { it.copy(liveDisabled = it.liveDisabled + live, ifwTotal = total) }
+            }
             onDone(msg)
         }
     }
@@ -675,17 +699,32 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 val byType = byTypeForVM(scanned, selectedRuleIds)
                 // 批X2（审查 PN-03）：入口捕获引擎快照——执行/记账/结果引用同一份，消灭重读漂移
                 val engineSnapshot = _state.value.engine
+                // 批Y2（架构评审 C3）：IFW 只支持 activity/service/receiver——provider 在计划层剔除，
+                // 执行/记账/回执同源；全 provider 选择=无支持目标，诚实失败不记账
+                val effByType = if (engineSnapshot == Engine.IFW) byType.filterKeys { it != "provider" } else byType
+                val effTargets = effByType.values.flatten()
+                if (engineSnapshot == Engine.IFW && effByType.isEmpty()) {
+                    return@withBusy Pair(false, appCtx.getString(R.string.vm_no_targets))
+                }
                 val r = when (engineSnapshot) {
-                    Engine.IFW -> engine.applyIfw(scanned.packageName, byType)
+                    Engine.IFW -> engine.applyIfw(scanned.packageName, effByType)
                     Engine.PM -> engine.applyPm(scanned.packageName, targets)
                 }
                 // 批X2（审查 R04/R05）：合并记账（不覆盖同包其他 SDK）+ ruleIds 身份入账
                 if (r.isFailure) return@withBusy Pair(false, appCtx.getString(R.string.vm_op_fail))
-                applied.recordMerge(
-                    scanned.packageName, engineSnapshot.name, targets,
-                    byType.entries.flatMap { (t, cs) -> cs.map { it to t } }.toMap(),
-                    addedRuleIds = selectedRuleIds
-                )
+                if (engineSnapshot == Engine.IFW) {
+                    applied.recordMerge(
+                        scanned.packageName, engineSnapshot.name, effTargets,
+                        effByType.entries.flatMap { (t, cs) -> cs.map { it to t } }.toMap(),
+                        addedRuleIds = selectedRuleIds
+                    )
+                } else {
+                    applied.recordMerge(
+                        scanned.packageName, engineSnapshot.name, targets,
+                        byType.entries.flatMap { (t, cs) -> cs.map { it to t } }.toMap(),
+                        addedRuleIds = selectedRuleIds
+                    )
+                }
                 // 批G：写入后单包重读现场（展示层以现场为准）
                 val liveAfter = if (r.isSuccess) engine.readLiveDisabled(listOf(scanned.packageName)).first else null
                 _state.update {
