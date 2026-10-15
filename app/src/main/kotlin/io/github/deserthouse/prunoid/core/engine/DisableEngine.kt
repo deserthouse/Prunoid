@@ -295,16 +295,20 @@ class DisableEngine(
                     ?: return@runCatching 0
                 val tmp = "${context.cacheDir.absolutePath}/ifw_$pkg.xml"
                 java.io.File(tmp).writeText(xml)
-                // 批X2（审查 R06）：同目录 .tmp + mv 原子替换；全 && 链真实传播退出码（原 "; rm -f" 会掩盖失败）
+                // 批X2（审查 R06）：同目录 .tmp + mv 原子替换；全 && 链真实传播退出码（原 "; rm -f" 会掩盖失败）。
+                // 热修 0.18.1：.tmp 名加纳秒后缀——cp/mv 链在并发写入（现由 AutoReapply 单飞互斥兜底）或
+                // 异常残留同名 .tmp 时互踩，曾表现为一方 mv 先走另一方 "ifw write failed"。
+                val stage = "${ifwPath(pkg)}.tmp.${System.nanoTime()}"
                 try {
                     val r = Shell.cmd(
-                        "mkdir -p $IFW_DIR && cp $tmp ${ifwPath(pkg)}.tmp && " +
-                        "chmod 644 ${ifwPath(pkg)}.tmp && (restorecon ${ifwPath(pkg)}.tmp 2>/dev/null || true) && " +
-                        "mv ${ifwPath(pkg)}.tmp ${ifwPath(pkg)}"
+                        "mkdir -p $IFW_DIR && cp $tmp $stage && " +
+                        "chmod 644 $stage && (restorecon $stage 2>/dev/null || true) && " +
+                        "mv $stage ${ifwPath(pkg)}"
                     ).exec()
                     check(r.isSuccess) { "ifw write failed: ${r.err}" }
                 } finally {
                     java.io.File(tmp).delete()
+                    Shell.cmd("rm -f $stage").exec()
                 }
                 filtered.values.sumOf { it.size }
             }
