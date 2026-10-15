@@ -66,6 +66,7 @@ class AppliedRulesStore {
     /** v1 文件迁移：顶栏字段 → 单桶（engine 字段决定桶位；旧条目 preExisting 空=原状态未知） */
     private fun migrated(e: AppliedEntry): AppliedEntry {
         if (e.ifw != null || e.pm != null) return e
+        if (e.components.isEmpty() && e.types.isEmpty()) return e.copy(ifw = null, pm = null)
         val bucket = EngineChange(
             components = e.components,
             types = e.types,
@@ -107,7 +108,9 @@ class AppliedRulesStore {
     ) {
         if (addedComponents.isEmpty() && addedRuleIds.isEmpty()) return
         val store = load()
-        val old = migrated(store.entries[pkg] ?: AppliedEntry())
+        val existing = store.entries[pkg]
+        // 空条目不走迁移（否则空 v1 形态会迁出空 ifw 桶，干扰双桶判空）
+        val old = if (existing == null) AppliedEntry() else migrated(existing)
         val isPm = engine == "PM"
         val cur = if (isPm) old.pm else old.ifw
         val merged = EngineChange(

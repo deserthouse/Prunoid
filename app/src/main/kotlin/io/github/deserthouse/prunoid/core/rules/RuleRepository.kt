@@ -39,6 +39,10 @@ class RuleRepository(context: Context, initialSources: List<SettingsRepository.S
     var generation: Long = 0
         private set
 
+    /** 批Z4：setSources 短路键（源集合未变不重建） */
+    @Volatile
+    private var lastSourcesKey: String? = null
+
     @Volatile
     private var builtinAliases: Map<String, String> = emptyMap()
 
@@ -51,9 +55,13 @@ class RuleRepository(context: Context, initialSources: List<SettingsRepository.S
         // 单例化前置：所有构造点（VM/自动重应用/守护服务/应急恢复）默认同步装载
         // 注册表全量源（含自定义源缓存），保证后台链路与 UI 使用同一规则集。
         // sources 缺省走 DataStore 同步读（filesDir IO，量小可控）。
-        rebuild(initialSources ?: kotlinx.coroutines.runBlocking {
+        val initSources = initialSources ?: kotlinx.coroutines.runBlocking {
             settings.settings.first().sources
-        })
+        }
+        // 批Z4：记录初始 key——否则首帧 settings collect 同源 setSources 会再 rebuild
+        // 一次（generation 1→2），冷启首个扫描全部被代次检查误丢弃
+        lastSourcesKey = initSources.joinToString("|") { it.id + "@" + it.url }
+        rebuild(initSources)
     }
 
     /**
@@ -119,9 +127,6 @@ class RuleRepository(context: Context, initialSources: List<SettingsRepository.S
         subscribedSources = sources
         rebuild(sources)
     }
-
-    @Volatile
-    private var lastSourcesKey: String? = null
 
     companion object {
         val json = Json { ignoreUnknownKeys = true }

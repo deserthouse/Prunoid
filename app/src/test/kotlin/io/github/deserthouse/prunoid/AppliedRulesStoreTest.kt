@@ -70,6 +70,32 @@ class AppliedRulesStoreTest {
         assertTrue(raw.contains(""""ruleIds":"""))
     }
 
+    /** 模拟 0.18.1 旧代码的字段集与 Json 配置：decode v2 落盘文件必须不抛、v1 字段完整 */
+    @Test
+    fun `v2 file decodes with old 0_18_1 field set`() {
+        val s = newStore()
+        s.recordMerge("pkg.a", "IFW", listOf("p/A"), mapOf("p/A" to "activity"), addedRuleIds = setOf("r1"))
+        val raw = tmp.root.resolve("applied_rules.json").readText()
+        // 0.18.1 的 AppliedEntry：engine/components/types/at + ruleIds；Json{ignoreUnknownKeys=true}
+        // v2 新增的 ifw/pm/schemaVersion 字段被忽略，v1 字段经 encodeDefaults=true 保证在场
+        val oldJson = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
+        @kotlinx.serialization.Serializable
+        data class OldEntry(
+            val engine: String,
+            val components: List<String>,
+            val types: Map<String, String>,
+            val at: Long = 0,
+            val ruleIds: Set<String> = emptySet()
+        )
+        @kotlinx.serialization.Serializable
+        data class OldStore(val entries: Map<String, OldEntry> = emptyMap())
+        val decoded = oldJson.decodeFromString(OldStore.serializer(), raw)
+        val e = decoded.entries["pkg.a"]!!
+        assertEquals("IFW", e.engine)
+        assertEquals(listOf("p/A"), e.components)
+        assertEquals(setOf("r1"), e.ruleIds)
+    }
+
     @Test
     fun `removeEngine keeps the other engine bucket`() {
         val s = newStore()
