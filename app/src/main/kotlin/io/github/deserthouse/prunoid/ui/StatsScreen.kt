@@ -1,5 +1,7 @@
 package io.github.deserthouse.prunoid.ui
 
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.draw.clip
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -31,7 +33,7 @@ private data class StatsRow(val rule: SdkRule, val hitApps: Int, val hitComponen
 private fun categoryColor(c: String, dark: Boolean): Color = chartColor(c, dark)
 
 @Composable
-fun StatsScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
+fun StatsScreen(vm: AppViewModel, modifier: Modifier = Modifier, onOpenSdk: (String) -> Unit = {}) {
     val st by vm.state.collectAsState()
     val dark = isDark()
 
@@ -121,19 +123,23 @@ fun StatsScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
             Column(Modifier.padding(16.dp)) {
                 Text(stringResource(R.string.stats_cat_title), style = MaterialTheme.typography.titleSmall)
                 Spacer(Modifier.height(12.dp))
-                // 批AA5（M3E 评审 E05）：响应式排列——宽度足够时环图与图例并排，
-                // 窄内容区上下排列（不靠缩小文字维持横排）
-                val wide = androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp >= 400
-                if (wide) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        DonutChart(catDist, catTotal, dark, Modifier.size(148.dp))
-                        Spacer(Modifier.width(16.dp))
-                        LegendList(catDist, catPct, dark, Modifier.weight(1f))
+                // 批AA5（E05）+批CC（R5）：响应式按卡片实际可用宽度（非屏幕宽）——
+                // 宽度足够并排，窄内容区上下排列（不靠缩小文字维持横排）
+                androidx.compose.foundation.layout.BoxWithConstraints {
+                    val wide = maxWidth >= 400.dp
+                    if (wide) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            DonutChart(catDist, catTotal, dark, Modifier.size(148.dp))
+                            Spacer(Modifier.width(16.dp))
+                            LegendList(catDist, catPct, dark, Modifier.weight(1f))
+                        }
+                    } else {
+                        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                            DonutChart(catDist, catTotal, dark, Modifier.size(148.dp))
+                            Spacer(Modifier.height(12.dp))
+                            LegendList(catDist, catPct, dark, Modifier.fillMaxWidth())
+                        }
                     }
-                } else {
-                    DonutChart(catDist, catTotal, dark, Modifier.size(148.dp).align(Alignment.CenterHorizontally))
-                    Spacer(Modifier.height(12.dp))
-                    LegendList(catDist, catPct, dark, Modifier.fillMaxWidth())
                 }
             }
         }
@@ -144,7 +150,11 @@ fun StatsScreen(vm: AppViewModel, modifier: Modifier = Modifier) {
                 Spacer(Modifier.height(8.dp))
                 rows.take(10).forEachIndexed { i, row ->
                     Row(
-                        Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                        // 批CC4：排行进入动作——点行跳 SDK 库并带入搜索词
+                        Modifier.fillMaxWidth()
+                            .clip(MaterialTheme.shapes.small)
+                            .clickable { onOpenSdk(row.rule.name) }
+                            .padding(vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(

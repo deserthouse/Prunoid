@@ -41,10 +41,17 @@ private data class LibRow(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SdkLibraryScreen(vm: AppViewModel) {
+fun SdkLibraryScreen(vm: AppViewModel, pendingQuery: String? = null, onConsumeQuery: () -> Unit = {}) {
     val st by vm.state.collectAsState()
     val snackbar = rememberSnackbar()
     var query by remember { mutableStateOf("") }
+    // 批CC4：统计排行进入动作——外部注入搜索词（一次消费）
+    androidx.compose.runtime.LaunchedEffect(pendingQuery) {
+        if (!pendingQuery.isNullOrBlank()) {
+            query = pendingQuery
+            onConsumeQuery()
+        }
+    }
     var tab by remember { mutableStateOf(0) }   // 0 = 在机检出, 1 = 未检出
     var sheetRow by remember { mutableStateOf<LibRow?>(null) }
     var sheetMsg by remember { mutableStateOf<String?>(null) }
@@ -122,14 +129,15 @@ fun SdkLibraryScreen(vm: AppViewModel) {
                 Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                FilledTonalButton(onClick = { libFilterSheet = true }, modifier = Modifier.weight(1f)) {
+                // 批CC（R5）：与首页同律紧凑化——按钮按内容取宽
+                FilledTonalButton(onClick = { libFilterSheet = true }) {
                     Icon(Icons.Outlined.FilterList, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(6.dp))
                     Text(if (libCat.isNotEmpty()) stringResource(R.string.filter_label_n, libCat.size)
                          else stringResource(R.string.filter_label))
                 }
-                Box(Modifier.weight(1f)) {
-                    FilledTonalButton(onClick = { libSortMenu = true }, modifier = Modifier.fillMaxWidth()) {
+                Box {
+                    FilledTonalButton(onClick = { libSortMenu = true }) {
                         Icon(Icons.Outlined.Sort, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
                         Text(stringResource(if (libSortByName) R.string.sort_name else R.string.sort_default),

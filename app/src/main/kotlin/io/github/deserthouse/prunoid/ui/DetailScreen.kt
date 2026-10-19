@@ -29,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -259,14 +260,36 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                         }
                     }
                     Spacer(Modifier.height(4.dp))
-                    Text(
-                        if (st.engine == Engine.IFW)
-                            stringResource(R.string.ifw_desc)
-                        else
-                            stringResource(R.string.pm_desc),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    // 批CC（R5）：引擎说明默认单行摘要、点击展开全文——
+                    // 选择任务优先，长机制说明不再占据首屏高度
+                    var engineHelpOpen by remember { mutableStateOf(false) }
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .clip(MaterialTheme.shapes.small)
+                            .clickable { engineHelpOpen = !engineHelpOpen }
+                            .padding(vertical = 2.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            if (st.engine == Engine.IFW)
+                                stringResource(R.string.ifw_desc)
+                            else
+                                stringResource(R.string.pm_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = if (engineHelpOpen) Int.MAX_VALUE else 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Icon(
+                            Icons.Outlined.ExpandMore,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(16.dp)
+                                .graphicsLayer { rotationZ = if (engineHelpOpen) 180f else 0f }
+                        )
+                    }
                 }
             }
             // 分类筛选：按 category 过滤 + 批量勾选操作
@@ -664,10 +687,13 @@ private fun DetailHeaderCard(
                                 .padding(vertical = 6.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
+                            // 批CC（R5）：箭头随展开旋转——展开方向可读
                             Icon(
                                 Icons.Outlined.ExpandMore,
                                 contentDescription = null,
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier
+                                    .size(16.dp)
+                                    .graphicsLayer { rotationZ = if (techOpen) 180f else 0f }
                             )
                             Spacer(Modifier.width(4.dp))
                             Text(

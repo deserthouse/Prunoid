@@ -103,6 +103,8 @@ fun SdkPrunerApp() {
     var selected by remember { mutableStateOf<ScannedApp?>(null) }
     var inSettings by remember { mutableStateOf(false) }
     var tab by remember { mutableStateOf(0) }   // 0=应用 1=SDK 库 2=统计
+    // 批CC4：统计排行 → SDK 库联动（一次性搜索词）
+    var pendingLibQuery by remember { mutableStateOf<String?>(null) }   // 0=应用 1=SDK 库 2=统计
     // 详情/设置屏系统返回 = 回上级，不退出 app
     BackHandler(enabled = selected != null || inSettings) {
         if (inSettings) inSettings = false else selected = null
@@ -146,8 +148,11 @@ fun SdkPrunerApp() {
                                 onOpenSettings = { inSettings = true },
                                 onOpenLibrary = { tab = 1 }
                             )
-                            1 -> SdkLibraryScreen(vm)
-                            else -> StatsScreen(vm)
+                            1 -> SdkLibraryScreen(vm, pendingQuery = pendingLibQuery, onConsumeQuery = { pendingLibQuery = null })
+                            else -> StatsScreen(vm, onOpenSdk = { name ->
+                                pendingLibQuery = name
+                                tab = 1
+                            })
                         }
                     }
             }

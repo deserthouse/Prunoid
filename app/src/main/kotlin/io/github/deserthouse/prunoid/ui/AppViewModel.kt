@@ -542,7 +542,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 android.util.Log.d("SdkPruner", "scan superseded by newer scan (seq $mySeq < $scanSeq)")
                 return@launch
             }
-            _state.update { it.copy(scanning = false, apps = apps, applied = withContext(Dispatchers.IO) { applied.all() }) }
+            _state.update { it.copy(scanning = false, apps = apps, applied = withContext(Dispatchers.IO) { applied.all() }, ledgerCorrupted = applied.corrupted) }
             // 图标后台预载（getApplicationIcon 是 binder 调用，100+ app 不能放组合期主线程）
             viewModelScope.launch(Dispatchers.IO) {
                 val pm = getApplication<Application>().packageManager
