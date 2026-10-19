@@ -543,6 +543,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 return@launch
             }
             _state.update { it.copy(scanning = false, apps = apps, applied = withContext(Dispatchers.IO) { applied.all() }, ledgerCorrupted = applied.corrupted) }
+            android.util.Log.d("SdkPruner", "ledgerSync: corrupted=${applied.corrupted}")
             // 图标后台预载（getApplicationIcon 是 binder 调用，100+ app 不能放组合期主线程）
             viewModelScope.launch(Dispatchers.IO) {
                 val pm = getApplication<Application>().packageManager
@@ -721,9 +722,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     /** 批BB RV-09：损坏账本显式重置（.corrupt 证据保留；恢复依据由用户确认丢弃） */
     fun resetLedger() {
         viewModelScope.launch {
+            android.util.Log.d("SdkPruner", "resetLedger: invoked")
             withContext(Dispatchers.IO) { applied.resetCorrupted() }
             _state.update {
-                it.copy(applied = withContext(Dispatchers.IO) { applied.all() }, ledgerCorrupted = applied.corrupted)
+                val v = applied.corrupted
+                android.util.Log.d("SdkPruner", "resetLedger: post-reset corrupted=$v")
+                it.copy(applied = withContext(Dispatchers.IO) { applied.all() }, ledgerCorrupted = v)
             }
         }
     }

@@ -61,8 +61,11 @@ class AppliedRulesStore {
     val corrupted: Boolean
         get() = corruptedFlag || corruptEvidenceExists()
 
-    private fun corruptEvidenceExists(): Boolean =
-        file.parentFile?.listFiles()?.any { it.name.startsWith(file.name + ".corrupt-") } ?: false
+    private fun corruptEvidenceExists(): Boolean {
+        val hits = file.parentFile?.listFiles()?.count { it.name.startsWith(file.name + ".corrupt-") } ?: -1
+        android.util.Log.d("SdkPruner", "ledger evidence check: dir=${file.parentFile} hits=$hits")
+        return hits > 0
+    }
 
     @Serializable
     private data class Store(val entries: MutableMap<String, AppliedEntry> = mutableMapOf())
@@ -105,10 +108,16 @@ class AppliedRulesStore {
 
     /** 批BB RV-09：损坏后显式重置（用户已确认丢弃恢复依据——.corrupt 证据文件一并删除） */
     fun resetCorrupted() {
+        android.util.Log.d("SdkPruner", "resetCorrupted: enter")
         corruptedFlag = false
+        var deleted = 0
         file.parentFile?.listFiles()?.forEach { f ->
-            if (f.name.startsWith(file.name + ".corrupt-")) f.delete()
+            if (f.name.startsWith(file.name + ".corrupt-")) {
+                if (f.delete()) deleted++
+                else android.util.Log.w("SdkPruner", "resetCorrupted: delete FAILED for ${f.name}")
+            }
         }
+        android.util.Log.d("SdkPruner", "resetCorrupted: deleted=$deleted")
     }
 
     /** v1 文件迁移：顶栏字段 → 单桶（engine 字段决定桶位；旧条目 preExisting 空=原状态未知）。
