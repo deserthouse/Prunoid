@@ -52,10 +52,17 @@ class AppliedRulesStore {
     // encodeDefaults=true：v1 兼容顶栏字段即使取默认值也必须落盘（旧代码 decode 缺字段会抛）
     private val json = Json { ignoreUnknownKeys = true; encodeDefaults = true }
 
-    /** 批BB RV-09：账本损坏标志——置位后写操作拒绝（防覆盖恢复依据），由用户显式重置解除 */
+    /** 批BB RV-09：账本损坏标志——置位后写操作拒绝（防覆盖恢复依据），由用户显式重置解除。
+     *  状态外置：.corrupt-* 证据文件存在即损坏（corrupted 属于文件而非实例——
+     *  多实例下先到的实例会把主文件改名，后到实例看"文件不存在"不能误判健康） */
     @Volatile
-    var corrupted: Boolean = false
-        private set
+    private var corruptedFlag = false
+
+    val corrupted: Boolean
+        get() = corruptedFlag || corruptEvidenceExists()
+
+    private fun corruptEvidenceExists(): Boolean =
+        file.parentFile?.listFiles()?.any { it.name.startsWith(file.name + ".corrupt-") } ?: false
 
     @Serializable
     private data class Store(val entries: MutableMap<String, AppliedEntry> = mutableMapOf())
@@ -74,7 +81,7 @@ class AppliedRulesStore {
                 val f = java.io.File(file.parentFile, file.name + ".corrupt-$ts")
                 file.renameTo(f) || runCatching { file.copyTo(f, overwrite = true); file.delete() }.isSuccess
             }
-            corrupted = true
+            corruptedFlag = true
             Store()
         }
     }
@@ -96,9 +103,12 @@ class AppliedRulesStore {
         }
     }
 
-    /** 批BB RV-09：损坏后显式重置（.corrupt 证据文件保留在原目录；用户已确认丢弃恢复依据） */
+    /** 批BB RV-09：损坏后显式重置（用户已确认丢弃恢复依据——.corrupt 证据文件一并删除） */
     fun resetCorrupted() {
-        corrupted = false
+        corruptedFlag = false
+        file.parentFile?.listFiles()?.forEach { f ->
+            if (f.name.startsWith(file.name + ".corrupt-")) f.delete()
+        }
     }
 
     /** v1 文件迁移：顶栏字段 → 单桶（engine 字段决定桶位；旧条目 preExisting 空=原状态未知）。
