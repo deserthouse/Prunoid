@@ -46,7 +46,7 @@ object AutoReapply {
             }
             Log.d("SdkPruner", "auto-reapply: reapplying for $pkg (ruleIds=${entry.ruleIds.size}, buckets=${listOfNotNull(entry.ifw?.let { "IFW" }, entry.pm?.let { "PM" }).joinToString("/")})")
             val rules = io.github.deserthouse.prunoid.core.rules.RuleRepository(context)
-            val scanner = io.github.deserthouse.prunoid.core.scanner.Scanner(context, rules)
+            val scanner = io.github.deserthouse.prunoid.core.scanner.Scanner(context, rules.published)
             val appInfo = context.packageManager.getApplicationInfo(pkg, 0)
             val comps = DisableEngine.enumerateComponents(context, pkg)
             val compNames = comps.map { it.first }.toSet()
@@ -54,9 +54,9 @@ object AutoReapply {
 
             val engine = DisableEngine(context, rules)
             var wroteAny = false
-            // 批Z1（架构评审 A3）：按引擎桶各自重应用——v2 账本同包可含双桶，v1 迁移后单桶走同一循环。
+            // 批Z1：按引擎桶各自重应用——v2 账本同包可含双桶，v1 迁移后单桶走同一循环。
             // ① 保留：桶内组件仍存在于最新 manifest；分组键=类型（0.18.1 热修 C1）。
-            // ② 增量：仅 ruleIds 范围内 SAFE/CAUTION 新命中；IFW 桶按 Y2 剔除 provider/native。
+            // ② 增量：批BB RV-02 改用桶内 ruleIds（跨引擎不串用；共享集迁移/桶内空=只保留不扩展）。
             for ((eng, ch) in listOfNotNull(
                 entry.ifw?.let { "IFW" to it },
                 entry.pm?.let { "PM" to it }
@@ -65,15 +65,26 @@ object AutoReapply {
                     .filter { it.key in compNames }
                     .groupBy({ it.value }, { it.key })
                     .toMutableMap()
-                if (entry.ruleIds.isNotEmpty()) {
-                    scanned.matchedSdks
-                        .filter { it.ruleId in entry.ruleIds && (it.safety == Safety.CAUTION || it.safety == Safety.SAFE) }
+                var freshPreExisting: List<String> = emptyList()
+                if (ch.ruleIds.isNotEmpty()) {
+                    val freshClasses = scanned.matchedSdks
+                        .filter { it.ruleId in ch.ruleIds && (it.safety == Safety.CAUTION || it.safety == Safety.SAFE) }
                         .flatMap { it.componentTypes.entries }
                         .groupBy({ it.value }, { it.key })
-                        .forEach { (t, classes) ->
-                            if (eng == "IFW" && (t == "provider" || t == "native")) return@forEach
-                            byType[t] = (byType[t].orEmpty() + classes).distinct()
+                    freshClasses.forEach { (t, classes) ->
+                        if (eng == "IFW" && (t == "provider" || t == "native")) return@forEach
+                        byType[t] = (byType[t].orEmpty() + classes).distinct()
+                    }
+                    // 批BB RV-01：PM 桶新增组件的所有权采集——写入前已禁用者记 preExisting
+                    // （排除本桶已有组件，它们是本工具自己的写入不算外部既有）
+                    if (eng == "PM") {
+                        val owned = ch.components.toSet()
+                        val freshComps = freshClasses.values.flatten().filter { it !in owned }
+                        if (freshComps.isNotEmpty()) {
+                            val pre = engine.readPmDisabled(pkg)
+                            freshPreExisting = freshComps.filter { it in pre }
                         }
+                    }
                 }
                 // Y2：IFW 只写它支持的类型（执行/记账同源）；全 provider 桶=无可写目标跳过
                 val (writeByType, writeComps) = if (eng == "IFW") {
@@ -91,7 +102,8 @@ object AutoReapply {
                 store.recordMerge(
                     pkg, eng,
                     writeComps,
-                    writeByType.entries.flatMap { (t, cs) -> cs.map { it to t } }.toMap()
+                    writeByType.entries.flatMap { (t, cs) -> cs.map { it to t } }.toMap(),
+                    preExisting = freshPreExisting
                 )
                 wroteAny = true
                 Log.d("SdkPruner", "auto-reapply: done $pkg [$eng] (${writeComps.size} comps)")

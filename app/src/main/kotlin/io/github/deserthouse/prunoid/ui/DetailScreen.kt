@@ -98,9 +98,19 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
         app.matchedSdks.map { it.category }.distinct()
     }
 
-    // 量化确认摘要（以当前勾选与引擎为准）
+    // 量化确认摘要（以当前勾选与引擎为准）。
+    // 批BB RV-08：单份执行计划——底栏计数/确认框/引擎写入/记账同源；
+    // IFW 剔除 provider/native，共享组件按身份去重
     val selHits = app.matchedSdks.filter { it.ruleId in selected }
     val selComponents = selHits.flatMap { it.matchedComponents }
+    val effSelComponents = if (st.engine == Engine.IFW) {
+        selHits.flatMap { h ->
+            h.matchedComponents.filter { c ->
+                val t = h.componentTypes[c] ?: ""
+                t != "provider" && t != "native"
+            }
+        }.distinct()
+    } else selComponents.distinct()
     // 批C2：按类别归纳影响（组合期预算字符串，供确认句引用）
     val selBreakdown = selHits.groupBy { it.category }
         .mapValues { (_, v) -> v.sumOf { it.matchedComponents.size } }
@@ -156,16 +166,8 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                         // 批AA7（M3E 评审 E11）：选择计数随勾选持续可见——滚动后仍知道选了什么；
                         // M=当前引擎实际支持组件数（IFW 剔除 provider/native，与 Y2 记账口径同源）
                         if (selected.isNotEmpty()) {
-                            val selEffComps = if (st.engine == Engine.IFW) {
-                                selHits.sumOf { h ->
-                                    h.matchedComponents.count { c ->
-                                        val t = h.componentTypes[c] ?: ""
-                                        t != "provider" && t != "native"
-                                    }
-                                }
-                            } else selComponents.size
                             Text(
-                                stringResource(R.string.sel_count_line, selHits.size, selEffComps),
+                                stringResource(R.string.sel_count_line, selHits.size, effSelComponents.size),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier
@@ -515,7 +517,7 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                 Column {
                     Text(
                         // 批U（审查U-6）：分隔空格移进 excluded_line 资源（中文全角括号自带断句不需要半角空格）
-                        stringResource(R.string.confirm_line, selHits.size, selComponents.size) +
+                        stringResource(R.string.confirm_line, selHits.size, effSelComponents.size) +
                             (if (excludedRisky > 0) stringResource(R.string.excluded_line, excludedRisky) else "") +
                             stringResource(R.string.engine_line, st.engine.name)
                     )

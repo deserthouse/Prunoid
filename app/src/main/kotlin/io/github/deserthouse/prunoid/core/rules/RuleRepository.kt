@@ -39,9 +39,22 @@ class RuleRepository(context: Context, initialSources: List<SettingsRepository.S
     var generation: Long = 0
         private set
 
+    /** 批BB RV-07：不可变生效快照——rebuild 局部构建完成后一次发布；
+     *  Scanner 绑定此对象，扫描全程读到一致规则集（原逐字段赋值可被扫描读到新旧混合） */
+    @Volatile
+    var published: EffectiveSnapshot = EffectiveSnapshot.EMPTY
+        private set
+
     /** 批Z4：setSources 短路键（源集合未变不重建） */
     @Volatile
     private var lastSourcesKey: String? = null
+
+    /** 当前注册表（由 VM 从 Settings 注入，供 rebuild 与拉取使用）。
+     *  批BB RV-06：声明必须在 init 块之前——原声明位于类尾，属性初始化在 init 块之后执行，
+     *  会把 init 已同步的真实源列表覆盖回默认官方源（自定义源刷新即丢失的根因） */
+    @Volatile
+    var subscribedSources: List<SettingsRepository.SubSource> = listOf(SettingsRepository.OFFICIAL_SOURCE)
+        private set
 
     @Volatile
     private var builtinAliases: Map<String, String> = emptyMap()
@@ -59,8 +72,11 @@ class RuleRepository(context: Context, initialSources: List<SettingsRepository.S
             settings.settings.first().sources
         }
         // 批Z4：记录初始 key——否则首帧 settings collect 同源 setSources 会再 rebuild
-        // 一次（generation 1→2），冷启首个扫描全部被代次检查误丢弃
+        // 一次（generation 1→2），冷启首个扫描全部被代次检查误丢弃。
+        // 批BB RV-06：真实列表与 key 同步初始化（原 init 只记 key 不更新 subscribedSources，
+        // 首帧短路后该字段停留默认官方源，refreshSource 只并官方——自定义规则丢失）
         lastSourcesKey = initSources.joinToString("|") { it.id + "@" + it.url }
+        subscribedSources = initSources
         rebuild(initSources)
     }
 
@@ -70,26 +86,32 @@ class RuleRepository(context: Context, initialSources: List<SettingsRepository.S
      * 置信度高者胜（high>medium>low，平手保留先入），新 id 追加（并集语义）。
      */
     fun rebuild(sources: List<SettingsRepository.SubSource>) {
-        generation++
         val rules = MultiSourceMerger.mergeMultiSource(
             snapshot.sdks,
             sources.map { it.id }.mapNotNull { id -> subscription.cached(id)?.snapshot?.sdks }
         )
         // 批R5：同实体别名去重（保守合并，详见 RuleDedup.kt）
-        aliasTable = builtinAliases.toMutableMap().apply {
+        val aliasTable0 = builtinAliases.toMutableMap().apply {
             sources.forEach { src ->
                 subscription.cached(src.id)?.snapshot?.aliases?.let { fromSrc -> putAll(fromSrc) }
             }
         }
         // 批库链修复⑦：索引/查表归一到主 id（别名组非主 id 不再有断链窗口）
-        val dr = dedupRulesDetailed(rules, aliasTable)
-        effectiveRules = dr.rules
-        nameAliases = dr.nameAliases
-        rulesById = dr.rules.associateBy { it.id }
+        val dr = dedupRulesDetailed(rules, aliasTable0)
+        val byId = dr.rules.associateBy { it.id }
         val m = HashMap<String, MutableList<String>>()
         for (r in dr.rules) {
             for (p in r.packPrefixes) m.getOrPut(p) { mutableListOf() }.add(r.id)
         }
+        // 批BB RV-07：完整快照局部构建后一次发布（generation 随发布递增）——
+        // 中途开始的扫描要么读到完整旧快照、要么读到完整新快照，不再有字段级混合
+        val snap = EffectiveSnapshot(dr.rules, byId, aliasTable0, dr.nameAliases, m)
+        published = snap
+        generation++
+        // 兼容读取口同步（VM/库页等旧消费方）
+        effectiveRules = dr.rules
+        nameAliases = dr.nameAliases
+        rulesById = byId
         prefixIndex = m
     }
 
@@ -113,11 +135,6 @@ class RuleRepository(context: Context, initialSources: List<SettingsRepository.S
 
     fun clearSourceCache(id: String) = subscription.clear(id)
 
-    /** 当前注册表（由 VM 从 Settings 注入，供 rebuild 与拉取使用） */
-    @Volatile
-    var subscribedSources: List<SettingsRepository.SubSource> = listOf(SettingsRepository.OFFICIAL_SOURCE)
-        private set
-
     fun setSources(sources: List<SettingsRepository.SubSource>) {
         // 批Z4：源集合未变（含普通偏好触发的 settings emission）不重建索引，
         // 也不递增 generation——语言/备份份数等偏好不再引发规则重建
@@ -130,5 +147,26 @@ class RuleRepository(context: Context, initialSources: List<SettingsRepository.S
 
     companion object {
         val json = Json { ignoreUnknownKeys = true }
+    }
+}
+
+/** 批BB RV-07：不可变生效规则集（规则+别名+索引一次发布，扫描全程一致） */
+data class EffectiveSnapshot(
+    val rules: List<SdkRule>,
+    val rulesById: Map<String, SdkRule>,
+    val aliasTable: Map<String, String>,
+    val nameAliases: Map<String, Set<String>>,
+    val prefixIndex: Map<String, List<String>>
+) {
+    fun match(packageName: String): List<SdkRule> {
+        val hits = LinkedHashSet<String>()
+        for ((prefix, ids) in prefixIndex) {
+            if (packageName.startsWith(prefix)) hits.addAll(ids)
+        }
+        return hits.mapNotNull { rulesById[it] }
+    }
+
+    companion object {
+        val EMPTY = EffectiveSnapshot(emptyList(), emptyMap(), emptyMap(), emptyMap(), emptyMap())
     }
 }

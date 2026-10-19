@@ -218,9 +218,13 @@
     <string name="backup_keep_note">份数自由填写；超出的旧备份自动清理。磁盘占用为天然后果，请按需取舍。</string>
     <string name="backup_restore_confirm">将把所选归档解回原路径（覆盖现有 IFW 规则与 pm 状态）并修复归属。注意：还原按全局时点进行，快照之后写入的 IFW 规则（含其他工具）将被撤销。继续？</string>
     <string name="recovery_cmd_title">应急命令（点击复制）</string>
-    <string name="recovery_cmd_sub">UI 无法进入时，在电脑上执行以下命令清除全部 IFW 规则</string>
+    <string name="recovery_cmd_sub">UI 无法进入时，在电脑上执行以下命令清除全部 IFW 规则（需应用的 Realtime 守护存活）</string>
     <string name="recovery_clear_title">清除全部 IFW 规则</string>
     <string name="recovery_clear_desc">将无差别清除本应用与其他工具写入的全部 IFW 规则；pm 停用状态不受影响。</string>
+    <string name="ledger_corrupted">账本文件损坏，已保留 .corrupt 证据文件；写入已暂停。重置账本将丢弃恢复依据（设备上的禁用状态不受影响），此后可继续使用。</string>
+    <string name="ledger_reset">重置账本</string>
+    <string name="vm_restore_backup_pm_fail">（注意：pm 状态恢复失败，pm 账本已保留）</string>
+    <string name="vm_ledger_corrupted">账本文件损坏（已保留证据文件）——请在设置 → 恢复区重置账本后重试</string>
     <string name="live_line">设备现状（含本工具外来源）已禁用 %1$d 组件</string>
     <string name="disabled_count">已禁用 %1$d</string>
     <string name="recovery_ifw_count">当前 IFW 规则 %1$d 条（含其他工具写入）</string>

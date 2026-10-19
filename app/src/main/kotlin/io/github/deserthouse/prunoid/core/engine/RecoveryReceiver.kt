@@ -24,11 +24,9 @@ class RecoveryReceiver : BroadcastReceiver() {
         val pending = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val n = DisableEngine(context, RuleRepository(context)).clearAllIfw()
-                // 批Y3（架构评审 C4）：应急清除=终止 IFW 自动管理——失效账本条目同步移除
-                // （PM 条目保留），防止包更新按账本复活刚清掉的规则
-                AppliedRulesStore(context).removeEngine(Engine.IFW.name)
-                Log.w("SdkPruner", "recovery: cleared $n IFW files, IFW ledger entries removed")
+                // 批BB RV-04：走共用事务（共锁+成功才清账本）；失败不再删恢复依据
+                val r = DisableEngine.clearIfwTransaction(context)
+                Log.w("SdkPruner", "recovery: clear transaction " + (r.getOrNull()?.let { "ok: $it IFW files, IFW ledger entries removed" } ?: ("failed: " + r.exceptionOrNull()?.message)))
             } finally {
                 pending.finish()
             }

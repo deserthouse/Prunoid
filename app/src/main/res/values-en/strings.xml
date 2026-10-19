@@ -202,9 +202,13 @@
     <string name="backup_keep_note">Any count is fine; older backups beyond the limit are pruned automatically. Disk usage is a natural consequence — your call.</string>
     <string name="backup_restore_confirm">The selected archive will be unpacked back to the original paths (overwriting current IFW rules and pm state) with ownership fixed. Note: restore is a global point-in-time operation — IFW rules written after the snapshot (including rules from other tools) will be revoked. Continue?</string>
     <string name="recovery_cmd_title">Emergency command (tap to copy)</string>
-    <string name="recovery_cmd_sub">If the UI cannot be reached, run this on a computer to clear all IFW rules</string>
+    <string name="recovery_cmd_sub">If the UI cannot be reached, run this on a computer to clear all IFW rules (requires the app’s Realtime guard to be alive)</string>
     <string name="recovery_clear_title">Clear all IFW rules</string>
     <string name="recovery_clear_desc">Clears ALL IFW rules written by this app and other tools indiscriminately; pm disabled states are unaffected.</string>
+    <string name="ledger_corrupted">Ledger file corrupted; a .corrupt evidence file has been kept and writes are paused. Resetting discards the recovery ledger (disabled states on the device are unaffected) and resumes normal use.</string>
+    <string name="ledger_reset">Reset ledger</string>
+    <string name="vm_restore_backup_pm_fail"> (note: pm state restore failed; pm ledger kept)</string>
+    <string name="vm_ledger_corrupted">Ledger corrupted (evidence kept) — reset it in Settings → Recovery, then retry</string>
     <string name="live_line">On-device state (incl. non-Prunoid sources): %1$d disabled</string>
     <string name="disabled_count">%1$d disabled</string>
     <string name="recovery_ifw_count">Current IFW rules: %1$d (incl. other tools)</string>

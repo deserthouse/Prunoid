@@ -59,6 +59,8 @@ data class AppUiState(
     // 批G：现场禁用集（包名→组件类名）。展示层以现场为准；applied 记账只喂恢复。
     val liveDisabled: Map<String, Set<String>> = emptyMap(),
     val ifwTotal: Int = 0,
+    // 批BB RV-09：账本损坏标志——恢复区显示重置入口；写操作在 VM 边界拒绝
+    val ledgerCorrupted: Boolean = false,
     // 批H 彩蛋（对齐 OptIcon）：About 卡整体可点，🐾×7 解锁作者块（持久化）；碎碎念 🍆×6→💦 烧断
     val easter: EasterState = EasterState(),
     // 批N：工作方式与档位（audit=只读审计；reapply open=启动对账/realtime=常驻）
@@ -81,7 +83,7 @@ data class AppUiState(
 class AppViewModel(app: Application) : AndroidViewModel(app) {
     private val appCtx get() = getApplication<Application>()
     private val rules = RuleRepository(app)
-    private var scanner = Scanner(appCtx, rules)
+    private var scanner = Scanner(appCtx, rules.published)
     private val engine = DisableEngine(app, rules)
     private val applied = AppliedRulesStore(app)
     private val settings = SettingsRepository(app)
@@ -182,6 +184,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         _state.value.workMode.id == io.github.deserthouse.prunoid.core.engine.WorkModeId.ROOT &&
             _state.value.rootGranted
 
+    /** 批BB RV-09：账本损坏时拒绝普通写（覆盖即销毁恢复依据）；恢复区提供显式重置 */
+    private fun ledgerCorrupted(): Boolean = applied.corrupted
+
     fun setWorkMode(tag: String) { viewModelScope.launch { settings.setWorkMode(tag) } }
     fun setReapplyMode(tag: String) { viewModelScope.launch { settings.setReapplyMode(tag) } }
     fun setBackupEnabled(on: Boolean) { viewModelScope.launch { settings.setBackupEnabled(on) } }
@@ -225,6 +230,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             val msg = withBusy("everywhere", locked = true) {
                 if (!rootGate()) return@withBusy appCtx.getString(R.string.vm_need_root)
+                if (ledgerCorrupted()) return@withBusy appCtx.getString(R.string.vm_ledger_corrupted)
                 val rule = rules.rule(ruleId) ?: return@withBusy appCtx.getString(R.string.vm_no_targets)
                 // 批库链修复①：目标组件改用各 app 扫描命中的真实组件
                 // （规则锚点 87% 为空，旧实现必然 "no targets"）
@@ -266,6 +272,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 _state.update {
                     it.copy(
                         applied = applied.all(),
+                            ledgerCorrupted = applied.corrupted,
                         liveDisabled = it.liveDisabled + live.mapValues { e -> e.value.toSet() }
                     )
                 }
@@ -280,6 +287,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             val msg = withBusy(if (on) "sdk-on" else "sdk-off", locked = true) {
                 if (!rootGate()) return@withBusy appCtx.getString(R.string.vm_need_root)
+                if (ledgerCorrupted()) return@withBusy appCtx.getString(R.string.vm_ledger_corrupted)
                 val app = _state.value.apps.firstOrNull { it.packageName == pkg }
                     ?: return@withBusy appCtx.getString(R.string.vm_no_targets)
                 val hit = app.matchedSdks.firstOrNull { it.ruleId == ruleId }
@@ -302,21 +310,35 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 } else {
                     // off：仅移除该 SDK 命中的组件（IFW 定向移除 + pm enable）；
                     // 外部/其他来源 filter 幸存（removeIfw 语义批J#1 已修正）。
-                    // 批Z1：SDK 组件可能分布在双桶——按桶清理后整体替换
-                    val removed: Set<String> = hit.matchedComponents.toSet()
-                    val r1 = engine.enablePm(pkg, removed.toList())
-                    val r2 = engine.removeIfw(pkg, removeComponents = removed)
+                    // 批BB RV-03：共用恢复所有权推导——
+                    //   ① PM 只撤本桶实际负责且非 preExisting 的部分（仅 IFW 管理时不动 PM）；
+                    //   ② 共享命中被其他 SDK 仍引用时保留（关闭 A 不破坏 B）；
+                    //   ③ 移除的组件按桶过滤后整体替换。
+                    val removed = hit.matchedComponents.toSet()
+                    val retainedByOthers = hit.matchedComponents.filter { c ->
+                        app.matchedSdks.any { o -> o.ruleId != ruleId && o.matchedComponents.contains(c) }
+                    }.toSet()
+                    val removedEffective = removed - retainedByOthers
+                    val pmBucket = prev?.pm
+                    val pmTargets = removedEffective.filter { c ->
+                        pmBucket?.components?.contains(c) == true && c !in pmBucket.preExisting.toSet()
+                    }
+                    val r1 = engine.enablePm(pkg, pmTargets)
+                    val r2 = engine.removeIfw(pkg, removeComponents = removedEffective)
                     // 批X2：写失败不谎报；账本替换语义——双桶全空自动删除（修 R04-b 复活问题）
                     check(r1.isSuccess && r2.isSuccess)
                     fun minus(b: AppliedRulesStore.EngineChange?) = b?.copy(
-                        components = b.components.filter { it !in removed },
-                        types = b.types.filterKeys { it !in removed }
-                    )?.takeIf { b2 -> b2.components.isNotEmpty() }
+                        components = b.components.filter { it !in removedEffective },
+                        types = b.types.filterKeys { it !in removedEffective },
+                        preExisting = b.preExisting.filter { it !in removedEffective },
+                        // 批BB RV-02：关闭 SDK 同步终止该桶内对此 SDK 的意图
+                        ruleIds = b.ruleIds - ruleId
+                    )?.takeIf { b2 -> b2.components.isNotEmpty() || b2.ruleIds.isNotEmpty() }
                     applied.replaceBuckets(
                         pkg,
                         ifw = minus(prev?.ifw),
                         pm = minus(prev?.pm),
-                        ruleIds = prev?.ruleIds.orEmpty() - ruleId
+                        fallbackRuleIds = prev?.ruleIds.orEmpty() - ruleId
                     )
                 }
                 val liveAfter = engine.readLiveDisabled(listOf(pkg)).first
@@ -342,6 +364,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             val (ok, msg) = withBusy("unmatched", locked = true) {
                 if (!rootGate()) return@withBusy Pair(false, appCtx.getString(R.string.vm_need_root))
+                if (ledgerCorrupted()) return@withBusy Pair(false, appCtx.getString(R.string.vm_ledger_corrupted))
                 if (DisableEngine.isForbidden(pkg)) return@withBusy Pair(false, appCtx.getString(R.string.vm_forbidden))
                 // 批Y2（架构评审 C3）：IFW 不支持 provider——执行/记账/回执同源过滤
                 val eff = byType.filterKeys { it != "provider" }
@@ -359,6 +382,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 _state.update {
                     it.copy(
                         applied = applied.all(),
+                            ledgerCorrupted = applied.corrupted,
                         liveDisabled = liveAfter.let { l -> it.liveDisabled + (pkg to (l[pkg] ?: emptySet())) }
                     )
                 }
@@ -434,6 +458,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             val cur = io.github.deserthouse.prunoid.core.engine.DeclarationsStore.declaredPrefixes
             val next = if (on) cur + rule.packPrefixes.map { it.trimEnd('.') }
                        else cur - rule.packPrefixes.map { it.trimEnd('.') }.toSet()
+            if (applied.corrupted) { onDone(appCtx.getString(R.string.vm_ledger_corrupted)); return@launch }
             // 批Z2：声明写入与其他 root 写入口共锁
             val r = OpCoordinator.write {
                 io.github.deserthouse.prunoid.core.engine.DeclarationsStore.write(
@@ -460,6 +485,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 onDone(appCtx.getString(R.string.vm_need_root))
                 return@launch
             }
+            if (applied.corrupted) { onDone(appCtx.getString(R.string.vm_ledger_corrupted)); return@launch }
             // 批Z2：声明写入与其他 root 写入口共锁
             val r = OpCoordinator.write {
                 io.github.deserthouse.prunoid.core.engine.DeclarationsStore.write(
@@ -476,12 +502,16 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    // 批BB RV-07：扫描任务序号——同代次反序完成时仅最新轮发布（含 icons/live 子任务）
+    private var scanSeq = 0
+
     fun rescan() {
         viewModelScope.launch {
+            val mySeq = ++scanSeq
             _state.update { it.copy(scanning = true) }
             // 批X4（审查 R08/PN-17）：扫描索引随每次重扫重建——订阅刷新后新规则当场生效
-            scanner = Scanner(appCtx, rules)
-            // 批Z4（架构评审 A6）：捕获规则代次——扫描期间重建则旧代次结果不回写
+            scanner = Scanner(appCtx, rules.published)
+            // 批Z4/批BB RV-07：捕获规则代次与快照——扫描期间重建则旧代次结果不回写
             val genAtStart = rules.generation
             val apps = try {
                 withContext(Dispatchers.IO) {
@@ -507,6 +537,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 _state.update { it.copy(scanning = false) }
                 return@launch
             }
+            if (mySeq != scanSeq) {
+                // 批BB RV-07：同代次内已有更新一轮扫描——本轮不发布（防反序覆盖）
+                android.util.Log.d("SdkPruner", "scan superseded by newer scan (seq $mySeq < $scanSeq)")
+                return@launch
+            }
             _state.update { it.copy(scanning = false, apps = apps, applied = withContext(Dispatchers.IO) { applied.all() }) }
             // 图标后台预载（getApplicationIcon 是 binder 调用，100+ app 不能放组合期主线程）
             viewModelScope.launch(Dispatchers.IO) {
@@ -514,13 +549,13 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 val icons = apps.associate { a ->
                     a.packageName to (runCatching { pm.getApplicationIcon(a.packageName) }.getOrNull())
                 }.filterValues { it != null }.mapValues { it.value!! }
-                _state.update { it.copy(icons = icons) }
+                if (mySeq == scanSeq) _state.update { it.copy(icons = icons) }
             }
             // 批G：读现场——仅命中 app（shell 合并单次调用），IFW+pm 两处
             viewModelScope.launch(Dispatchers.IO) {
                 val targets = apps.filter { it.matchedSdks.isNotEmpty() }.map { it.packageName }
                 val (live, total) = engine.readLiveDisabled(targets)
-                _state.update { it.copy(liveDisabled = live, ifwTotal = total) }
+                if (mySeq == scanSeq) _state.update { it.copy(liveDisabled = live, ifwTotal = total) }
             }
         }
     }
@@ -657,45 +692,58 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun restoreBackup(path: String, onDone: (String) -> Unit) {
         viewModelScope.launch {
             var ok = false
-            val msg = withBusy("backup", locked = true) {
+            var partialNote = ""
+            // 批BB RV-05：locked=false——restoreBackup 内部含共锁段与 PM 失败传播；
+            // 账本同步按实际成功范围执行（失败桶保留恢复依据）
+            val msg = withBusy("backup") {
                 engine.restoreBackup(path).fold(
-                    onSuccess = {
-                        ok = true
-                        // 批Z0（D1 裁决）：还原=全局时点——快照归档含 IFW 目录与 pm 状态，
-                        // 快照后的全部本工具修改（双引擎）都被回滚，账本同步全清；
-                        // 否则下次包更新按账本复活已回滚规则。应急清除（仅清 IFW）则保留 PM 条目，
-                        // 两入口语义不同源自归档覆盖面不同。
+                    onSuccess = { report ->
+                        ok = report.ifwOk
                         withContext(Dispatchers.IO) {
-                            applied.removeEngine(Engine.IFW.name)
-                            applied.removeEngine(Engine.PM.name)
+                            if (report.ifwOk) applied.removeEngine(Engine.IFW.name)
+                            if (report.pmOk) applied.removeEngine(Engine.PM.name)
+                        }
+                        // 失败桶如实告知（PM 恢复失败→pm 账本保留=恢复依据仍在）
+                        if (!report.pmOk && report.pmInArchive) {
+                            partialNote = appCtx.getString(R.string.vm_restore_backup_pm_fail)
                         }
                         appCtx.getString(R.string.vm_restore_backup_ok)
                     },
                     onFailure = { appCtx.getString(R.string.vm_restore_backup_fail, it.message ?: "") }
                 )
             }
-            _state.update { it.copy(applied = withContext(Dispatchers.IO) { applied.all() }) }
+            _state.update { it.copy(applied = withContext(Dispatchers.IO) { applied.all() }, ledgerCorrupted = applied.corrupted) }
             if (ok) rescan()  // 批P2#30：恢复后现场与记录可能漂移，重扫校准
-            onDone(msg)
+            onDone(if (partialNote.isEmpty()) msg else msg + partialNote)
+        }
+    }
+
+    /** 批BB RV-09：损坏账本显式重置（.corrupt 证据保留；恢复依据由用户确认丢弃） */
+    fun resetLedger() {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) { applied.resetCorrupted() }
+            _state.update {
+                it.copy(applied = withContext(Dispatchers.IO) { applied.all() }, ledgerCorrupted = applied.corrupted)
+            }
         }
     }
 
     fun clearAllIfw(onDone: (String) -> Unit) {
         viewModelScope.launch {
             var ok = false
-            val msg = withBusy("clearifw", locked = true) {
-                engine.clearAllIfw().fold(
+            // 批BB RV-04：locked=false——clearIfwTransaction 内部持 OpCoordinator 共锁，
+            // 成功才清 IFW 账本；失败原样保留恢复依据并如实报错
+            val msg = withBusy("clearifw") {
+                if (ledgerCorrupted()) return@withBusy appCtx.getString(R.string.vm_ledger_corrupted)
+                DisableEngine.clearIfwTransaction(appCtx).fold(
                     onSuccess = { n ->
                         ok = true
-                        // 批Y3（架构评审 C4）：应急清除=终止 IFW 自动管理——失效账本条目同步移除
-                        // （PM 条目保留：pm 禁用不受清 IFW 影响），否则下次包更新按账本复活已清规则
-                        withContext(Dispatchers.IO) { applied.removeEngine(Engine.IFW.name) }
                         appCtx.getString(R.string.vm_ifw_cleared, n)
                     },
                     onFailure = { appCtx.getString(R.string.vm_clear_fail, it.message ?: "") }
                 )
             }
-            _state.update { it.copy(applied = withContext(Dispatchers.IO) { applied.all() }) }
+            _state.update { it.copy(applied = withContext(Dispatchers.IO) { applied.all() }, ledgerCorrupted = applied.corrupted) }
             if (ok) {
                 // 批Y3：现场重读——IFW 已清，剩余禁用=pm 状态；IFW 总数以现读为准
                 val pkgs = _state.value.liveDisabled.keys.toList()
@@ -725,6 +773,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             val withBusyResult = withBusy("apply", locked = true) {
                 if (!rootGate()) return@withBusy Pair(false, appCtx.getString(R.string.vm_need_root))
+                if (ledgerCorrupted()) return@withBusy Pair(false, appCtx.getString(R.string.vm_ledger_corrupted))
                 if (DisableEngine.isForbidden(scanned.packageName) || scanned.isSystem) return@withBusy Pair(false, appCtx.getString(R.string.vm_forbidden))
                 val selected = scanned.matchedSdks.filter { it.ruleId in selectedRuleIds }
                 val targets = selected.flatMap { it.matchedComponents }
@@ -743,10 +792,13 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 var preExistingTargets: List<String> = emptyList()
                 val r = when (engineSnapshot) {
                     Engine.IFW -> engine.applyIfw(scanned.packageName, effByType)
-                    // 批Z3（架构评审 A5）：写入前现场读——已禁用的组件记 preExisting（非本工具新增，恢复跳过）
+                    // 批Z3（架构评审 A5）：写入前现场读——已禁用的组件记 preExisting（非本工具新增，恢复跳过）。
+                    // 批BB RV-01：本 PM 桶已负责的组件排除在外——它们是本工具自己的写入，
+                    // 重复 apply 不得把自有禁用污染成"外部既有状态"
                     Engine.PM -> {
                         val pre = engine.readPmDisabled(scanned.packageName)
-                        preExistingTargets = targets.filter { it in pre }
+                        val owned = applied.get(scanned.packageName)?.pm?.components.orEmpty().toSet()
+                        preExistingTargets = targets.filter { it in pre && it !in owned }
                         engine.applyPm(scanned.packageName, targets)
                     }
                 }
@@ -771,6 +823,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 _state.update {
                     it.copy(
                         applied = applied.all(),
+                            ledgerCorrupted = applied.corrupted,
                         liveDisabled = liveAfter?.let { l -> it.liveDisabled + (scanned.packageName to (l[scanned.packageName] ?: emptySet())) } ?: it.liveDisabled
                     )
                 }
@@ -788,6 +841,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun restoreApp(scanned: ScannedApp, onDone: (String) -> Unit) {
         viewModelScope.launch {
             val msg = withBusy("restore", locked = true) {
+                if (ledgerCorrupted()) return@withBusy appCtx.getString(R.string.vm_ledger_corrupted)
                 // 按 applied 记录回滚（当时真实写入集），不用当前扫描重算——
                 // 否则规则更新/显式加选的组件会成为恢复盲区。
                 // 批Z1/Z3（架构评审 A3/A5）：按引擎桶分别恢复；PM 跳过 preExisting

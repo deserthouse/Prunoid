@@ -4,7 +4,7 @@ import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import io.github.deserthouse.prunoid.core.engine.DisableEngine
-import io.github.deserthouse.prunoid.core.rules.RuleRepository
+import io.github.deserthouse.prunoid.core.rules.EffectiveSnapshot
 import io.github.deserthouse.prunoid.core.rules.Safety
 import io.github.deserthouse.prunoid.core.rules.safety
 
@@ -54,14 +54,14 @@ data class SdkHit(
 // ① app 包名前缀 ② 组件全类名精确锚点（LCR）③ 组件类名前缀（blocker/oF2pks 的 searchKeyword 语义）
 class Scanner(
     context: Context,
-    private val rules: RuleRepository
+    private val rules: EffectiveSnapshot
 ) {
     private val ctx = context
     private val pm = context.packageManager
 
     private val componentIndex: Map<String, Pair<String, String>> by lazy {
         val m = HashMap<String, Pair<String, String>>()
-        for (r in rules.effectiveRules) {
+        for (r in rules.rules) {
             for (c in r.components) {
                 if (c.type != "native") m[c.`class`] = r.id to c.type
             }
@@ -69,7 +69,7 @@ class Scanner(
         m
     }
 
-    private val prefixMatcher: PrefixMatcher by lazy { PrefixMatcher(rules.effectiveRules) }
+    private val prefixMatcher: PrefixMatcher by lazy { PrefixMatcher(rules.rules) }
 
     fun scanAll(): List<ScannedApp> {
         val out = mutableListOf<ScannedApp>()
@@ -87,7 +87,7 @@ class Scanner(
     fun scanOne(app: ApplicationInfo, components: List<Pair<String, String>>): ScannedApp {
         val hits = LinkedHashMap<String, SdkHit>()
         fun addHit(rid: String, cn: String?, type: String?) {
-            val r = rules.rule(rid) ?: return
+            val r = rules.rulesById[rid] ?: return
             val prev = hits[rid]
             when {
                 prev == null -> hits[rid] = SdkHit(

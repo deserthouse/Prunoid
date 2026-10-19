@@ -92,6 +92,17 @@ class DisableEngine(
     companion object {
         init { Shell.enableVerboseLogging = false; Shell.setDefaultBuilder(Shell.Builder.create().setTimeout(10)) }
 
+        /** 批BB RV-04：清 IFW 事务——三入口（VM/静态/动态 receiver）共用；
+         *  全局写锁内执行，**成功才**终止 IFW 账本；失败原样保留恢复依据 */
+        suspend fun clearIfwTransaction(context: android.content.Context): Result<Int> = OpCoordinator.write {
+            val store = AppliedRulesStore(context)
+            val eng = DisableEngine(context, RuleRepository(context))
+            eng.clearAllIfw().mapCatching { n ->
+                store.removeEngine(Engine.IFW.name)
+                n
+            }
+        }
+
         // 系统/框架包白名单（M1 硬拦截；数据底座见 blocker-general-rules components/）
         val SYSTEM_PREFIXES = listOf(
             "android", "com.android.", "com.google.android.", "androidx.",
@@ -235,15 +246,23 @@ class DisableEngine(
     }
 
     // ── 安全层：恢复备份（tar 解包回原路径 + 归属/上下文修复） ─────
-    suspend fun restoreBackup(backupPath: String): Result<Unit> = withContext(Dispatchers.IO) {
+    /** 批BB RV-05：结构化还原报告——账本同步按实际成功范围执行（RV-05：失败不得清桶） */
+    data class RestoreReport(val ifwOk: Boolean, val pmOk: Boolean, val pmInArchive: Boolean)
+
+    suspend fun restoreBackup(backupPath: String): Result<RestoreReport> = withContext(Dispatchers.IO) {
         runCatching {
             // 批X2（审查 R11）：差异还原——纯解包不会删除备份后新建的 IFW 文件，恢复会"假成功"。
-            // 流程：隔离目录解包 → 备份内的受管文件逐个还原 → 当前受管文件中备份没有的删除 → 校验
+            // 流程：隔离目录解包 → 备份内的受管文件逐个还原 → 当前受管文件中备份没有的删除 → 校验。
+            // 批BB RV-05：先探归档成员判定 PM 段；PM 恢复链去掉 || true（失败必须传播）。
             val stage = "/data/local/tmp/prunoid_restore"
             val pre = Shell.cmd(
                 "rm -rf $stage && mkdir -p $stage && tar -xzf $backupPath -C $stage"
             ).exec()
             check(pre.isSuccess) { "restore unpack failed: ${pre.err}" }
+            val pmInArchive = Shell.cmd("tar -tzf $backupPath 2>/dev/null | grep -c package-restrictions")
+                .exec().out.firstOrNull()?.trim()?.toIntOrNull()?.let { it > 0 } ?: false
+            var ifwOk = true
+            var pmOk = false
             val restore = StringBuilder("set -e")
             val ifwStage = "$stage$IFW_DIR"
             val backupFiles = Shell.cmd("ls $ifwStage/*.xml 2>/dev/null").exec().out
@@ -259,12 +278,23 @@ class DisableEngine(
             (current - backupFiles.toSet()).forEach { extra ->
                 restore.append("\nrm -f $IFW_DIR/$extra")
             }
-            restore.append("\ntest -f $stage$PKG_RESTRICTIONS && cp $stage$PKG_RESTRICTIONS $PKG_RESTRICTIONS && chown system:system $PKG_RESTRICTIONS || true")
-            restore.append("\nrestorecon -R $IFW_DIR $PKG_RESTRICTIONS 2>/dev/null || true")
+            restore.append("\nrestorecon -R $IFW_DIR 2>/dev/null || true")
             val fin = Shell.cmd(restore.toString()).exec()
-            check(fin.isSuccess) { "restore apply failed: ${fin.err}" }
+            ifwOk = fin.isSuccess
+            check(ifwOk) { "restore apply failed: ${fin.err}" }
+            if (pmInArchive) {
+                val pm = Shell.cmd(
+                    "test -f $stage$PKG_RESTRICTIONS && cp $stage$PKG_RESTRICTIONS $PKG_RESTRICTIONS && chown system:system $PKG_RESTRICTIONS"
+                ).exec()
+                // 批BB RV-05：PM 恢复失败不再被 || true 掩盖——报告为失败（账本保留）
+                pmOk = pm.isSuccess
+                if (!pmOk) {
+                    Shell.cmd("rm -rf $stage").exec()
+                    return@runCatching RestoreReport(ifwOk = true, pmOk = false, pmInArchive = true)
+                }
+            }
             Shell.cmd("rm -rf $stage").exec()
-            Unit
+            RestoreReport(ifwOk = true, pmOk = pmOk, pmInArchive = pmInArchive)
         }
     }
 
@@ -285,6 +315,7 @@ class DisableEngine(
             files.size
         }
     }
+
 
     // ── IFW 主引擎 ────────────────────────────────────────────────
     suspend fun applyIfw(pkg: String, byType: Map<String, List<String>>): Result<Int> =

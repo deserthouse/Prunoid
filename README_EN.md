@@ -39,7 +39,7 @@ See every SDK embedded in your apps, and decide which components to block
 
 - Per-SDK checkboxes, category filters (ads/analytics/push…), select-all-filtered one-tap block
 - **Auto reapply** after app install/update (foreground guard service; toggleable)
-- **Safety layer (non-removable)**: mandatory pre-apply backup; per-app restore / backup restore / clear-all / adb emergency broadcast; hard whitelist block on framework packages (bootloop-proof by design)
+- **Safety layer (non-removable)**: optional auto-backup (off by default); per-app restore / backup restore / clear-all / adb emergency broadcast (requires the app’s Realtime guard to be alive — Android 16 does not dispatch the static broadcast); hard whitelist block on framework packages (bootloop-proof by design)
 
 ### Rules ecosystem
 

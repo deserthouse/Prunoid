@@ -51,11 +51,16 @@ class RuleGuardService : Service() {
             val pending = goAsync()
             CoroutineScope(Dispatchers.IO).launch {
                 try {
-                    val n = engine.clearAllIfw().getOrDefault(-1)
-                    // 批Y3（架构评审 C4）：与 RecoveryReceiver 同语义——应急清除终止 IFW 自动管理
-                    // （PM 条目保留），防止包更新按账本复活刚清掉的规则
-                    AppliedRulesStore(context).removeEngine(Engine.IFW.name)
-                    Log.w("SdkPruner", "guard: recovery cleared $n IFW files, IFW ledger entries removed")
+                    // 批BB RV-04：共用清 IFW 事务（共锁+成功才清账本）；失败不删恢复依据
+                    val r = DisableEngine.clearIfwTransaction(applicationContext)
+                    r.fold(
+                        onSuccess = { n ->
+                            Log.w("SdkPruner", "guard: recovery cleared $n IFW files, IFW ledger entries removed")
+                        },
+                        onFailure = { e ->
+                            Log.e("SdkPruner", "guard: recovery clear failed, ledger kept", e)
+                        }
+                    )
                 } finally {
                     pending.finish()
                 }

@@ -577,6 +577,22 @@ internal fun RecoverySection(st: AppUiState, vm: AppViewModel, onMsg: (String) -
     // 批R2（审计 P-2）：系统级毁灭操作补单次确认——批J2 拆倒计时时此键的确认被一并拆掉（git 考古 5120738）
     var confirmClearIfw by remember { mutableStateOf(false) }
     SectionTitle(stringResource(R.string.sec_recovery))
+    // 批BB RV-09：账本损坏提示 + 显式重置（证据文件保留；恢复依据由用户确认丢弃）
+    if (st.ledgerCorrupted) {
+        SettingsCard {
+            Column(Modifier.padding(16.dp)) {
+                Text(
+                    stringResource(R.string.ledger_corrupted),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
+                )
+                Spacer(Modifier.height(8.dp))
+                TextButton(onClick = { vm.resetLedger() }) {
+                    Text(stringResource(R.string.ledger_reset), color = MaterialTheme.colorScheme.error)
+                }
+            }
+        }
+    }
     SettingsCard {
         Column(Modifier.padding(vertical = 4.dp)) {
             val clipboard = androidx.compose.ui.platform.LocalClipboardManager.current
