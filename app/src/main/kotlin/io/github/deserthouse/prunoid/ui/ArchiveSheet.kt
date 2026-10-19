@@ -38,6 +38,8 @@ fun SdkArchiveSheet(
     onToggle: (Boolean) -> Unit,
     onDismiss: () -> Unit,
     libraryContext: Boolean = false,
+    // 批EE3（六审 B03）：批量结果当前层可见——放函数类型参数之前，避免 trailing lambda 错绑
+    bulkStatus: String? = null,
     onDisableEverywhere: (() -> Unit)? = null
 ) {
     val info = remember(hit.ruleId) { vm.ruleInfo(hit.ruleId) }
@@ -157,6 +159,17 @@ fun SdkArchiveSheet(
                 var sheetStatus by remember { mutableStateOf<String?>(null) }
                 // 批R2（审计 P-5）：跨应用批量写 IFW 补单次确认
                 var confirmEverywhere by remember { mutableStateOf(false) }
+                // 批EE3（六审 B03）：批量禁用结果在 sheet 当前层呈现（父级 Snackbar 被 modal 层压住不可见）
+                bulkStatus?.let {
+                    Surface(
+                        color = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                        shape = MaterialTheme.shapes.extraSmall,
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                    ) {
+                        Text(it, style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(8.dp))
+                    }
+                }
                 sheetStatus?.let {
                     Surface(
                         color = MaterialTheme.colorScheme.secondaryContainer,
@@ -229,13 +242,15 @@ fun SdkArchiveSheet(
                                     color = if (disN > 0) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
+            val triEnabled = vm.sdkEnabledFor(a, hit.ruleId)
             Switch(
                 // 批库链修复③：开关=该 app × 该 SDK 单粒度（不再全局/整 app 越权）
-                checked = vm.sdkEnabledFor(a, hit.ruleId),
+                // 批EE5（六审 B05）：三态——live 未加载=null 中性禁用，不再伪装"未禁用"
+                checked = triEnabled == true,
                 onCheckedChange = { on ->
                     vm.setSdkForApp(a.packageName, hit.ruleId, on) { sheetStatus = it }
                 },
-                enabled = !st0.busy && st0.workMode.capabilities.disablePerApp && st0.rootGranted
+                enabled = triEnabled != null && !st0.busy && st0.workMode.capabilities.disablePerApp && st0.rootGranted
             )
                         }
                     }

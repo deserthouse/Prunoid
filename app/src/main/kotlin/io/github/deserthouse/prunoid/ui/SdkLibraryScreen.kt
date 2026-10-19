@@ -55,6 +55,8 @@ fun SdkLibraryScreen(vm: AppViewModel, pendingQuery: String? = null, onConsumeQu
     var tab by remember { mutableStateOf(0) }   // 0 = 在机检出, 1 = 未检出
     var sheetRow by remember { mutableStateOf<LibRow?>(null) }
     var sheetMsg by remember { mutableStateOf<String?>(null) }
+    // 批EE3（六审 B03）：seq 参与 SnackbarEffect key——同文本连续两次（两次批量禁用同结果）也要弹第二次
+    var sheetMsgSeq by remember { mutableStateOf(0) }
 
     // ruleId → (命中 app 数, 命中组件数)。口径=在机检出（全量 apps，与统计页排行一致）；
     // 白名单系统应用的排除由禁用引擎在执行层兜底，展示层不重复过滤——
@@ -74,7 +76,7 @@ fun SdkLibraryScreen(vm: AppViewModel, pendingQuery: String? = null, onConsumeQu
     val foundCount = remember(all, hitMap) { all.count { (hitMap[it.id] ?: IntArray(2))[0] > 0 } }
 
     SnackbarEffect(snackbar, st.message)
-    SnackbarEffect(snackbar, sheetMsg)
+    SnackbarEffect(snackbar, sheetMsg, sheetMsgSeq)
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },
@@ -265,7 +267,10 @@ fun SdkLibraryScreen(vm: AppViewModel, pendingQuery: String? = null, onConsumeQu
             ),
             libraryContext = true,
             onDisableEverywhere = {
-                vm.disableSdkEverywhere(row.rule.id) { sheetMsg = it }
+                vm.disableSdkEverywhere(row.rule.id) {
+                    sheetMsg = it
+                    sheetMsgSeq++
+                }
             },
             app = ScannedApp(
                 packageName = "", label = "", isSystem = false, matchedSdks = emptyList()
@@ -274,7 +279,9 @@ fun SdkLibraryScreen(vm: AppViewModel, pendingQuery: String? = null, onConsumeQu
             appliedEntry = null,
             checked = false,
             onToggle = { },
-            onDismiss = { sheetRow = null }
+            onDismiss = { sheetRow = null },
+            // 批EE3（六审 B03）：批量结果同步写 sheet 当前层状态行
+            bulkStatus = sheetMsg
         )
     }
 }

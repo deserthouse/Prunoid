@@ -119,7 +119,7 @@
     <string name="lib_empty">无匹配条目</string>
     <!-- 统计页 -->
     <string name="stats_identified">已识别 SDK</string>
-    <string name="stats_blocked">已禁用组件</string>
+    <string name="stats_blocked">已禁用（按账本）</string>
     <string name="stats_apps">含系统应用</string>
     <string name="stats_cat_title">SDK 分类分布</string>
     <string name="stats_title">统计</string>

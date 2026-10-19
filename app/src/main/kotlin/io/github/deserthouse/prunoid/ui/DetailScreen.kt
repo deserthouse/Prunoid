@@ -424,11 +424,11 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                             }
                             TextButton(
                                 onClick = { selected = selected + visibleSdks.map { it.ruleId }.toSet() },
-                                enabled = visibleSdks.isNotEmpty()
+                                enabled = visibleSdks.isNotEmpty() && !st.busy
                             ) { Text(stringResource(R.string.select_all_filtered)) }
                             TextButton(
                                 onClick = { selected = selected - visibleSdks.map { it.ruleId }.toSet() },
-                                enabled = visibleSdks.isNotEmpty()
+                                enabled = visibleSdks.isNotEmpty() && !st.busy
                             ) { Text(stringResource(R.string.select_none)) }
                         }
                     }
@@ -440,7 +440,8 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                 // SDK 档案（原 ExpandMore 暗示原地展开而实为模态档案，图标语义一并修正）；
                 // 选中态 tonal 容器持续可见——滚动中可辨认已选集合；风险徽标保持语义色不参与选择反馈
                 Card(
-                    onClick = { selected = if (checked) selected - hit.ruleId else selected + hit.ruleId },
+                    // 批EE2（六审 B02）：busy 期锁选择面——执行中改选不再进入会被成功回调误清的草稿
+                    onClick = { if (!st.busy) selected = if (checked) selected - hit.ruleId else selected + hit.ruleId },
                     Modifier
                         .fillMaxWidth()
                         .animateItem(),
@@ -455,8 +456,9 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                         Checkbox(
                             checked = checked,
                             onCheckedChange = { on ->
-                                selected = if (on) selected + hit.ruleId else selected - hit.ruleId
-                            }
+                                if (!st.busy) selected = if (on) selected + hit.ruleId else selected - hit.ruleId
+                            },
+                            enabled = !st.busy
                         )
                         SdkMonogram(hit.ruleId, hit.name, Modifier.padding(end = 8.dp), vm.ruleInfo(hit.ruleId)?.iconUrl)
                         Column(Modifier.weight(1f)) {
@@ -560,9 +562,11 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                     onClick = {
                         showApplyConfirm = false
                         // 批X2（审查 PN-06）：成功才清空选择——失败保留重试入口
-                        vm.applyRules(app, selected) { ok, m ->
+                        // 批EE2（六审 B02）：只从当前选择移除本次提交集——busy 窗口内新增的勾选保留
+                        val committed = selected
+                        vm.applyRules(app, committed) { ok, m ->
                             msg = m
-                            if (ok) selected = emptySet()
+                            if (ok) selected = selected - committed
                         }
                     }
                 ) { Text(stringResource(R.string.apply), color = MaterialTheme.colorScheme.error) }

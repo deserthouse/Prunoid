@@ -351,10 +351,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /** 档案卡开关状态：该 app 现场禁用集与该 SDK 命中组件有交集 = on */
-    fun sdkEnabledFor(app: ScannedApp, ruleId: String): Boolean {
+    /** 档案卡开关状态：该 app 现场禁用集与该 SDK 命中组件有交集 = on。
+     *  批EE5（六审 B05）：三态——live 未加载=null（UI 据此中性禁用，不再伪装"未禁用"）；无命中=false */
+    fun sdkEnabledFor(app: ScannedApp, ruleId: String): Boolean? {
         val hit = app.matchedSdks.firstOrNull { it.ruleId == ruleId } ?: return false
-        val live = _state.value.liveDisabled[app.packageName] ?: return false
+        val live = _state.value.liveDisabled[app.packageName] ?: return null
         return hit.matchedComponents.any { c -> live.any { it == c || it == app.packageName + "/" + c } }
     }
 
@@ -780,7 +781,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 if (ledgerCorrupted()) return@withBusy Pair(false, appCtx.getString(R.string.vm_ledger_corrupted))
                 if (DisableEngine.isForbidden(scanned.packageName) || scanned.isSystem) return@withBusy Pair(false, appCtx.getString(R.string.vm_forbidden))
                 val selected = scanned.matchedSdks.filter { it.ruleId in selectedRuleIds }
-                val targets = selected.flatMap { it.matchedComponents }
+                // 批EE1（六审 B01）：共享组件去重——与 byTypeForVM 同口径
+                val targets = selected.flatMap { it.matchedComponents }.distinct()
                 if (targets.isEmpty()) return@withBusy Pair(false, appCtx.getString(R.string.vm_no_targets))
                 val backup = if (_state.value.backupEnabled) engine.backup(_state.value.backupKeep).getOrNull() else null
                 val byType = byTypeForVM(scanned, selectedRuleIds)
@@ -880,9 +882,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 }
 
-/** 批债33：app 勾选 → 引擎类型分组（纯函数，供 VM 与单测共用） */
+/** 批债33：app 勾选 → 引擎类型分组（纯函数，供 VM 与单测共用）。
+ *  批EE1（六审 B01）：distinctBy 去重共享组件——两 SDK 共含同一组件时组内只保留一份，
+ *  消灭确认/回执双计数与重复 filter 写入 */
 fun byTypeForVM(scanned: ScannedApp, ruleIds: Set<String>): Map<String, List<String>> =
     scanned.matchedSdks
         .filter { it.ruleId in ruleIds }
         .flatMap { it.componentTypes.entries }
+        .distinctBy { it.key }
         .groupBy({ it.value }, { it.key })

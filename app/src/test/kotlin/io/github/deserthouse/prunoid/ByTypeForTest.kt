@@ -34,4 +34,25 @@ class ByTypeForTest {
         val app = ScannedApp(packageName = "p", label = "P", isSystem = false, matchedSdks = listOf(hit("a", listOf("com.a.A1" to "activity"))))
         assertEquals(emptyMap<String, List<String>>(), io.github.deserthouse.prunoid.ui.byTypeForVM(app, emptySet()))
     }
+
+    @Test
+    fun `批EE1 共享组件去重`() {
+        // 两 SDK 共含 com.x.Shared：组内列表只保留一份（六审 B01——确认/回执/写盘不得双计数）
+        val app = ScannedApp(
+            packageName = "p", label = "P", isSystem = false,
+            matchedSdks = listOf(
+                hit("a", listOf("com.a.A1" to "activity", "com.x.Shared" to "service")),
+                hit("b", listOf("com.b.R1" to "receiver", "com.x.Shared" to "service"))
+            )
+        )
+        val out = io.github.deserthouse.prunoid.ui.byTypeForVM(app, setOf("a", "b"))
+        assertEquals(
+            mapOf(
+                "activity" to listOf("com.a.A1"),
+                "service" to listOf("com.x.Shared"),
+                "receiver" to listOf("com.b.R1")
+            ),
+            out
+        )
+    }
 }

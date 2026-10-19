@@ -106,7 +106,7 @@
     <string name="lib_tab_missing">Not found (%1$d)</string>
     <string name="lib_empty">No matching entries</string>
     <string name="stats_identified">SDKs identified</string>
-    <string name="stats_blocked">Components disabled</string>
+    <string name="stats_blocked">Blocked (ledger)</string>
     <string name="stats_apps">Apps scanned (incl. system)</string>
     <string name="stats_cat_title">SDK category distribution</string>
     <string name="stats_title">Stats</string>
