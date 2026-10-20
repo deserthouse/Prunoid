@@ -38,11 +38,10 @@ fun SdkArchiveSheet(
     onToggle: (Boolean) -> Unit,
     onDismiss: () -> Unit,
     libraryContext: Boolean = false,
-    // 批EE3（六审 B03）：批量结果当前层可见——放函数类型参数之前，避免 trailing lambda 错绑
-    bulkStatus: String? = null,
     // 批FF3（七审 AV04）：库上下文的在机扫描命中数（跨应用去重）——锚点数不再冒充现场命中数
     scanHitCount: Int? = null,
-    onDisableEverywhere: (() -> Unit)? = null
+    // 批FF-B3（AA3）：管理职责移至独立目的地——档案弹层回归阅读，此回调打开管理页
+    onOpenManage: (() -> Unit)? = null
 ) {
     val info = remember(hit.ruleId) { vm.ruleInfo(hit.ruleId) }
     // 量化句：N matched / N blocked（blocked = 已应用记录中命中的组件数）
@@ -145,146 +144,16 @@ fun SdkArchiveSheet(
                     Switch(checked = checked, onCheckedChange = onToggle)
                 }
             } else {
-                // 批M1：库上下文——使用此 SDK 的应用清单（各应用禁用状态，等待用户调整）
+                // 批FF-B3（AA3）：管理职责移至独立目的地——档案弹层回归阅读 + 管理入口行
                 Spacer(Modifier.height(12.dp))
                 val st0 = vm.state.collectAsState().value
-                val liveSet0 = st0.liveDisabled
                 val userApps = st0.apps.filter { a -> a.matchedSdks.any { it.ruleId == hit.ruleId } }
-                // 批AA3（M3E 评审 E03）：清单可检索+可展开全集——批量覆盖全集但只能看前 30 的矛盾解除
-                var appQuery by remember { mutableStateOf("") }
-                var showAllApps by remember { mutableStateOf(false) }
-                val filteredApps = if (appQuery.isBlank()) userApps
-                else userApps.filter { a ->
-                    a.label.contains(appQuery, true) || a.packageName.contains(appQuery, true)
-                }
-                // 批M3：sheet 内嵌状态行（Snackbar 在 sheet 之下会被遮挡，改本地呈现）
-                var sheetStatus by remember { mutableStateOf<String?>(null) }
-                // 批R2（审计 P-5）：跨应用批量写 IFW 补单次确认
-                var confirmEverywhere by remember { mutableStateOf(false) }
-                // 批EE3（六审 B03）：批量禁用结果在 sheet 当前层呈现（父级 Snackbar 被 modal 层压住不可见）
-                bulkStatus?.let {
-                    Surface(
-                        color = MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                        shape = MaterialTheme.shapes.extraSmall,
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
-                    ) {
-                        Text(it, style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(8.dp))
-                    }
-                }
-                sheetStatus?.let {
-                    Surface(
-                        color = MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                        shape = MaterialTheme.shapes.extraSmall,
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
-                    ) {
-                        Text(it, style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(8.dp))
-                    }
-                }
-                if (userApps.isEmpty()) {
-                    Text(
-                        stringResource(R.string.sheet_no_apps),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                } else {
-                    Row(
-                        Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            stringResource(R.string.sheet_apps_title, userApps.size),
-                            style = MaterialTheme.typography.titleSmall,
-                            modifier = Modifier.weight(1f)
-                        )
-                        // 批库链修复②：全局禁用按钮（此前 onDisableEverywhere 为死回调从未接入）
-                        onDisableEverywhere?.let { cb ->
-                            FilledTonalButton(
-                                onClick = { confirmEverywhere = true },
-                                enabled = !st0.busy && st0.workMode.capabilities.disablePerApp && st0.rootGranted,
-                                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 4.dp)
-                            ) {
-                                Text(
-                                    stringResource(R.string.block_everywhere, userApps.size),
-                                    style = MaterialTheme.typography.labelSmall
-                                )
-                            }
-                        }
-                    }
-                    // 批AA3：大集合检索（>10 才显示，小清单免打扰）
-                    if (userApps.size > 10) {
-                        Spacer(Modifier.height(4.dp))
-                        SearchField(
-                            value = appQuery,
-                            onValueChange = { appQuery = it },
-                            placeholder = { Text(stringResource(R.string.search_app_hint)) },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                    Spacer(Modifier.height(4.dp))
-                    val shown = if (showAllApps || appQuery.isNotBlank()) filteredApps else filteredApps.take(30)
-                    shown.forEach { a ->
-                        val disN = liveSet0[a.packageName]?.count { c ->
-                            a.matchedSdks.filter { it.ruleId == hit.ruleId }.any { h ->
-                                h.matchedComponents.any { it == c || (a.packageName + "/" + it) == c }
-                            }
-                        } ?: 0
-                        val total = a.matchedSdks.first { it.ruleId == hit.ruleId }.matchedComponents.size
-                        Row(
-                            Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(Modifier.weight(1f)) {
-                                Text(a.label.ifEmpty { a.packageName }, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                Text(
-                                    if (disN > 0) stringResource(R.string.sheet_app_disabled, disN, total)
-                                    else stringResource(R.string.sheet_app_pending),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = if (disN > 0) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-            val triEnabled = vm.sdkEnabledFor(a, hit.ruleId)
-            Switch(
-                // 批库链修复③：开关=该 app × 该 SDK 单粒度（不再全局/整 app 越权）
-                // 批EE5（六审 B05）：三态——live 未加载=null 中性禁用，不再伪装"未禁用"
-                checked = triEnabled == true,
-                onCheckedChange = { on ->
-                    vm.setSdkForApp(a.packageName, hit.ruleId, on) { sheetStatus = it }
-                },
-                enabled = triEnabled != null && !st0.busy && st0.workMode.capabilities.disablePerApp && st0.rootGranted
-            )
-                        }
-                    }
-                    // 批AA3：剩余项改为展开入口（原"还有 N 个"只读文本=批量覆盖全集却只能看 30 的矛盾）
-                    if (appQuery.isBlank() && filteredApps.size > 30 && !showAllApps) {
-                        TextButton(onClick = { showAllApps = true }) {
-                            Text(stringResource(R.string.sheet_apps_show_all, filteredApps.size))
-                        }
-                    }
-                    if (appQuery.isNotBlank() && filteredApps.isEmpty()) {
-                        Text(
-                            stringResource(R.string.sheet_no_apps),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-                if (confirmEverywhere) {
-                    AlertDialog(
-                        onDismissRequest = { confirmEverywhere = false },
-                        title = { Text(stringResource(R.string.block_everywhere, userApps.size)) },
-                        text = { Text(stringResource(R.string.block_everywhere_confirm, userApps.size)) },
-                        confirmButton = {
-                            TextButton(
-                                onClick = {
-                                    confirmEverywhere = false
-                                    onDisableEverywhere?.invoke()
-                                }
-                            ) { Text(stringResource(R.string.risk_continue), color = MaterialTheme.colorScheme.error) }
-                        },
-                        dismissButton = { TextButton(onClick = { confirmEverywhere = false }) { Text(stringResource(R.string.cancel)) } }
-                    )
+                Button(
+                    onClick = { onOpenManage?.invoke() },
+                    enabled = onOpenManage != null && userApps.isNotEmpty(),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(stringResource(R.string.manage_open, userApps.size))
                 }
             }
             Spacer(Modifier.height(12.dp))

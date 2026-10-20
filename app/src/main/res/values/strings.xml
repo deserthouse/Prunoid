@@ -75,6 +75,8 @@
     <string name="result_counts">%1$d 项成功 · %2$d 项失败</string>
     <string name="result_more">另有 %1$d 项未列出</string>
     <string name="result_retry">恢复当时选择并重试</string>
+    <string name="manage_subtitle">在机命中 %1$d 个应用</string>
+    <string name="manage_open">管理 %1$d 个应用</string>
     <string name="cd_open_sheet">查看 SDK 档案</string>
     <string name="unmatched_total">未识别组件 %1$d</string>
     <string name="unmatched_desc">不在规则库中——勾选禁用属人工判断、风险自担；欢迎提交规则</string>

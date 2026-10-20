@@ -41,7 +41,13 @@ private data class LibRow(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SdkLibraryScreen(vm: AppViewModel, pendingQuery: String? = null, onConsumeQuery: () -> Unit = {}) {
+fun SdkLibraryScreen(
+    vm: AppViewModel,
+    pendingQuery: String? = null,
+    onConsumeQuery: () -> Unit = {},
+    // 批FF-B3（AA3）：SDK 管理目的地入口（档案卡内按钮回调）
+    onOpenManage: (String) -> Unit = {},
+) {
     val st by vm.state.collectAsState()
     val snackbar = rememberSnackbar()
     var query by remember { mutableStateOf("") }
@@ -54,10 +60,7 @@ fun SdkLibraryScreen(vm: AppViewModel, pendingQuery: String? = null, onConsumeQu
     }
     var tab by remember { mutableStateOf(0) }   // 0 = 在机检出, 1 = 未检出
     var sheetRow by remember { mutableStateOf<LibRow?>(null) }
-    // 批FF1（七审 AV01）：批量结果键控 ruleId——切档案不继承上一对象的结果，异步晚归不污染当前对象
-    var bulkMsg by remember { mutableStateOf<Pair<String, String>?>(null) }
-    // 批EE3（六审 B03）：seq 参与 SnackbarEffect key——同文本连续两次（两次批量禁用同结果）也要弹第二次
-    var sheetMsgSeq by remember { mutableStateOf(0) }
+    // 批FF-B3（AA3）：批量执行与结果行已迁至 SDK 管理目的地（本屏档案卡回归纯阅读）
 
     // ruleId → (命中 app 数, 命中组件数)。口径=在机检出（全量 apps，与统计页排行一致）；
     // 白名单系统应用的排除由禁用引擎在执行层兜底，展示层不重复过滤——
@@ -77,7 +80,6 @@ fun SdkLibraryScreen(vm: AppViewModel, pendingQuery: String? = null, onConsumeQu
     val foundCount = remember(all, hitMap) { all.count { (hitMap[it.id] ?: IntArray(2))[0] > 0 } }
 
     SnackbarEffect(snackbar, st.message)
-    SnackbarEffect(snackbar, bulkMsg?.second, sheetMsgSeq)
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },
@@ -281,13 +283,6 @@ fun SdkLibraryScreen(vm: AppViewModel, pendingQuery: String? = null, onConsumeQu
                 componentTypes = row.rule.components.associate { it.`class` to it.type }
             ),
             libraryContext = true,
-            onDisableEverywhere = {
-                val originId = row.rule.id
-                vm.disableSdkEverywhere(originId) {
-                    bulkMsg = originId to it
-                    sheetMsgSeq++
-                }
-            },
             app = ScannedApp(
                 packageName = "", label = "", isSystem = false, matchedSdks = emptyList()
             ),
@@ -296,12 +291,12 @@ fun SdkLibraryScreen(vm: AppViewModel, pendingQuery: String? = null, onConsumeQu
             checked = false,
             onToggle = { },
             onDismiss = { sheetRow = null },
-            // 批EE3（六审 B03）+批FF1（七审 AV01）：结果写 sheet 当前层，且只显示属于当前 ruleId 的结果
-            bulkStatus = bulkMsg?.takeIf { it.first == row.rule.id }?.second,
             // 批FF3（七审 AV04）：在机扫描命中（跨应用去重），供档案标题区分锚点/命中口径
             scanHitCount = st.apps.flatMap { a ->
                 a.matchedSdks.filter { it.ruleId == row.rule.id }.flatMap { it.matchedComponents }
-            }.toSet().size
+            }.toSet().size,
+            // 批FF-B3（AA3）：管理职责移至独立目的地
+            onOpenManage = { onOpenManage(row.rule.id) },
         )
     }
 }

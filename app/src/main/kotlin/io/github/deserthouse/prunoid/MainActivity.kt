@@ -1,6 +1,7 @@
 package io.github.deserthouse.prunoid
 
 import androidx.compose.ui.res.stringResource
+import io.github.deserthouse.prunoid.ui.SdkManageScreen
 import io.github.deserthouse.prunoid.R
 import android.content.Intent
 import android.os.Bundle
@@ -92,10 +93,12 @@ class MainActivity : androidx.appcompat.app.AppCompatActivity() {
 
 /** 批P0-1：导航状态快照——Crossfade 退场期间持有旧状态，不再读活状态。
  *  批EE4（六审 B04）：selected 降为包名——普通 remember 持整个 ScannedApp 无生命周期契约，
- *  旋转/进程恢复丢详情位；对象从 VM 事实源按包名派生 */
+ *  旋转/进程恢复丢详情位；对象从 VM 事实源按包名派生。
+ *  批FF-B1③/B3（AA3）：新增 SDK 管理目的地（manageRuleId）。 */
 private data class NavTarget(
     val inSettings: Boolean,
     val selectedPkg: String?,
+    val manageRuleId: String?,
     val tab: Int
 )
 
@@ -115,20 +118,27 @@ fun SdkPrunerApp() {
     val listSortName = androidx.compose.runtime.saveable.rememberSaveable {
         mutableStateOf(io.github.deserthouse.prunoid.ui.AppSort.DEFAULT.name)
     }
+    // 批FF-B1③/B3（AA3）：SDK 管理目的地路由（从库页档案卡入口进入）
+    var manageRuleId by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<String?>(null) }
     // 详情对象从 UiState 事实源按包名派生——apps 未加载（进程恢复早期）时为 null，自然回落列表页不崩
     val st = vm.state.collectAsState().value
     val selected = selectedPkg?.let { pkg -> st.apps.firstOrNull { it.packageName == pkg } }
-    // 详情/设置屏系统返回 = 回上级，不退出 app
-    BackHandler(enabled = selectedPkg != null || inSettings) {
-        if (inSettings) inSettings = false else selectedPkg = null
+    // 详情/设置/管理屏系统返回 = 回上级，不退出 app
+    BackHandler(enabled = selectedPkg != null || inSettings || manageRuleId != null) {
+        when {
+            manageRuleId != null -> manageRuleId = null
+            inSettings -> inSettings = false
+            else -> selectedPkg = null
+        }
     }
     // 批P0-1 修复：Crossfade target 持有导航键（退场期间按键派生旧对象渲染，不读可空活状态）。
     // 旧实现 target 存 selected?.packageName、内容读活状态 selected!!——返回动画期间
     // selected 已置 null 而旧内容仍被组合 → NPE 必崩（0.12.0/0.13.0 均受影响）
-    androidx.compose.animation.Crossfade(targetState = NavTarget(inSettings, selectedPkg, tab), label = "nav") { nav ->
+    androidx.compose.animation.Crossfade(targetState = NavTarget(inSettings, selectedPkg, manageRuleId, tab), label = "nav") { nav ->
         val navApp = nav.selectedPkg?.let { pkg -> st.apps.firstOrNull { it.packageName == pkg } }
         when {
             nav.inSettings -> SettingsScreen(vm, onBack = { inSettings = false })
+            nav.manageRuleId != null -> SdkManageScreen(vm, nav.manageRuleId, onBack = { manageRuleId = null })
             navApp != null -> AppDetailScreen(navApp, vm, onBack = { selectedPkg = null })
             else -> Scaffold(
             bottomBar = {
@@ -166,7 +176,12 @@ fun SdkPrunerApp() {
                                 onOpenSettings = { inSettings = true },
                                 onOpenLibrary = { tab = 1 }
                             )
-                            1 -> SdkLibraryScreen(vm, pendingQuery = pendingLibQuery, onConsumeQuery = { pendingLibQuery = null })
+                            1 -> SdkLibraryScreen(
+                                vm,
+                                pendingQuery = pendingLibQuery,
+                                onConsumeQuery = { pendingLibQuery = null },
+                                onOpenManage = { manageRuleId = it },
+                            )
                             else -> StatsScreen(vm, onOpenSdk = { name ->
                                 pendingLibQuery = name
                                 tab = 1
