@@ -104,36 +104,42 @@ fun SdkManageScreen(
                 }
             }
             LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 24.dp)) {
-                items(filteredApps, key = { it.packageName }) { a ->
+                // 批HH2（S3）：行模型派生化——key 掺入 disN/triEnabled，live 变化必触发行重组
+                //（g_09 发现：批量后 KOOK 行刷新而 Oopz/CoolApk 滞后，根因=key 不含行状态）
+                val rowModels = filteredApps.map { a ->
                     val hit = a.matchedSdks.firstOrNull { it.ruleId == ruleId }
-                    val triEnabled = vm.sdkEnabledFor(a, ruleId)
-                    val total = a.matchedSdks.firstOrNull { it.ruleId == ruleId }?.matchedComponents?.size ?: 0
+                    val tri = vm.sdkEnabledFor(a, ruleId)
+                    val total = hit?.matchedComponents?.size ?: 0
                     val disN = liveSet0[a.packageName]?.count { c ->
                         hit?.matchedComponents?.any { it == c || (a.packageName + "/" + it) == c } == true
                     } ?: 0
+                    ManageRow(a, tri, total, disN)
+                }
+                items(rowModels, key = { it.app.packageName + ":" + it.disN + ":" + (it.tri == true) }) { row ->
+                    val a = row.app
                     ListItem(
                         headlineContent = {
                             Text(a.label.ifEmpty { a.packageName }, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         },
                         supportingContent = {
                             Text(
-                                if (disN > 0) stringResource(R.string.sheet_app_disabled, disN, total)
+                                if (row.disN > 0) stringResource(R.string.sheet_app_disabled, row.disN, row.total)
                                 else stringResource(R.string.sheet_app_pending),
                                 style = MaterialTheme.typography.labelSmall,
-                                color = if (disN > 0) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant
+                                color = if (row.disN > 0) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         },
                         trailingContent = {
                             Switch(
                                 // EE5 三态 + EE3 当前层反馈（管理面同契约）
-                                checked = triEnabled == true,
+                                checked = row.tri == true,
                                 onCheckedChange = { on ->
                                     vm.setSdkForApp(a.packageName, ruleId, on) { stMsg ->
                                         bulkMsg = ruleId to stMsg
                                         bulkMsgSeq++
                                     }
                                 },
-                                enabled = triEnabled != null && !st.busy && st.workMode.capabilities.disablePerApp && st.rootGranted
+                                enabled = row.tri != null && !st.busy && st.workMode.capabilities.disablePerApp && st.rootGranted
                             )
                         }
                     )
@@ -164,3 +170,11 @@ fun SdkManageScreen(
 
 private fun userAppsCount(st: io.github.deserthouse.prunoid.ui.AppUiState, ruleId: String): Int =
     st.apps.count { a -> a.matchedSdks.any { it.ruleId == ruleId } }
+
+/** 批HH2（S3）：管理页行模型——pkg+三态+计数派生后固化，key 掺状态防 LazyColumn 跳过重组 */
+private data class ManageRow(
+    val app: io.github.deserthouse.prunoid.core.scanner.ScannedApp,
+    val tri: Boolean?,
+    val total: Int,
+    val disN: Int,
+)
