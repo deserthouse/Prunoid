@@ -61,6 +61,7 @@
     <string name="cd_detail">Details</string>
     <string name="detail_tech">Technical details</string>
     <string name="sel_count_line">%1$d SDK(s) · %2$d components selected</string>
+    <string name="draft_stale">Rule set updated — this selection was made on an older version; review before applying</string>
     <string name="cd_open_sheet">Open SDK archive</string>
     <string name="unmatched_total">Unrecognized components %1$d</string>
     <string name="unmatched_desc">Not in the rule base — selecting these for blocking is your own judgment; consider contributing a rule</string>

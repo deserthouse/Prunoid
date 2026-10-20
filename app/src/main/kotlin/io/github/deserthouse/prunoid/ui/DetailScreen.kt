@@ -74,6 +74,14 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
         app.packageName,
         stateSaver = listSaver(save = { s: Set<String> -> s.toList() }, restore = { it.toSet() })
     ) { mutableStateOf(emptySet<String>()) }
+    // 批FF-B1②（方案B S1）：选择草稿同步至 VM——绑定规则代次，规则刷新后提示重审
+    val draft by vm.draft.collectAsState()
+    val draftStale = draft?.let {
+        it.packageName == app.packageName && it.ruleIds == selected && it.rulesGeneration != vm.rulesGeneration
+    } == true
+    LaunchedEffect(selected, st.engine) {
+        vm.syncDraft(app.packageName, selected, st.engine)
+    }
     // 分类筛选：null = 全部
     // 批P1#14：列表级 SDK 分类筛选传导进详情（用户"只关心广告"的意图不丢失；详情内可再改）
     var catFilter by remember(app.packageName) {
@@ -189,6 +197,17 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                     .fillMaxWidth()
                                     .padding(horizontal = 16.dp)
                             )
+                            // 批FF-B1②（方案B S1）：规则库刷新后草稿过期——提示重审，不自动改选
+                            if (draftStale) {
+                                Text(
+                                    stringResource(R.string.draft_stale),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp)
+                                )
+                            }
                         }
                         Row(
                             Modifier

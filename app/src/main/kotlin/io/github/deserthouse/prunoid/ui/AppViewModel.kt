@@ -10,6 +10,7 @@ import io.github.deserthouse.prunoid.core.engine.DisableEngine
 import io.github.deserthouse.prunoid.ui.operations.OperationCenter
 import io.github.deserthouse.prunoid.ui.operations.OperationItem
 import io.github.deserthouse.prunoid.ui.operations.OperationKind
+import io.github.deserthouse.prunoid.ui.operations.SelectionDraft
 import io.github.deserthouse.prunoid.core.engine.Engine
 import io.github.deserthouse.prunoid.core.engine.OpCoordinator
 import io.github.deserthouse.prunoid.core.rules.RuleRepository
@@ -23,6 +24,7 @@ import io.github.deserthouse.prunoid.core.scanner.Scanner
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -90,6 +92,19 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private val engine = DisableEngine(app, rules)
     // 批FF-B1①（AA7/方案B S1）：操作结果中心——逐项成败记录，B2/B3 的结果卡与管理面消费
     val opCenter = OperationCenter()
+    // 批FF-B1②（方案B S1）：选择草稿——绑定规则代次，刷新后标 stale 提示重审（不自动改选）
+    private val _draft = MutableStateFlow<SelectionDraft?>(null)
+    val draft: StateFlow<SelectionDraft?> = _draft.asStateFlow()
+    val rulesGeneration: Long get() = rules.generation
+
+    fun syncDraft(pkg: String, ruleIds: Set<String>, engine: Engine) {
+        val cur = _draft.value
+        _draft.value = when {
+            ruleIds.isEmpty() -> null
+            cur != null && cur.packageName == pkg && cur.ruleIds == ruleIds && cur.engine == engine -> cur
+            else -> SelectionDraft(pkg, ruleIds, engine, rules.generation)
+        }
+    }
     private val applied = AppliedRulesStore(app)
     private val settings = SettingsRepository(app)
 

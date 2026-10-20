@@ -67,6 +67,7 @@
     <string name="cd_detail">详情</string>
     <string name="detail_tech">技术详情</string>
     <string name="sel_count_line">已选 %1$d 个 SDK · %2$d 个组件</string>
+    <string name="draft_stale">规则库已更新——当前选择基于旧版本，建议重新确认后再应用</string>
     <string name="cd_open_sheet">查看 SDK 档案</string>
     <string name="unmatched_total">未识别组件 %1$d</string>
     <string name="unmatched_desc">不在规则库中——勾选禁用属人工判断、风险自担；欢迎提交规则</string>
