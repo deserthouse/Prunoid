@@ -358,14 +358,20 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     )
                 }
                 // 批FF1（七审 AV09）：off 成功给就地解释——恢复多少本工具管理项、多少由外部禁用保留
-                //（所有权保护不误读为开关失灵）；on 分支保持静默成功（开关态+行计数即反馈）
+                //（所有权保护不误读为开关失灵）；计数按账本实际负责口径（批FF 复验修正：扫描命中
+                //含从未被本工具写入的 provider，不得计入"已恢复"）；on 分支保持静默成功
                 if (!on && removedEff.isNotEmpty()) {
                     val liveSet = liveAfter[pkg] ?: emptySet()
+                    val restoredFromLedger = removedEff.count { c ->
+                        prev?.ifw?.components?.contains(c) == true || prev?.pm?.components?.contains(c) == true
+                    }
                     val keptExternal = hit.matchedComponents.count { c ->
                         c !in removedEff && liveSet.any { l -> l == c || l == "$pkg/$c" }
                     }
-                    if (keptExternal > 0) return@withBusy appCtx.getString(R.string.sdk_off_partial, removedEff.size, keptExternal)
-                    return@withBusy appCtx.getString(R.string.sdk_off_full, removedEff.size)
+                    if (restoredFromLedger > 0 && keptExternal > 0) {
+                        return@withBusy appCtx.getString(R.string.sdk_off_partial, restoredFromLedger, keptExternal)
+                    }
+                    if (restoredFromLedger > 0) return@withBusy appCtx.getString(R.string.sdk_off_full, restoredFromLedger)
                 }
                 ""
             }
