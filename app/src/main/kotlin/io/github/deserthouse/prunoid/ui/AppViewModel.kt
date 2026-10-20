@@ -265,6 +265,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 // 批FF3（七审 AV03）：回执组件数=各应用实际写入的唯一组件之和（不再冒用应用计数）
                 var compWritten = 0
                 val touched = mutableListOf<String>()
+                // 批HH1（S2）：批量路径接入结果协议——逐 app 成败条目（AA7 协议贯通）
+                val bulkItems = mutableListOf<OperationItem>()
                 targets.forEach { a ->
                     val hit = a.matchedSdks.first { it.ruleId == ruleId }
                     // 批Y2（架构评审 C3）：IFW 只写它支持的类型——native/provider 在计划层剔除，
@@ -280,6 +282,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                         ok++
                         compWritten += byType.values.flatten().distinct().size
                         touched.add(a.packageName)
+                        // 批HH1（S2）：逐 app 条目
+                        bulkItems += OperationItem(a.packageName, true, "")
                         // 批X2（审查 R04）：合并语义走 recordMerge，目标以 ruleIds 记账
                         applied.recordMerge(
                             a.packageName, Engine.IFW.name,
@@ -287,6 +291,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                             byType.entries.flatMap { (t, cs) -> cs.map { it to t } }.toMap(),
                             addedRuleIds = setOf(ruleId)
                         )
+                    } else {
+                        // 批HH1（S2）：失败 app 也进逐项条目（部分失败可见）
+                        bulkItems += OperationItem(a.packageName, false, "ifw write failed")
                     }
                 }
                 if (total == 0) return@withBusy appCtx.getString(R.string.vm_no_targets)
@@ -299,6 +306,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                         liveDisabled = it.liveDisabled + live.mapValues { e -> e.value.toSet() }
                     )
                 }
+                // 批HH1（S2）：批量结果记入 Operation——逐 app 条目（协议贯通，管理页结果行消费）
+                opCenter.record(
+                    OperationKind.DISABLE_EVERYWHERE, ruleId,
+                    bulkItems.toList(),
+                    appCtx.getString(R.string.vm_sdk_everywhere_ok, rule.name, ok, targets.size, compWritten),
+                )
                 appCtx.getString(R.string.vm_sdk_everywhere_ok, rule.name, ok, targets.size, compWritten)
             }
             onDone(msg)
@@ -325,13 +338,20 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                         .filterKeys { it != "provider" && it != "native" }
                     if (byType.isEmpty()) return@withBusy appCtx.getString(R.string.vm_no_targets)
                     val r = engine.applyIfw(pkg, byType)
-                    // 批X2（审查 R04/PN-06）：合并语义 + 失败如实反馈（不再静默成功）
-                    if (r.isSuccess) applied.recordMerge(
-                        pkg, Engine.IFW.name,
-                        byType.values.flatten(),
-                        byType.entries.flatMap { (t, cs) -> cs.map { it to t } }.toMap(),
-                        addedRuleIds = setOf(ruleId)
-                    ) else return@withBusy appCtx.getString(R.string.vm_op_fail)
+                    // 批HH1（S5）：on 成功也记 Operation（与 off 对称，结果卡可见）
+                    if (r.isSuccess) {
+                        applied.recordMerge(
+                            pkg, Engine.IFW.name,
+                            byType.values.flatten(),
+                            byType.entries.flatMap { (t, cs) -> cs.map { it to t } }.toMap(),
+                            addedRuleIds = setOf(ruleId)
+                        )
+                        opCenter.record(
+                            OperationKind.SET_SDK_FOR_APP, pkg,
+                            byType.values.flatten().map { OperationItem(it, true, "") },
+                            appCtx.getString(R.string.vm_sdk_on_ok, byType.values.flatten().size),
+                        )
+                    } else return@withBusy appCtx.getString(R.string.vm_op_fail)
                 } else {
                     // off：仅移除该 SDK 命中的组件（IFW 定向移除 + pm enable）；
                     // 外部/其他来源 filter 幸存（removeIfw 语义批J#1 已修正）。
@@ -866,14 +886,16 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 val r = when (engineSnapshot) {
                     Engine.IFW -> engine.applyIfw(scanned.packageName, effByType).also { r ->
                         // 批FF-B2：IFW 为文件级原子写——结果卡以单条目记录（重试参数随行）
-                        if (r.isSuccess) {
-                            opCenter.record(
-                                OperationKind.APPLY, scanned.packageName,
-                                listOf(OperationItem("ifw-file", true, "")),
-                                appCtx.getString(R.string.vm_apply_ok, "IFW", r.getOrDefault(0)),
-                                retryRuleIds = selectedRuleIds,
-                            )
-                        }
+                        // 批HH1（S1）：失败也记 FAILED Operation——结果归属操作对失败同样成立
+                        opCenter.record(
+                            OperationKind.APPLY, scanned.packageName,
+                            listOf(
+                                if (r.isSuccess) OperationItem("ifw-file", true, "")
+                                else OperationItem("ifw-file", false, r.exceptionOrNull()?.message?.take(120) ?: "ifw write failed")
+                            ),
+                            appCtx.getString(R.string.vm_apply_ok, "IFW", r.getOrDefault(0)),
+                            retryRuleIds = selectedRuleIds,
+                        )
                     }
                     // 批Z3（架构评审 A5）：写入前现场读——已禁用的组件记 preExisting（非本工具新增，恢复跳过）。
                     // 批BB RV-01：本 PM 桶已负责的组件排除在外——它们是本工具自己的写入，
