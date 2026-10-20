@@ -1,8 +1,8 @@
 # Prunoid UI 真机走查审计与修改意见（AVD 篇）
 
 > 审查日期：2026-10-03 · 方式：AVD 真机走查（A15_clean 实例，API 35，1080x2400；本仓 assembleDebug 构建 v0.16.1-20261003-112756 → force-stop 后 `am start --activity-clear-task` 冷启 → 确定性坐标逐页导航 → 逐屏截图 → 读图评审；异常以 `logcat -b crash` 定性）
-> 姊妹文档：同日**静态代码审计**见本目录 `ui-audit-2026-10-03.md`（代码层问题 P-1~P-12）；三项目横评总报告见 `C:\Users\deser\Projects\android-ui-review-2026-10-03-avd.md`
-> 证据截图：`C:\Users\deser\Projects\android-ui-review-2026-10-03\prunoid\`（下文以 `prunoid/NN` 简称，共 24 张）
+> 姊妹文档：同日**静态代码审计**见本目录 `ui-audit-2026-10-03.md`（代码层问题 P-1~P-12）；三项目横评总报告见 `C:\Users\deser\Projects\.archive\android-ui-review-2026-10-03\android-ui-review-2026-10-03-avd.md`
+> 证据截图：`C:\Users\deser\Projects\.archive\android-ui-review-2026-10-03\prunoid\`（下文以 `prunoid/NN` 简称，共 24 张）
 > 环境说明：走查在**无 root 的 clean 实例**上做——正好覆盖"未 root 用户"场景，本次 P1 即该场景暴露；扫描功能以同实例装/卸 OptIcon 作扫描对象做了对照实验
 > 状态：全程零 crash；已与静态篇同批提交入库（2026-10-03）
 

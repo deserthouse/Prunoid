@@ -6,8 +6,8 @@
 > | 篇章 | 文档 | 内容 |
 > |---|---|---|
 > | 静态代码审计（同日） | 本目录 `ui-audit-2026-10-03.md` | P-1~P-12，file:line 证据 |
-> | AVD 真机走查（同日） | 本目录 `ui-audit-avd-2026-10-03.md` | B-1~B-6，截图证据（`Projects\android-ui-review-2026-10-03\prunoid\`，24 张） |
-> | 三项目横评总报告 | `C:\Users\deser\Projects\android-ui-review-2026-10-03.md` / `...-avd.md` | 交叉对比与共性 |
+> | AVD 真机走查（同日） | 本目录 `ui-audit-avd-2026-10-03.md` | B-1~B-6，截图证据（`Projects\.archive\android-ui-review-2026-10-03\prunoid\`，24 张） |
+> | 三项目横评总报告 | `C:\Users\deser\Projects\.archive\android-ui-review-2026-10-03\android-ui-review-2026-10-03.md` / `...-avd.md` | 交叉对比与共性 |
 > 走查版本：v0.16.1（versionCode 24 debug 构建）；走查环境：A15_clean（API 35，无 root）——恰好覆盖"未 root 用户"场景，本次 P1 即该场景暴露
 
 ## 一、总体结论
