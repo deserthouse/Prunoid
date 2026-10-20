@@ -68,13 +68,23 @@ enum class AppSort(val labelRes: Int) {
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings: () -> Unit, onOpenLibrary: () -> Unit) {
+fun AppListScreen(
+    vm: AppViewModel,
+    // 批FF4（七审 AV05）：查询/排序状态提升至根路由层（Crossfade 分支销毁不丢）
+    queryState: MutableState<String>,
+    onQueryChange: (String) -> Unit,
+    sortNameState: MutableState<String>,
+    onSortNameChange: (String) -> Unit,
+    onOpen: (ScannedApp) -> Unit,
+    onOpenSettings: () -> Unit,
+    onOpenLibrary: () -> Unit
+) {
     val st by vm.state.collectAsState()
     val dark = isDark()
     val snackbar = rememberSnackbar()
     var subMsg by remember { mutableStateOf<String?>(null) }
     // 批FF4（七审 AV05）：查询跨配置重建保留（旋转）；筛选族本就在 VM 会话态（批T8）
-    var query by rememberSaveable { mutableStateOf("") }
+    var query by queryState
     // 订阅点语义：任一源成功拉取过才亮（sources 注册表默认恒含官方源，不能作为判据）
     val subscribed = st.sources.any { it.lastFetched.isNotBlank() }
     // semantics{} 非组合上下文，文案先在组合期解析
@@ -92,7 +102,7 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
     val safetySel = st.filters.safety
     val appliedOnly = st.filters.appliedOnly
     // 批FF4（七审 AV05）：排序跨配置重建保留（enum 存名解析，避免 Bundle 直存 enum）
-    var sortName by rememberSaveable { mutableStateOf(AppSort.DEFAULT.name) }
+    var sortName by sortNameState
     val sortMode = AppSort.entries.firstOrNull { it.name == sortName } ?: AppSort.DEFAULT
     var showFilterSheet by remember { mutableStateOf(false) }
     val apps = remember(st.apps, st.filters.showSystem, st.filters.hitsOnly, query, catSel, safetySel, appliedOnly, sortName, st.applied) {
@@ -253,7 +263,7 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
                 Column {
             SearchField(
                 value = query,
-                onValueChange = { query = it },
+                onValueChange = { onQueryChange(it) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp)

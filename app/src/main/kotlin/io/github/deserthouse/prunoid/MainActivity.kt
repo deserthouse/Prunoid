@@ -109,6 +109,12 @@ fun SdkPrunerApp() {
     var tab by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(0) }   // 0=应用 1=SDK 库 2=统计
     // 批CC4：统计排行 → SDK 库联动（一次性搜索词）；批EE4 同批 saveable（旋转不丢联动词）
     var pendingLibQuery by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<String?>(null) }
+    // 批FF4（七审 AV05）：列表查询/排序提升至根路由层——tab 往返与详情往返都保留
+    //（分支内 rememberSaveable 会随 Crossfade 分支销毁而丢，只有顶层稳定）
+    val listQuery = androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("") }
+    val listSortName = androidx.compose.runtime.saveable.rememberSaveable {
+        mutableStateOf(io.github.deserthouse.prunoid.ui.AppSort.DEFAULT.name)
+    }
     // 详情对象从 UiState 事实源按包名派生——apps 未加载（进程恢复早期）时为 null，自然回落列表页不崩
     val st = vm.state.collectAsState().value
     val selected = selectedPkg?.let { pkg -> st.apps.firstOrNull { it.packageName == pkg } }
@@ -152,6 +158,10 @@ fun SdkPrunerApp() {
                         when (nav.tab) {
                             0 -> AppListScreen(
                                 vm,
+                                queryState = listQuery,
+                                onQueryChange = { listQuery.value = it },
+                                sortNameState = listSortName,
+                                onSortNameChange = { listSortName.value = it },
                                 onOpen = { selectedPkg = it.packageName },
                                 onOpenSettings = { inSettings = true },
                                 onOpenLibrary = { tab = 1 }
