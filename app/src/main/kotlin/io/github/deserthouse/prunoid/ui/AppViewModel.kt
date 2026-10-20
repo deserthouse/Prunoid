@@ -626,6 +626,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         _state.update { it.copy(filters = it.filters.copy(showSystem = !it.filters.showSystem)) }
     }
 
+    /** 批FF-B4 补（方案B S2c/D06）：一键清空全部筛选——列表空态的就地恢复动作（U02 模式） */
+    fun clearFilters() {
+        _state.update { it.copy(filters = ListFilters()) }
+    }
+
     fun toggleHitsOnly() {
         _state.update { it.copy(filters = it.filters.copy(hitsOnly = !it.filters.hitsOnly)) }
     }

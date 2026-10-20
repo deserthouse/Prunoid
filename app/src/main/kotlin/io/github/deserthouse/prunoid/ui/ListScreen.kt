@@ -383,6 +383,13 @@ fun AppListScreen(
                                         style = MaterialTheme.typography.labelMedium,
                                         color = MaterialTheme.colorScheme.primary
                                     )
+                                } else {
+                                    // 批FF-B4 补（方案B S2c/D06）：搜索/筛选致空——就地恢复动作（U02 模式）
+                                    Spacer(Modifier.height(12.dp))
+                                    TextButton(onClick = {
+                                        onQueryChange("")
+                                        vm.clearFilters()
+                                    }) { Text(stringResource(R.string.empty_clear)) }
                                 }
                             }
                         }

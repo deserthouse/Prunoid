@@ -29,6 +29,7 @@
     <string name="chip_hits_only">仅看命中</string>
     <string name="empty_apps">没有可显示的 app</string>
     <string name="empty_hint">下拉刷新开始扫描</string>
+    <string name="empty_clear">清除搜索与筛选</string>
     <string name="save">保存</string>
     <string name="backup_keep_saved">已保存</string>
     <string name="empty_no_match">无匹配结果</string>
