@@ -54,7 +54,8 @@ fun SdkLibraryScreen(
     // 批CC4：统计排行进入动作——外部注入搜索词（一次消费）
     androidx.compose.runtime.LaunchedEffect(pendingQuery) {
         if (!pendingQuery.isNullOrBlank()) {
-            query = pendingQuery
+            // 批FF-B4（D05）：注入词可能是 ruleId（排行联动）——解析为实体名再搜索
+            query = vm.allRules().firstOrNull { it.id == pendingQuery }?.name ?: pendingQuery
             onConsumeQuery()
         }
     }

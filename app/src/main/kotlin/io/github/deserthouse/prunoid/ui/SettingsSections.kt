@@ -13,6 +13,7 @@ import androidx.compose.material.icons.outlined.Extension
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.Image
 import androidx.compose.animation.fadeOut
@@ -346,32 +347,50 @@ internal fun EnginesSection(st: AppUiState, vm: AppViewModel) {
             Spacer(Modifier.height(12.dp))
             HorizontalDivider()
             Spacer(Modifier.height(12.dp))
-            Text(stringResource(R.string.engines_title), style = MaterialTheme.typography.titleSmall)
-            Spacer(Modifier.height(8.dp))
-            Text(stringResource(R.string.engine_ifw_title), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-            Spacer(Modifier.height(2.dp))
-            Text(
-                // aapt2 会剥资源字符串尾部空格，拼接空格只能在这里补
-                stringResource(R.string.engine_ifw_body1) + " " +
-                    stringResource(R.string.engine_ifw_body2),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(Modifier.height(8.dp))
-            Text(stringResource(R.string.engine_pm_title), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-            Spacer(Modifier.height(2.dp))
-            Text(
-                stringResource(R.string.engine_pm_body1) + " " +
-                    stringResource(R.string.engine_pm_body2),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                stringResource(R.string.engines_note),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            // 批FF-B4（方案B S2c/D03）：机制长说明默认收起、点击展开——日常设置不与原理解释争夺首屏
+            var enginesOpen by remember { mutableStateOf(false) }
+            Row(
+                Modifier.fillMaxWidth().clip(MaterialTheme.shapes.small).clickable { enginesOpen = !enginesOpen },
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(stringResource(R.string.engines_title), style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
+                Icon(
+                    Icons.Outlined.ExpandMore,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(20.dp)
+                        .graphicsLayer { rotationZ = if (enginesOpen) 180f else 0f }
+                )
+            }
+            AnimatedVisibility(enginesOpen) {
+                Column {
+                    Spacer(Modifier.height(8.dp))
+                    Text(stringResource(R.string.engine_ifw_title), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        // aapt2 会剥资源字符串尾部空格，拼接空格只能在这里补
+                        stringResource(R.string.engine_ifw_body1) + " " +
+                            stringResource(R.string.engine_ifw_body2),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text(stringResource(R.string.engine_pm_title), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        stringResource(R.string.engine_pm_body1) + " " +
+                            stringResource(R.string.engine_pm_body2),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        stringResource(R.string.engines_note),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
         }
     }
 

@@ -151,9 +151,10 @@ fun StatsScreen(vm: AppViewModel, modifier: Modifier = Modifier, onOpenSdk: (Str
                 rows.take(10).forEachIndexed { i, row ->
                     Row(
                         // 批CC4：排行进入动作——点行跳 SDK 库并带入搜索词
+                        // 批FF-B4（方案B S2c/D05）：改传 ruleId——同名实体下 name 查询有歧义
                         Modifier.fillMaxWidth()
                             .clip(MaterialTheme.shapes.small)
-                            .clickable { onOpenSdk(row.rule.name) }
+                            .clickable { onOpenSdk(row.rule.id) }
                             .padding(vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
