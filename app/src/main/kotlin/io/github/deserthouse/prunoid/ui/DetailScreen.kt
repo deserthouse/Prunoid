@@ -21,6 +21,8 @@ import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.WarningAmber
+import androidx.compose.material.icons.outlined.ErrorOutline
+import androidx.compose.material.icons.outlined.HelpOutline
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.listSaver
@@ -42,6 +44,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import io.github.deserthouse.prunoid.ui.operations.OperationKind
+import io.github.deserthouse.prunoid.ui.operations.OperationOutcome
 import io.github.deserthouse.prunoid.R
 import io.github.deserthouse.prunoid.core.engine.DisableEngine
 import io.github.deserthouse.prunoid.core.engine.Engine
@@ -186,6 +190,70 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                             )
                         }
                     } else Column(Modifier.fillMaxWidth()) {
+                        // 批FF-B2（方案B S2）：结果卡——操作结果归属操作本身（AA7：离开不抹去、
+                        // 失败项可持续查看、APPLY 可重试）；重试走同一 VM 提交路径（单一执行入口）
+                        val ops by vm.opCenter.operations.collectAsState()
+                        ops.lastOrNull { it.target == app.packageName }?.let { op ->
+                            val (label, color, icon) = when (op.outcome) {
+                                OperationOutcome.SUCCESS -> Triple(
+                                    stringResource(R.string.result_success), MaterialTheme.colorScheme.primary, Icons.Outlined.CheckCircle)
+                                OperationOutcome.PARTIAL -> Triple(
+                                    stringResource(R.string.result_partial), MaterialTheme.colorScheme.tertiary, Icons.Outlined.WarningAmber)
+                                OperationOutcome.FAILED -> Triple(
+                                    stringResource(R.string.result_failed), MaterialTheme.colorScheme.error, Icons.Outlined.ErrorOutline)
+                                OperationOutcome.UNVERIFIED -> Triple(
+                                    stringResource(R.string.result_unverified), MaterialTheme.colorScheme.onSurfaceVariant, Icons.Outlined.HelpOutline)
+                            }
+                            Surface(
+                                color = if (op.outcome == OperationOutcome.FAILED) MaterialTheme.colorScheme.errorContainer
+                                else MaterialTheme.colorScheme.surfaceVariant,
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                shape = MaterialTheme.shapes.extraSmall,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 4.dp)
+                            ) {
+                                Column(Modifier.padding(horizontal = 10.dp, vertical = 8.dp)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(icon, contentDescription = null, modifier = Modifier.size(16.dp), tint = color)
+                                        Spacer(Modifier.width(6.dp))
+                                        Text(
+                                            "$label · " + stringResource(R.string.result_counts, op.okCount, op.failCount),
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = color,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                    }
+                                    val fails = op.items.filter { !it.ok }
+                                    fails.take(3).forEach { f ->
+                                        Text(
+                                            "✗ " + f.target + (f.detail.takeIf { it.isNotBlank() }?.let { d -> " — $d" } ?: ""),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.error,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+                                    if (fails.size > 3) {
+                                        Text(
+                                            stringResource(R.string.result_more, fails.size - 3),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                    if (op.kind == OperationKind.APPLY && op.retryRuleIds.isNotEmpty()) {
+                                        TextButton(
+                                            // 重试=恢复当时的提交集并走确认框（单次确认裁决保持，参数可见）
+                                            onClick = {
+                                                selected = op.retryRuleIds
+                                                showApplyConfirm = true
+                                            },
+                                            enabled = !st.busy && st.workMode.capabilities.disablePerApp && st.rootGranted
+                                        ) { Text(stringResource(R.string.result_retry)) }
+                                    }
+                                }
+                            }
+                        }
                         // 批AA7（M3E 评审 E11）：选择计数随勾选持续可见——滚动后仍知道选了什么；
                         // M=当前引擎实际支持组件数（IFW 剔除 provider/native，与 Y2 记账口径同源）
                         if (selected.isNotEmpty()) {
@@ -465,30 +533,33 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                             }
                         }
                         Row(
-                            Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(Modifier.weight(1f)) {
-                                Text(
-                                    stringResource(R.string.showing_sdks, visibleSdks.size),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                Text(
-                                    stringResource(R.string.precheck_note),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                            TextButton(
-                                onClick = { selected = selected + visibleSdks.map { it.ruleId }.toSet() },
-                                enabled = visibleSdks.isNotEmpty() && !st.busy
-                            ) { Text(stringResource(R.string.select_all_filtered)) }
-                            TextButton(
-                                onClick = { selected = selected - visibleSdks.map { it.ruleId }.toSet() },
-                                enabled = visibleSdks.isNotEmpty() && !st.busy
-                            ) { Text(stringResource(R.string.select_none)) }
+                        Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // 批FF-B2（方案B S2/D01）：说明与全选按钮分行——窄宽度下说明不再挤成多行
+                        Column(Modifier.weight(1f)) {
+                            Text(
+                                stringResource(R.string.showing_sdks, visibleSdks.size),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                stringResource(R.string.precheck_note),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
                         }
+                        TextButton(
+                            onClick = { selected = selected + visibleSdks.map { it.ruleId }.toSet() },
+                            enabled = visibleSdks.isNotEmpty() && !st.busy
+                        ) { Text(stringResource(R.string.select_all_filtered)) }
+                        TextButton(
+                            onClick = { selected = selected - visibleSdks.map { it.ruleId }.toSet() },
+                            enabled = visibleSdks.isNotEmpty() && !st.busy
+                        ) { Text(stringResource(R.string.select_none)) }
+                    }
                     }
                 }
             }

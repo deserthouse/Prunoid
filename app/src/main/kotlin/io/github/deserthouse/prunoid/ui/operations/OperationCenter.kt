@@ -27,6 +27,8 @@ data class Operation(
     val failCount: Int,
     val message: String,
     val at: Long,
+    /** APPLY 类操作的重试参数（选中的 ruleId 集）——B2 结果卡重试钮消费。 */
+    val retryRuleIds: Set<String> = emptySet(),
 )
 
 /**
@@ -43,6 +45,7 @@ class OperationCenter {
         target: String,
         items: List<OperationItem>,
         message: String,
+        retryRuleIds: Set<String> = emptySet(),
     ): Operation {
         val ok = items.count { it.ok }
         val fail = items.size - ok
@@ -62,6 +65,7 @@ class OperationCenter {
             failCount = fail,
             message = message,
             at = System.currentTimeMillis(),
+            retryRuleIds = retryRuleIds,
         )
         _operations.update { it + op }
         return op

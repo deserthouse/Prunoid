@@ -68,6 +68,13 @@
     <string name="detail_tech">技术详情</string>
     <string name="sel_count_line">已选 %1$d 个 SDK · %2$d 个组件</string>
     <string name="draft_stale">规则库已更新——当前选择基于旧版本，建议重新确认后再应用</string>
+    <string name="result_success">成功</string>
+    <string name="result_partial">部分成功</string>
+    <string name="result_failed">失败</string>
+    <string name="result_unverified">未核实</string>
+    <string name="result_counts">%1$d 项成功 · %2$d 项失败</string>
+    <string name="result_more">另有 %1$d 项未列出</string>
+    <string name="result_retry">恢复当时选择并重试</string>
     <string name="cd_open_sheet">查看 SDK 档案</string>
     <string name="unmatched_total">未识别组件 %1$d</string>
     <string name="unmatched_desc">不在规则库中——勾选禁用属人工判断、风险自担；欢迎提交规则</string>
@@ -287,7 +294,7 @@
     <string name="addsource_disclosure">自建源置信度按 low 计，同 id 冲突不会覆盖官方 high 置信度规则；请仅添加可信来源。</string>
     <string name="block_everywhere">全部禁用 (%1$d 个应用)</string>
     <string name="unmatched_pending_hint">未识别组件勾选进行中——先在卡内完成「禁用所选」，再回来操作 SDK</string>
-    <string name="precheck_note">默认不勾选任何 SDK；请自行评估后勾选（可用「全选筛选结果」全选）</string>
+    <string name="precheck_note">默认不勾选——自行评估后勾选</string>
     <string name="restore_app_confirm">将按本工具的应用记录回滚该应用的全部禁用（IFW 规则移除 + pm 重启用）；其他工具写入的规则会保留。</string>
     <string name="guide_title">三步开始</string>
     <string name="guide_body">1) 下拉刷新扫描应用；2) 进入应用勾选要禁用的 SDK（默认不勾选，由你逐项评估）；3) 点「应用规则」。设置里可切换引擎与订阅规则源。</string>

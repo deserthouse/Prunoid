@@ -859,7 +859,17 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 // 批FF-B1①（AA7）：PM 逐项执行的实际成功集——下游记账只记真实写入的组件
                 var pmOkTargets: List<String>? = null
                 val r = when (engineSnapshot) {
-                    Engine.IFW -> engine.applyIfw(scanned.packageName, effByType)
+                    Engine.IFW -> engine.applyIfw(scanned.packageName, effByType).also { r ->
+                        // 批FF-B2：IFW 为文件级原子写——结果卡以单条目记录（重试参数随行）
+                        if (r.isSuccess) {
+                            opCenter.record(
+                                OperationKind.APPLY, scanned.packageName,
+                                listOf(OperationItem("ifw-file", true, "")),
+                                appCtx.getString(R.string.vm_apply_ok, "IFW", r.getOrDefault(0)),
+                                retryRuleIds = selectedRuleIds,
+                            )
+                        }
+                    }
                     // 批Z3（架构评审 A5）：写入前现场读——已禁用的组件记 preExisting（非本工具新增，恢复跳过）。
                     // 批BB RV-01：本 PM 桶已负责的组件排除在外——它们是本工具自己的写入，
                     // 重复 apply 不得把自有禁用污染成"外部既有状态"
@@ -874,6 +884,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                             OperationKind.APPLY, scanned.packageName,
                             perItem.map { (c, ok) -> OperationItem(c, ok, if (ok) "" else "pm disable failed") },
                             appCtx.getString(R.string.vm_apply_ok, "PM", okComps.size),
+                            retryRuleIds = selectedRuleIds,
                         )
                         pmOkTargets = okComps
                         // 全失败=诚实失败（UI 保留选择重试）；部分成功=记账成功集+回执如实计数

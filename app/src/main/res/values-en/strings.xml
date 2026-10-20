@@ -62,6 +62,13 @@
     <string name="detail_tech">Technical details</string>
     <string name="sel_count_line">%1$d SDK(s) · %2$d components selected</string>
     <string name="draft_stale">Rule set updated — this selection was made on an older version; review before applying</string>
+    <string name="result_success">Success</string>
+    <string name="result_partial">Partial success</string>
+    <string name="result_failed">Failed</string>
+    <string name="result_unverified">Unverified</string>
+    <string name="result_counts">%1$d ok · %2$d failed</string>
+    <string name="result_more">%1$d more not shown</string>
+    <string name="result_retry">Restore selection and retry</string>
     <string name="cd_open_sheet">Open SDK archive</string>
     <string name="unmatched_total">Unrecognized components %1$d</string>
     <string name="unmatched_desc">Not in the rule base — selecting these for blocking is your own judgment; consider contributing a rule</string>
@@ -271,7 +278,7 @@
     <string name="addsource_disclosure">Custom sources count as low confidence — they never outrank official high-confidence rules on id conflict. Only add sources you trust.</string>
     <string name="block_everywhere">Block in all apps (%1$d)</string>
     <string name="unmatched_pending_hint">Unrecognized groups selected — finish "Disable selected" inside the card first.</string>
-    <string name="precheck_note">Nothing is pre-checked; review each SDK and tick what you want (select-all available).</string>
+    <string name="precheck_note">Nothing pre-checked — review and tick yourself</string>
     <string name="restore_app_confirm">Restores all blocking applied by Prunoid in this app (IFW rules removed + pm re-enabled). Rules written by other tools are kept.</string>
     <string name="guide_title">Start in three steps</string>
     <string name="guide_body">1) Pull down to scan; 2) open an app and tick SDKs to block (nothing pre-checked — review each yourself); 3) tap "Apply rules". Engines and rule sources live in Settings.</string>
