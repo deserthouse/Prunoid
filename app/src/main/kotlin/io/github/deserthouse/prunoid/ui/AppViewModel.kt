@@ -7,6 +7,9 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.deserthouse.prunoid.core.engine.AppliedRulesStore
 import io.github.deserthouse.prunoid.core.engine.DisableEngine
+import io.github.deserthouse.prunoid.ui.operations.OperationCenter
+import io.github.deserthouse.prunoid.ui.operations.OperationItem
+import io.github.deserthouse.prunoid.ui.operations.OperationKind
 import io.github.deserthouse.prunoid.core.engine.Engine
 import io.github.deserthouse.prunoid.core.engine.OpCoordinator
 import io.github.deserthouse.prunoid.core.rules.RuleRepository
@@ -85,6 +88,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private val rules = RuleRepository(app)
     private var scanner = Scanner(appCtx, rules.published)
     private val engine = DisableEngine(app, rules)
+    // 批FF-B1①（AA7/方案B S1）：操作结果中心——逐项成败记录，B2/B3 的结果卡与管理面消费
+    val opCenter = OperationCenter()
     private val applied = AppliedRulesStore(app)
     private val settings = SettingsRepository(app)
 
@@ -329,7 +334,19 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     val pmTargets = removedEffective.filter { c ->
                         pmBucket?.components?.contains(c) == true && c !in pmBucket.preExisting.toSet()
                     }
-                    val r1 = engine.enablePm(pkg, pmTargets)
+                    // 批FF-B1①：pm enable 逐项执行（失败明细进 Operation）；账本语义保持原子——
+                    // 任一失败=整体失败不删账本（保留重试依据，批X2 RV 语义）
+                    val perItem = engine.enablePmPerItem(pkg, pmTargets)
+                    if (perItem.isNotEmpty()) {
+                        opCenter.record(
+                            OperationKind.SET_SDK_FOR_APP, pkg,
+                            perItem.map { (c, ok) -> OperationItem(c, ok, if (ok) "" else "pm enable failed") },
+                            "",
+                        )
+                    }
+                    val pmFailCount = perItem.count { !it.second }
+                    val r1 = if (pmFailCount == 0) Result.success(pmTargets.size)
+                    else Result.failure<Int>(IllegalStateException("pm enable: $pmFailCount failed"))
                     val r2 = engine.removeIfw(pkg, removeComponents = removedEffective)
                     // 批X2：写失败不谎报；账本替换语义——双桶全空自动删除（修 R04-b 复活问题）
                     check(r1.isSuccess && r2.isSuccess)
@@ -824,6 +841,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     return@withBusy Pair(false, appCtx.getString(R.string.vm_no_targets))
                 }
                 var preExistingTargets: List<String> = emptyList()
+                // 批FF-B1①（AA7）：PM 逐项执行的实际成功集——下游记账只记真实写入的组件
+                var pmOkTargets: List<String>? = null
                 val r = when (engineSnapshot) {
                     Engine.IFW -> engine.applyIfw(scanned.packageName, effByType)
                     // 批Z3（架构评审 A5）：写入前现场读——已禁用的组件记 preExisting（非本工具新增，恢复跳过）。
@@ -833,7 +852,21 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                         val pre = engine.readPmDisabled(scanned.packageName)
                         val owned = applied.get(scanned.packageName)?.pm?.components.orEmpty().toSet()
                         preExistingTargets = targets.filter { it in pre && it !in owned }
-                        engine.applyPm(scanned.packageName, targets)
+                        // 批FF-B1①（AA7/方案B S1）：PM 逐项执行——只记成功集，失败项进 Operation
+                        val perItem = engine.applyPmPerItem(scanned.packageName, targets)
+                        val okComps = perItem.filter { it.second }.map { it.first }
+                        opCenter.record(
+                            OperationKind.APPLY, scanned.packageName,
+                            perItem.map { (c, ok) -> OperationItem(c, ok, if (ok) "" else "pm disable failed") },
+                            appCtx.getString(R.string.vm_apply_ok, "PM", okComps.size),
+                        )
+                        pmOkTargets = okComps
+                        // 全失败=诚实失败（UI 保留选择重试）；部分成功=记账成功集+回执如实计数
+                        if (okComps.isEmpty()) {
+                            Result.failure(IllegalStateException("pm disable: all ${targets.size} components failed"))
+                        } else {
+                            Result.success(okComps.size)
+                        }
                     }
                 }
                 // 批X2（审查 R04/R05）：合并记账（不覆盖同包其他 SDK）+ ruleIds 身份入账
@@ -845,8 +878,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                         addedRuleIds = selectedRuleIds
                     )
                 } else {
+                    // 批FF-B1①：PM 记账只记实际成功集（部分失败组件不进账本=不产生虚假管理条目）
                     applied.recordMerge(
-                        scanned.packageName, engineSnapshot.name, targets,
+                        scanned.packageName, engineSnapshot.name, pmOkTargets ?: targets,
                         byType.entries.flatMap { (t, cs) -> cs.map { it to t } }.toMap(),
                         addedRuleIds = selectedRuleIds,
                         preExisting = preExistingTargets
@@ -888,7 +922,19 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 else Result.success(0)
                 val pmTargets = pmCh?.components?.filter { it !in pmCh.preExisting.toSet() }.orEmpty()
                 val skippedPre = (pmCh?.components?.size ?: 0) - pmTargets.size
-                val r2 = engine.enablePm(scanned.packageName, pmTargets)
+                // 批FF-B1①：pm enable 逐项（失败明细进 Operation）；账本原子语义保持——
+                // 任一失败=恢复失败不删账本（PN-07 保留重试依据）
+                val perItem = engine.enablePmPerItem(scanned.packageName, pmTargets)
+                if (perItem.isNotEmpty()) {
+                    opCenter.record(
+                        OperationKind.RESTORE, scanned.packageName,
+                        perItem.map { (c, ok) -> OperationItem(c, ok, if (ok) "" else "pm enable failed") },
+                        "",
+                    )
+                }
+                val pmFailCount = perItem.count { !it.second }
+                val r2 = if (pmFailCount == 0) Result.success(pmTargets.size)
+                else Result.failure<Int>(IllegalStateException("pm enable: $pmFailCount failed"))
                 // 批X2（审查 PN-07）：失败不删恢复账本——现场仍禁用时必须保留重试依据
                 val ok = r1.isSuccess && r2.isSuccess
                 if (ok && entry != null) applied.remove(scanned.packageName)

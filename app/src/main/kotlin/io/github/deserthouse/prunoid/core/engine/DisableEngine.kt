@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import com.topjohnwu.superuser.Shell
 import io.github.deserthouse.prunoid.core.rules.RuleRepository
+import io.github.deserthouse.prunoid.ui.operations.OperationCenter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
@@ -411,6 +412,30 @@ class DisableEngine(
                 check(r.isSuccess) { "pm enable failed: ${r.err}" }
                 componentNames.size
             }
+        }
+
+    // ── 批FF-B1①（七审 AA7 / 方案B S1）：PM 逐项执行——快路径块级判定，
+    //    失败块内逐条定位；部分失败不再被整体退出码吞掉 ────────
+    suspend fun applyPmPerItem(pkg: String, componentNames: List<String>): List<Pair<String, Boolean>> =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                require(!isBlockedTarget(context, pkg)) { "system app blocked by whitelist: $pkg" }
+                OperationCenter.chunkedPerItem(componentNames) { block ->
+                    val cmds = block.joinToString("; ") { "pm disable $pkg/$it" }
+                    Shell.cmd(cmds).exec().isSuccess
+                }
+            }.getOrDefault(emptyList())
+        }
+
+    suspend fun enablePmPerItem(pkg: String, componentNames: List<String>): List<Pair<String, Boolean>> =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                if (componentNames.isEmpty()) return@runCatching emptyList()
+                OperationCenter.chunkedPerItem(componentNames) { block ->
+                    val cmds = block.joinToString("; ") { "pm enable $pkg/$it" }
+                    Shell.cmd(cmds).exec().isSuccess
+                }
+            }.getOrDefault(emptyList())
         }
 
     suspend fun rootAvailable(): Boolean = withContext(Dispatchers.IO) {
