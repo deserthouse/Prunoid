@@ -181,7 +181,8 @@ fun safetyConsequence(s: Safety): String = stringResource(when (s) {
     Safety.UNKNOWN -> R.string.cons_unknown
 })
 
-/** 四级安全徽标：图标 + 文字（色不单独表意） */
+/** 四级安全徽标：图标 + 文字（色不单独表意）。
+ *  批HH3（S10）：暗色 Risky 对比度目视偏弱——维持现状（改动需对比度测量数据支撑，本轮无） */
 @Composable
 fun SafetyBadge(s: Safety, modifier: Modifier = Modifier) {
     val dark = isDark()

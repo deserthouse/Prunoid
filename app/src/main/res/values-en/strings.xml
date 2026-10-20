@@ -27,6 +27,7 @@
     <string name="empty_apps">Nothing to show</string>
     <string name="empty_hint">Pull down to scan</string>
     <string name="empty_clear">Clear search &amp; filters</string>
+    <string name="comp_empty">No matching components — adjust search or type filter</string>
     <string name="save">Save</string>
     <string name="backup_keep_saved">Saved</string>
     <string name="empty_no_match">No results</string>
@@ -119,7 +120,7 @@
     <string name="lib_empty">No matching entries</string>
     <string name="lib_empty_found_hint">Only found-on-device entries are searched; matches may exist under Not found</string>
     <string name="lib_empty_found_switch">View Not found</string>
-    <string name="stats_identified">SDKs identified</string>
+    <string name="stats_identified">SDKs found on device</string>
     <string name="stats_blocked">Blocked (ledger)</string>
     <string name="stats_apps">Apps scanned (incl. system)</string>
     <string name="stats_cat_title">SDK category distribution</string>

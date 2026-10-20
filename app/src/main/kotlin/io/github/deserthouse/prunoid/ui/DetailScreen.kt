@@ -226,13 +226,23 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                     }
                                     val fails = op.items.filter { !it.ok }
                                     fails.take(3).forEach { f ->
-                                        Text(
-                                            "✗ " + f.target + (f.detail.takeIf { it.isNotBlank() }?.let { d -> " — $d" } ?: ""),
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.error,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
+                                        // 批HH3（S6）："✗" 字符改矢量图标（ErrorOutline 12dp）
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Icon(
+                                                Icons.Outlined.ErrorOutline,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(12.dp),
+                                                tint = MaterialTheme.colorScheme.error
+                                            )
+                                            Spacer(Modifier.width(4.dp))
+                                            Text(
+                                                f.target + (f.detail.takeIf { it.isNotBlank() }?.let { d -> " — $d" } ?: ""),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.error,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
                                     }
                                     if (fails.size > 3) {
                                         Text(
@@ -477,6 +487,27 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
+                // 批HH3（S8）：组件视图空态——过滤致空给就地恢复动作（空态统一，D06/U02 模式）
+                if (compRows.isEmpty()) {
+                    item(key = "comp-empty") {
+                        Box(Modifier.fillParentMaxSize(), contentAlignment = Alignment.Center) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    stringResource(R.string.comp_empty),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                if (compQuery.isNotBlank() || compTypeFilter != null) {
+                                    Spacer(Modifier.height(8.dp))
+                                    TextButton(onClick = {
+                                        compQuery = ""
+                                        compTypeFilter = null
+                                    }) { Text(stringResource(R.string.empty_clear)) }
+                                }
+                            }
+                        }
+                    }
+                } else {
                 items(compRows, key = { it.first + it.third.ruleId }) { (cn, t, sdk) ->
                     ListItem(
                         headlineContent = {
@@ -509,6 +540,7 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                         }
                     )
                 }
+                } // 批HH3（S8）：else compRows 非空分支闭合
             }
             if (detailTab == 0 && categories.isNotEmpty()) {
                 item {

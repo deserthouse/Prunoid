@@ -30,6 +30,7 @@
     <string name="empty_apps">没有可显示的 app</string>
     <string name="empty_hint">下拉刷新开始扫描</string>
     <string name="empty_clear">清除搜索与筛选</string>
+    <string name="comp_empty">没有匹配的组件——调整搜索或类型筛选</string>
     <string name="save">保存</string>
     <string name="backup_keep_saved">已保存</string>
     <string name="empty_no_match">无匹配结果</string>
@@ -132,9 +133,9 @@
     <string name="lib_empty_found_hint">当前作用域只搜索在机检出；未检出页签可能仍有匹配</string>
     <string name="lib_empty_found_switch">查看未检出</string>
     <!-- 统计页 -->
-    <string name="stats_identified">已识别 SDK</string>
+    <string name="stats_identified">在机识别 SDK</string>
     <string name="stats_blocked">已禁用（按账本）</string>
-    <string name="stats_apps">含系统应用</string>
+    <string name="stats_apps">扫描应用（含系统）</string>
     <string name="stats_cat_title">SDK 分类分布</string>
     <string name="stats_title">统计</string>
     <string name="stats_rank_title">在机 SDK 排行</string>

@@ -31,6 +31,8 @@ fun SdkManageScreen(
     val st by vm.state.collectAsState()
     val snackbar = rememberSnackbar()
     val ruleName = remember(ruleId) { vm.allRules().firstOrNull { it.id == ruleId }?.name ?: ruleId }
+    // 批HH3（S4）：topBar 副标题计数 remember 化——避免每次重组全表扫
+    val matchedCount = remember(ruleId, st.apps) { userAppsCount(st, ruleId) }
     // 状态声明提升至 Scaffold 外——确认对话框在组合顶层需要引用（作用域贯通）
     val liveSet0 = st.liveDisabled
     val userApps = st.apps.filter { a -> a.matchedSdks.any { it.ruleId == ruleId } }
@@ -50,7 +52,7 @@ fun SdkManageScreen(
                     Column {
                         Text(ruleName, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         Text(
-                            stringResource(R.string.manage_subtitle, userAppsCount(st, ruleId)),
+                            stringResource(R.string.manage_subtitle, matchedCount),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
