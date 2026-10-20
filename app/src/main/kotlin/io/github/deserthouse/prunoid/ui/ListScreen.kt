@@ -35,6 +35,7 @@ import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -72,7 +73,8 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
     val dark = isDark()
     val snackbar = rememberSnackbar()
     var subMsg by remember { mutableStateOf<String?>(null) }
-    var query by remember { mutableStateOf("") }
+    // 批FF4（七审 AV05）：查询跨配置重建保留（旋转）；筛选族本就在 VM 会话态（批T8）
+    var query by rememberSaveable { mutableStateOf("") }
     // 订阅点语义：任一源成功拉取过才亮（sources 注册表默认恒含官方源，不能作为判据）
     val subscribed = st.sources.any { it.lastFetched.isNotBlank() }
     // semantics{} 非组合上下文，文案先在组合期解析
@@ -89,9 +91,11 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
     val catSel = st.filters.catSel
     val safetySel = st.filters.safety
     val appliedOnly = st.filters.appliedOnly
-    var sortMode by remember { mutableStateOf(AppSort.DEFAULT) }
+    // 批FF4（七审 AV05）：排序跨配置重建保留（enum 存名解析，避免 Bundle 直存 enum）
+    var sortName by rememberSaveable { mutableStateOf(AppSort.DEFAULT.name) }
+    val sortMode = AppSort.entries.firstOrNull { it.name == sortName } ?: AppSort.DEFAULT
     var showFilterSheet by remember { mutableStateOf(false) }
-    val apps = remember(st.apps, st.filters.showSystem, st.filters.hitsOnly, query, catSel, safetySel, appliedOnly, sortMode, st.applied) {
+    val apps = remember(st.apps, st.filters.showSystem, st.filters.hitsOnly, query, catSel, safetySel, appliedOnly, sortName, st.applied) {
         st.apps
             .filter { st.filters.showSystem || !it.isSystem }
             .filter { !st.filters.hitsOnly || it.matchedSdks.isNotEmpty() }
@@ -284,7 +288,7 @@ fun AppListScreen(vm: AppViewModel, onOpen: (ScannedApp) -> Unit, onOpenSettings
                         AppSort.entries.forEach { m ->
                             DropdownMenuItem(
                                 text = { Text(stringResource(m.labelRes)) },
-                                onClick = { sortMode = m; sortMenu = false }
+                                onClick = { sortName = m.name; sortMenu = false }
                             )
                         }
                     }

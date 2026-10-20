@@ -54,7 +54,8 @@ fun SdkLibraryScreen(vm: AppViewModel, pendingQuery: String? = null, onConsumeQu
     }
     var tab by remember { mutableStateOf(0) }   // 0 = 在机检出, 1 = 未检出
     var sheetRow by remember { mutableStateOf<LibRow?>(null) }
-    var sheetMsg by remember { mutableStateOf<String?>(null) }
+    // 批FF1（七审 AV01）：批量结果键控 ruleId——切档案不继承上一对象的结果，异步晚归不污染当前对象
+    var bulkMsg by remember { mutableStateOf<Pair<String, String>?>(null) }
     // 批EE3（六审 B03）：seq 参与 SnackbarEffect key——同文本连续两次（两次批量禁用同结果）也要弹第二次
     var sheetMsgSeq by remember { mutableStateOf(0) }
 
@@ -76,7 +77,7 @@ fun SdkLibraryScreen(vm: AppViewModel, pendingQuery: String? = null, onConsumeQu
     val foundCount = remember(all, hitMap) { all.count { (hitMap[it.id] ?: IntArray(2))[0] > 0 } }
 
     SnackbarEffect(snackbar, st.message)
-    SnackbarEffect(snackbar, sheetMsg, sheetMsgSeq)
+    SnackbarEffect(snackbar, bulkMsg?.second, sheetMsgSeq)
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },
@@ -201,12 +202,26 @@ fun SdkLibraryScreen(vm: AppViewModel, pendingQuery: String? = null, onConsumeQu
                     }
             }
             if (rows.isEmpty()) {
+                // 批FF4（七审 U02）：Found 作用域搜不到时给作用域引导——切换不清查询词
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(
-                        stringResource(R.string.lib_empty),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            stringResource(R.string.lib_empty),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        if (query.isNotBlank() && tab == 0) {
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                stringResource(R.string.lib_empty_found_hint),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            TextButton(onClick = { tab = 1 }) {
+                                Text(stringResource(R.string.lib_empty_found_switch))
+                            }
+                        }
+                    }
                 }
             } else {
                 LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 8.dp)) {
@@ -267,8 +282,9 @@ fun SdkLibraryScreen(vm: AppViewModel, pendingQuery: String? = null, onConsumeQu
             ),
             libraryContext = true,
             onDisableEverywhere = {
-                vm.disableSdkEverywhere(row.rule.id) {
-                    sheetMsg = it
+                val originId = row.rule.id
+                vm.disableSdkEverywhere(originId) {
+                    bulkMsg = originId to it
                     sheetMsgSeq++
                 }
             },
@@ -280,8 +296,12 @@ fun SdkLibraryScreen(vm: AppViewModel, pendingQuery: String? = null, onConsumeQu
             checked = false,
             onToggle = { },
             onDismiss = { sheetRow = null },
-            // 批EE3（六审 B03）：批量结果同步写 sheet 当前层状态行
-            bulkStatus = sheetMsg
+            // 批EE3（六审 B03）+批FF1（七审 AV01）：结果写 sheet 当前层，且只显示属于当前 ruleId 的结果
+            bulkStatus = bulkMsg?.takeIf { it.first == row.rule.id }?.second,
+            // 批FF3（七审 AV04）：在机扫描命中（跨应用去重），供档案标题区分锚点/命中口径
+            scanHitCount = st.apps.flatMap { a ->
+                a.matchedSdks.filter { it.ruleId == row.rule.id }.flatMap { it.matchedComponents }
+            }.toSet().size
         )
     }
 }

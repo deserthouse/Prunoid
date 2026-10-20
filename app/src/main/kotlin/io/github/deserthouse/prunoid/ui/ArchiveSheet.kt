@@ -40,6 +40,8 @@ fun SdkArchiveSheet(
     libraryContext: Boolean = false,
     // 批EE3（六审 B03）：批量结果当前层可见——放函数类型参数之前，避免 trailing lambda 错绑
     bulkStatus: String? = null,
+    // 批FF3（七审 AV04）：库上下文的在机扫描命中数（跨应用去重）——锚点数不再冒充现场命中数
+    scanHitCount: Int? = null,
     onDisableEverywhere: (() -> Unit)? = null
 ) {
     val info = remember(hit.ruleId) { vm.ruleInfo(hit.ruleId) }
@@ -343,7 +345,11 @@ fun SdkArchiveSheet(
                 }
                 Spacer(Modifier.height(8.dp))
             }
-            ArchiveFieldCard(stringResource(R.string.sheet_matched, hit.matchedComponents.size)) {
+            ArchiveFieldCard(
+                // 批FF3（七审 AV04）：库上下文区分两口径——在机扫描命中 vs 规则显式锚点
+                if (scanHitCount != null) stringResource(R.string.sheet_matched_scan, scanHitCount, hit.matchedComponents.size)
+                else stringResource(R.string.sheet_matched, hit.matchedComponents.size)
+            ) {
                 Column {
                     val typeOrder = listOf("activity", "service", "receiver", "provider", "other")
                     typeOrder.forEach { t ->

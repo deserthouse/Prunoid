@@ -97,6 +97,7 @@
     <string name="conf_label">Confidence: %1$s</string>
     <string name="sheet_contributors">Contributors</string>
     <string name="sheet_matched">Matched components: %1$d</string>
+    <string name="sheet_matched_scan">Scan hits on device: %1$d (rule anchors: %2$d)</string>
     <string name="lib_subtitle">Found / Not found</string>
     <string name="lib_title">SDK library</string>
     <string name="lib_scanning">Scanning… (showing last results)</string>
@@ -105,6 +106,8 @@
     <string name="lib_tab_found">Found (%1$d)</string>
     <string name="lib_tab_missing">Not found (%1$d)</string>
     <string name="lib_empty">No matching entries</string>
+    <string name="lib_empty_found_hint">Only found-on-device entries are searched; matches may exist under Not found</string>
+    <string name="lib_empty_found_switch">View Not found</string>
     <string name="stats_identified">SDKs identified</string>
     <string name="stats_blocked">Blocked (ledger)</string>
     <string name="stats_apps">Apps scanned (incl. system)</string>
@@ -216,7 +219,9 @@
     <string name="easter_author_name">澪狼</string>
     <string name="easter_author_handle">@deserthouse</string>
     <string name="easter_author_en">Ling the Wolp</string>
-    <string name="vm_sdk_everywhere_ok">%1$s: written to %2$d of %3$d matching apps, %4$d component rules each</string>
+    <string name="vm_sdk_everywhere_ok">%1$s: applied to %2$d of %3$d matching apps, %4$d components written</string>
+    <string name="sdk_off_full">Restored %1$d component(s) disabled by Prunoid</string>
+    <string name="sdk_off_partial">Restored %1$d Prunoid-managed item(s); %2$d kept (disabled by external sources)</string>
     <string name="lang_section">Language</string>
     <string name="sheet_matched_line">%1$d matched, %2$d blocked</string>
     <string name="filter_label">Filter</string>
@@ -238,6 +243,8 @@
     <string name="wm_root_desc">Writes disable rules directly (IFW / pm). Full capability. Default.</string>
     <string name="wm_root_noroot">Root not granted: blocking is unavailable right now (effectively audit-only). Grant Prunoid in Magisk → Superuser and reopen to restore.</string>
     <string name="apply_need_root">Root not granted — blocking unavailable. Grant Prunoid in Magisk → Superuser, then reopen</string>
+    <string name="apply_zero_targets">Current engine (%1$s) can\'t disable these component types (e.g. providers) — no valid targets; switch to the pm disable engine</string>
+    <string name="apply_audit_only">Audit-only mode — disabling is unavailable</string>
     <string name="wm_audit_desc">Read-only auditing: scan/identify/stats available; disable actions unavailable (no root, or just inspecting).</string>
     <string name="reapply_open">On open</string>
     <string name="reapply_realtime">Realtime</string>

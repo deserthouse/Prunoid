@@ -108,6 +108,7 @@
     <string name="conf_label">置信度 %1$s</string>
     <string name="sheet_contributors">规则贡献者</string>
     <string name="sheet_matched">命中组件 %1$d</string>
+    <string name="sheet_matched_scan">在机命中组件 %1$d 项（规则显式锚点 %2$d 项）</string>
     <!-- SDK 库 -->
     <string name="lib_subtitle">在机检出 / 未检出</string>
     <string name="lib_title">SDK 库</string>
@@ -117,6 +118,8 @@
     <string name="lib_tab_found">在机检出 (%1$d)</string>
     <string name="lib_tab_missing">未检出 (%1$d)</string>
     <string name="lib_empty">无匹配条目</string>
+    <string name="lib_empty_found_hint">当前作用域只搜索在机检出；未检出页签可能仍有匹配</string>
+    <string name="lib_empty_found_switch">查看未检出</string>
     <!-- 统计页 -->
     <string name="stats_identified">已识别 SDK</string>
     <string name="stats_blocked">已禁用（按账本）</string>
@@ -232,7 +235,9 @@
     <string name="easter_author_name">澪狼</string>
     <string name="easter_author_handle">@deserthouse</string>
     <string name="easter_author_en">Ling the Wolp</string>
-    <string name="vm_sdk_everywhere_ok">%1$s：已在 %2$d/%3$d 个命中应用写入 %4$d 条组件规则</string>
+    <string name="vm_sdk_everywhere_ok">%1$s：完成 %2$d/%3$d 个命中应用，共写入 %4$d 个组件</string>
+    <string name="sdk_off_full">已恢复本工具禁用的 %1$d 项组件</string>
+    <string name="sdk_off_partial">已恢复本工具管理的 %1$d 项；另有 %2$d 项由外部来源禁用，已保留</string>
     <string name="lang_section">语言</string>
     <string name="sheet_matched_line">命中 %1$d，已禁用 %2$d</string>
     <string name="filter_label">筛选</string>
@@ -254,6 +259,8 @@
     <string name="wm_root_desc">直写系统禁用规则（IFW / pm），全能力。默认方式。</string>
     <string name="wm_root_noroot">未获得 root 授权：禁用功能当前不可用（等效仅审计）。在 Magisk → 超级用户 授权 Prunoid 后重进即恢复。</string>
     <string name="apply_need_root">未获得 root 授权，禁用不可用——在 Magisk → 超级用户 授权 Prunoid 后重进</string>
+    <string name="apply_zero_targets">当前引擎（%1$s）不支持禁用此类组件（如 provider），无有效目标——可切到 pm disable 引擎</string>
+    <string name="apply_audit_only">当前为只审计模式，禁用操作不可用</string>
     <string name="wm_audit_desc">只读审计：扫描/识别/统计可用，禁用操作不可用（无 root 或只想查看时选择）。</string>
     <string name="reapply_open">打开时</string>
     <string name="reapply_realtime">实时</string>

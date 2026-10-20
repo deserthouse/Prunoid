@@ -242,6 +242,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 if (_state.value.backupEnabled) engine.backup(_state.value.backupKeep).getOrNull() else null
                 var ok = 0
                 var total = 0
+                // 批FF3（七审 AV03）：回执组件数=各应用实际写入的唯一组件之和（不再冒用应用计数）
+                var compWritten = 0
                 val touched = mutableListOf<String>()
                 targets.forEach { a ->
                     val hit = a.matchedSdks.first { it.ruleId == ruleId }
@@ -256,6 +258,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     val r = engine.applyIfw(a.packageName, byType)
                     if (r.isSuccess) {
                         ok++
+                        compWritten += byType.values.flatten().distinct().size
                         touched.add(a.packageName)
                         // 批X2（审查 R04）：合并语义走 recordMerge，目标以 ruleIds 记账
                         applied.recordMerge(
@@ -276,7 +279,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                         liveDisabled = it.liveDisabled + live.mapValues { e -> e.value.toSet() }
                     )
                 }
-                appCtx.getString(R.string.vm_sdk_everywhere_ok, rule.name, ok, targets.size, total)
+                appCtx.getString(R.string.vm_sdk_everywhere_ok, rule.name, ok, targets.size, compWritten)
             }
             onDone(msg)
         }
@@ -293,6 +296,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 val hit = app.matchedSdks.firstOrNull { it.ruleId == ruleId }
                     ?: return@withBusy appCtx.getString(R.string.vm_no_targets)
                 val prev = applied.get(pkg)
+                // 批FF1（七审 AV09）：off 分支的就地解释跨到共享尾段返回（恢复 N 项/外部保留 M 项）
+                var removedEff: Set<String> = emptySet()
                 if (on) {
                     // 批Y2（架构评审 C3）：native/provider 一并剔除——记账与写入同源（原记账含 provider）
                     val byType: Map<String, List<String>> = hit.componentTypes.entries
@@ -319,6 +324,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                         app.matchedSdks.any { o -> o.ruleId != ruleId && o.matchedComponents.contains(c) }
                     }.toSet()
                     val removedEffective = removed - retainedByOthers
+                    removedEff = removedEffective
                     val pmBucket = prev?.pm
                     val pmTargets = removedEffective.filter { c ->
                         pmBucket?.components?.contains(c) == true && c !in pmBucket.preExisting.toSet()
@@ -342,8 +348,24 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     )
                 }
                 val liveAfter = engine.readLiveDisabled(listOf(pkg)).first
+                // 批FF2（七审 AV02）：写后同帧发布 applied——单 SDK 开关与批量路径同契约，
+                // 统计/详情立即一致，不再读到过期账本快照
                 _state.update {
-                    it.copy(liveDisabled = liveAfter.let { l -> it.liveDisabled + (pkg to (l[pkg] ?: emptySet())) })
+                    it.copy(
+                        applied = applied.all(),
+                        ledgerCorrupted = applied.corrupted,
+                        liveDisabled = liveAfter.let { l -> it.liveDisabled + (pkg to (l[pkg] ?: emptySet())) }
+                    )
+                }
+                // 批FF1（七审 AV09）：off 成功给就地解释——恢复多少本工具管理项、多少由外部禁用保留
+                //（所有权保护不误读为开关失灵）；on 分支保持静默成功（开关态+行计数即反馈）
+                if (!on && removedEff.isNotEmpty()) {
+                    val liveSet = liveAfter[pkg] ?: emptySet()
+                    val keptExternal = hit.matchedComponents.count { c ->
+                        c !in removedEff && liveSet.any { l -> l == c || l == "$pkg/$c" }
+                    }
+                    if (keptExternal > 0) return@withBusy appCtx.getString(R.string.sdk_off_partial, removedEff.size, keptExternal)
+                    return@withBusy appCtx.getString(R.string.sdk_off_full, removedEff.size)
                 }
                 ""
             }

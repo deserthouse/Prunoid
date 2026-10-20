@@ -23,6 +23,8 @@ import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.listSaver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -32,6 +34,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -54,6 +57,8 @@ import kotlinx.coroutines.delay
 fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
     val snackbar = rememberSnackbar()
     var msg by remember { mutableStateOf<String?>(null) }
+    // 批FF1（七审 AV06）：seq 参与 key——同文本连续两次操作各弹一次反馈（与 EE3 库页同机制）
+    var msgSeq by remember { mutableStateOf(0) }
     var showApplyConfirm by remember { mutableStateOf(false) }
     var showRestoreConfirm by remember { mutableStateOf(false) }
     // 批E1：未识别勾选提升至屏级——有勾选时底部 SDK 操作栏让位（两套勾选不再并存误触）
@@ -64,7 +69,11 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
     val st by vm.state.collectAsState()
     val pm = LocalContext.current.packageManager
     // 批J1：默认零预选——勾选完全由用户自主（2026-09-26 用户明令撤销 SAFE 预勾）
-    var selected by remember(app.packageName) { mutableStateOf(setOf<String>()) }
+    // 批FF4（七审 AV05）：选择草稿跨配置重建保留（旋转/语言切换）；目的地退出即弃（返回不复活旧草稿）
+    var selected by rememberSaveable(
+        app.packageName,
+        stateSaver = listSaver(save = { s: Set<String> -> s.toList() }, restore = { it.toSet() })
+    ) { mutableStateOf(emptySet<String>()) }
     // 分类筛选：null = 全部
     // 批P1#14：列表级 SDK 分类筛选传导进详情（用户"只关心广告"的意图不丢失；详情内可再改）
     var catFilter by remember(app.packageName) {
@@ -86,7 +95,7 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
         }.getOrNull()
     }.let { if (it.isNullOrBlank()) stringResource(R.string.no_version) else it }
 
-    SnackbarEffect(snackbar, msg)
+    SnackbarEffect(snackbar, msg, msgSeq)
 
     // 分类筛选后的可见 SDK 与勾选摘要（批L3：加视图内搜索）
     var sdkQuery by remember(app.packageName) { mutableStateOf("") }
@@ -113,8 +122,13 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
         }.distinct()
     } else selComponents.distinct()
     // 批C2：按类别归纳影响（组合期预算字符串，供确认句引用）
-    val selBreakdown = selHits.groupBy { it.category }
-        .mapValues { (_, v) -> v.sumOf { it.matchedComponents.size } }
+    // 批FF3（七审 AV07）：按有效计划聚合（provider/native 剔除+共享组件去重后）——
+    // 分类明细与主计数同源，不再混用原始命中数
+    val effCategoryOf: Map<String, String> = buildMap {
+        selHits.forEach { h -> h.matchedComponents.forEach { c -> putIfAbsent(c, h.category) } }
+    }
+    val selBreakdown = effSelComponents.groupBy { effCategoryOf[it] ?: "other" }
+        .mapValues { (_, v) -> v.size }
         .entries.map { (c, n) -> categoryLabel(c) to n }
         .joinToString(" · ") { (label, n) -> "$label × $n" }
     val excludedRisky = app.matchedSdks.count {
@@ -185,6 +199,7 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                             Button(
                                 onClick = { showApplyConfirm = true },
                                 enabled = !framework && !systemWarn && !st.busy && selected.isNotEmpty()
+                                    && effSelComponents.isNotEmpty()
                                     && st.workMode.capabilities.disablePerApp && st.rootGranted,
                                 modifier = Modifier.weight(1f)
                             ) {
@@ -206,6 +221,30 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                         if (!framework && !st.rootGranted) {
                             Text(
                                 stringResource(R.string.apply_need_root),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.error,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp)
+                                    .padding(bottom = 10.dp)
+                            )
+                        }
+                        // 批FF3（七审 AV07）：已选但当前引擎无有效目标——说明原因，不邀请确认空操作
+                        if (!framework && !systemWarn && selected.isNotEmpty() && effSelComponents.isEmpty()) {
+                            Text(
+                                stringResource(R.string.apply_zero_targets, st.engine.name),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.error,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp)
+                                    .padding(bottom = 10.dp)
+                            )
+                        }
+                        // 批FF4（七审 U01）：只审计模式下禁用不可用的就地原因
+                        if (!framework && !systemWarn && !st.workMode.capabilities.disablePerApp) {
+                            Text(
+                                stringResource(R.string.apply_audit_only),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.error,
                                 modifier = Modifier
@@ -449,39 +488,77 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                         containerColor = MaterialTheme.colorScheme.secondaryContainer
                     ) else CardDefaults.cardColors()
                 ) {
-                    Row(
-                        Modifier.padding(horizontal = 10.dp, vertical = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Checkbox(
-                            checked = checked,
-                            onCheckedChange = { on ->
-                                if (!st.busy) selected = if (on) selected + hit.ruleId else selected - hit.ruleId
-                            },
-                            enabled = !st.busy
-                        )
-                        SdkMonogram(hit.ruleId, hit.name, Modifier.padding(end = 8.dp), vm.ruleInfo(hit.ruleId)?.iconUrl)
-                        Column(Modifier.weight(1f)) {
-                            // 批P3：审计对象名优先——允许两行
-                            Text(hit.name, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                            val liveSet = st.liveDisabled[app.packageName]
-                            val disN = liveSet?.count { c ->
-                                hit.matchedComponents.any { it == c || (app.packageName + "/" + it) == c }
-                            } ?: 0
-                            Text(
-                                if (disN > 0) categoryLabel(hit.category) + " · " + stringResource(R.string.disabled_count, disN)
-                                else categoryLabel(hit.category),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = if (disN > 0) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                    // 批FF4（七审 AV08）：窄宽度（<380dp）两层布局——名称+Info 上层、分类/风险下层；
+                    // 对象身份优先可读，分类不再拆孤字；选择触达仍覆盖整行（Card onClick 不变）
+                    val liveSet = st.liveDisabled[app.packageName]
+                    val disN = liveSet?.count { c ->
+                        hit.matchedComponents.any { it == c || (app.packageName + "/" + it) == c }
+                    } ?: 0
+                    val metaText = if (disN > 0) categoryLabel(hit.category) + " · " + stringResource(R.string.disabled_count, disN)
+                        else categoryLabel(hit.category)
+                    val metaColor = if (disN > 0) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant
+                    if (LocalConfiguration.current.screenWidthDp < 380) {
+                        Column(Modifier.padding(horizontal = 10.dp, vertical = 12.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Checkbox(
+                                    checked = checked,
+                                    onCheckedChange = { on ->
+                                        if (!st.busy) selected = if (on) selected + hit.ruleId else selected - hit.ruleId
+                                    },
+                                    enabled = !st.busy
+                                )
+                                SdkMonogram(hit.ruleId, hit.name, Modifier.padding(end = 8.dp), vm.ruleInfo(hit.ruleId)?.iconUrl)
+                                Text(
+                                    hit.name,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                IconButton(onClick = { sheetFor = hit }) {
+                                    Icon(
+                                        Icons.Outlined.Info,
+                                        contentDescription = stringResource(R.string.cd_open_sheet),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+                            Row(Modifier.padding(start = 50.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    metaText,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = metaColor,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                SafetyBadge(hit.safety)
+                            }
                         }
-                        SafetyBadge(hit.safety)
-                        IconButton(onClick = { sheetFor = hit }) {
-                            Icon(
-                                Icons.Outlined.Info,
-                                contentDescription = stringResource(R.string.cd_open_sheet),
-                                modifier = Modifier.size(20.dp)
+                    } else {
+                        Row(
+                            Modifier.padding(horizontal = 10.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Checkbox(
+                                checked = checked,
+                                onCheckedChange = { on ->
+                                    if (!st.busy) selected = if (on) selected + hit.ruleId else selected - hit.ruleId
+                                },
+                                enabled = !st.busy
                             )
+                            SdkMonogram(hit.ruleId, hit.name, Modifier.padding(end = 8.dp), vm.ruleInfo(hit.ruleId)?.iconUrl)
+                            Column(Modifier.weight(1f)) {
+                                // 批P3：审计对象名优先——允许两行
+                                Text(hit.name, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                Text(metaText, style = MaterialTheme.typography.labelSmall, color = metaColor)
+                            }
+                            SafetyBadge(hit.safety)
+                            IconButton(onClick = { sheetFor = hit }) {
+                                Icon(
+                                    Icons.Outlined.Info,
+                                    contentDescription = stringResource(R.string.cd_open_sheet),
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
                         }
                     }
                 }
@@ -489,7 +566,7 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
             // 未识别组件（LibChecker "Unmarked library" 语义）：只读展示，供人审与规则仓 PR
             if (detailTab == 0 && app.unmatched.isNotEmpty()) {
                 item(key = "unmatched") {
-                    UnmatchedCard(app, unmatchedSel, detailListState, vm) { msg = it }
+                    UnmatchedCard(app, unmatchedSel, detailListState, vm) { msg = it; msgSeq++ }
                 }
             }
         }
@@ -505,7 +582,7 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                 TextButton(
                     onClick = {
                         showRestoreConfirm = false
-                        vm.restoreApp(app) { msg = it }
+                        vm.restoreApp(app) { msg = it; msgSeq++ }
                     }
                 ) { Text(stringResource(R.string.restore), color = MaterialTheme.colorScheme.error) }
             },
@@ -566,6 +643,7 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                         val committed = selected
                         vm.applyRules(app, committed) { ok, m ->
                             msg = m
+                            msgSeq++
                             if (ok) selected = selected - committed
                         }
                     }
