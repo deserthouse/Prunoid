@@ -60,10 +60,10 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            // 批J1（S01）：组间距 24dp（原 12dp 与 SectionTitle top16 叠加出 28dp 大空隙）；
+            // 分区经 SettingsSection 包装后整组占一个间距槽
+            verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            Spacer(Modifier.height(4.dp))
-
             Spacer(Modifier.height(4.dp))
 
             // 批AA4（M3E 评审 E04）：按用户任务重排——工作环境 → 执行与自动化 → 规则订阅 →
@@ -90,7 +90,6 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
 
             ComplianceSection()
 
-            Spacer(Modifier.height(8.dp))
             Spacer(Modifier.height(8.dp))
         }
     }

@@ -108,14 +108,25 @@ internal fun CreditEntry(project: String, description: String, url: String) {
 /** OptIcon 同款分组标题（卡片外的小节标题） */
 @Composable
 internal fun SectionTitle(title: String) {
-    // 批I3（OptIcon 样板）：分区标题=primary 色 Medium 字重，上下 16/8 节奏
+    // 批I3（OptIcon 样板）：primary 色 Medium；批J1（S01）：top 间距交由父列表组间距
+    //（spacedBy 24dp），标题只保留标题-内容 8dp——原 top16 与全局间隔叠加致分区头部空隙过大
     Text(
         title,
         style = MaterialTheme.typography.labelLarge,
         fontWeight = FontWeight.Medium,
         color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
+        modifier = Modifier.padding(bottom = 8.dp)
     )
+}
+
+/** 批J1（S01）：分区自管间距包装——标题+内容成组，父列表把整组当一个间距槽（原两者散排在
+ *  spacedBy 列表里，组间距被均摊进标题与卡片之间）。分区内容与控件不动。 */
+@Composable
+internal fun SettingsSection(title: String, content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit) {
+    Column {
+        SectionTitle(title)
+        content()
+    }
 }
 
 /** OptIcon 同款分组卡片 */
@@ -188,28 +199,29 @@ internal fun NotifPermSection() {
         lifecycleOwner.lifecycle.addObserver(obs)
         onDispose { lifecycleOwner.lifecycle.removeObserver(obs) }
     }
-    SectionTitle(stringResource(R.string.notif_perm_title))
-    SettingsCard {
-        SettingRow(
-            icon = Icons.Outlined.Notifications,
-            title = stringResource(R.string.notif_perm_title),
-            subtitle = when {
-                !sdk33 -> stringResource(R.string.notif_perm_legacy)
-                granted -> stringResource(R.string.notif_perm_granted)
-                else -> stringResource(R.string.notif_perm_denied)
-            },
-            onClick = if (sdk33 && !granted) ({
-                ctx.startActivity(android.content.Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
-                    putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, ctx.packageName)
-                })
-            }) else null
-        ) {
-            Icon(
-                if (granted || !sdk33) Icons.Outlined.CheckCircle else Icons.Outlined.ErrorOutline,
-                contentDescription = null,
-                tint = if (granted || !sdk33) MaterialTheme.colorScheme.primary
-                       else MaterialTheme.colorScheme.error
-            )
+    SettingsSection(stringResource(R.string.notif_perm_title)) {
+        SettingsCard {
+            SettingRow(
+                icon = Icons.Outlined.Notifications,
+                title = stringResource(R.string.notif_perm_title),
+                subtitle = when {
+                    !sdk33 -> stringResource(R.string.notif_perm_legacy)
+                    granted -> stringResource(R.string.notif_perm_granted)
+                    else -> stringResource(R.string.notif_perm_denied)
+                },
+                onClick = if (sdk33 && !granted) ({
+                    ctx.startActivity(android.content.Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                        putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, ctx.packageName)
+                    })
+                }) else null
+            ) {
+                Icon(
+                    if (granted || !sdk33) Icons.Outlined.CheckCircle else Icons.Outlined.ErrorOutline,
+                    contentDescription = null,
+                    tint = if (granted || !sdk33) MaterialTheme.colorScheme.primary
+                           else MaterialTheme.colorScheme.error
+                )
+            }
         }
     }
 }
@@ -217,26 +229,27 @@ internal fun NotifPermSection() {
 @Composable
 internal fun LanguageSection() {
     // ── 语言（批I：手动覆盖，立即 recreate 生效） ──
-    SectionTitle(stringResource(R.string.lang_section))
-    SettingsCard {
-        Column(Modifier.padding(16.dp)) {
-            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-                // 批T7：迁官方 per-app locales（AppCompatDelegate），与系统「应用语言」入口同源
-                val cur = androidx.appcompat.app.AppCompatDelegate.getApplicationLocales().toLanguageTags()
-                val opts = listOf("" to "System", "zh-CN" to "中文", "en" to "English")
-                opts.forEachIndexed { i, (tag, label) ->
-                    val selectedNow = if (cur.startsWith("zh")) "zh-CN" else if (cur.startsWith("en")) "en" else ""
-                    SegmentedButton(
-                        selected = selectedNow == tag,
-                        onClick = {
-                            if (selectedNow != tag) {
-                                androidx.appcompat.app.AppCompatDelegate.setApplicationLocales(
-                                    androidx.core.os.LocaleListCompat.forLanguageTags(tag)
-                                )
-                            }
-                        },
-                        shape = SegmentedButtonDefaults.itemShape(index = i, count = opts.size)
-                    ) { Text(label) }
+    SettingsSection(stringResource(R.string.lang_section)) {
+        SettingsCard {
+            Column(Modifier.padding(16.dp)) {
+                SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                    // 批T7：迁官方 per-app locales（AppCompatDelegate），与系统「应用语言」入口同源
+                    val cur = androidx.appcompat.app.AppCompatDelegate.getApplicationLocales().toLanguageTags()
+                    val opts = listOf("" to "System", "zh-CN" to "中文", "en" to "English")
+                    opts.forEachIndexed { i, (tag, label) ->
+                        val selectedNow = if (cur.startsWith("zh")) "zh-CN" else if (cur.startsWith("en")) "en" else ""
+                        SegmentedButton(
+                            selected = selectedNow == tag,
+                            onClick = {
+                                if (selectedNow != tag) {
+                                    androidx.appcompat.app.AppCompatDelegate.setApplicationLocales(
+                                        androidx.core.os.LocaleListCompat.forLanguageTags(tag)
+                                    )
+                                }
+                            },
+                            shape = SegmentedButtonDefaults.itemShape(index = i, count = opts.size)
+                        ) { Text(label) }
+                    }
                 }
             }
         }
@@ -246,32 +259,33 @@ internal fun LanguageSection() {
 @Composable
 internal fun WorkModeSection(st: AppUiState, vm: AppViewModel) {
     // ── 工作方式（批N 一级）──
-    SectionTitle(stringResource(R.string.sec_workmode))
-    SettingsCard {
-        Column(Modifier.padding(16.dp)) {
-            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-                listOf("root" to stringResource(R.string.wm_root), "audit" to stringResource(R.string.wm_audit)).forEachIndexed { i, (tag, label) ->
-                    SegmentedButton(
-                        selected = (st.workMode.id.name == "ROOT") == (tag == "root"),
-                        onClick = { vm.setWorkMode(tag) },
-                        shape = SegmentedButtonDefaults.itemShape(index = i, count = 2)
-                    ) { Text(label) }
+    SettingsSection(stringResource(R.string.sec_workmode)) {
+        SettingsCard {
+            Column(Modifier.padding(16.dp)) {
+                SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                    listOf("root" to stringResource(R.string.wm_root), "audit" to stringResource(R.string.wm_audit)).forEachIndexed { i, (tag, label) ->
+                        SegmentedButton(
+                            selected = (st.workMode.id.name == "ROOT") == (tag == "root"),
+                            onClick = { vm.setWorkMode(tag) },
+                            shape = SegmentedButtonDefaults.itemShape(index = i, count = 2)
+                        ) { Text(label) }
+                    }
                 }
+                Spacer(Modifier.height(4.dp))
+                // 批R1（审计 B-6）：段选说明如实反映当前能力——配置选了 Root 但未授权时不再虚报 Full capability
+                val rootSelected = st.workMode.id.name == "ROOT"
+                val rootMissing = rootSelected && !st.rootGranted
+                Text(
+                    when {
+                        rootMissing -> stringResource(R.string.wm_root_noroot)
+                        rootSelected -> stringResource(R.string.wm_root_desc)
+                        else -> stringResource(R.string.wm_audit_desc)
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (rootMissing) MaterialTheme.colorScheme.error
+                            else MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
-            Spacer(Modifier.height(4.dp))
-            // 批R1（审计 B-6）：段选说明如实反映当前能力——配置选了 Root 但未授权时不再虚报 Full capability
-            val rootSelected = st.workMode.id.name == "ROOT"
-            val rootMissing = rootSelected && !st.rootGranted
-            Text(
-                when {
-                    rootMissing -> stringResource(R.string.wm_root_noroot)
-                    rootSelected -> stringResource(R.string.wm_root_desc)
-                    else -> stringResource(R.string.wm_audit_desc)
-                },
-                style = MaterialTheme.typography.bodySmall,
-                color = if (rootMissing) MaterialTheme.colorScheme.error
-                        else MaterialTheme.colorScheme.onSurfaceVariant
-            )
         }
     }
 
@@ -279,42 +293,43 @@ internal fun WorkModeSection(st: AppUiState, vm: AppViewModel) {
 @Composable
 internal fun DeclarativeSection(st: AppUiState, vm: AppViewModel, onMsg: (String) -> Unit) {
     // ── 声明式（批P：LSPosed 模式，默认关闭） ──
-    SectionTitle(stringResource(R.string.sec_declarative))
-    SettingsCard {
-        Column(Modifier.padding(vertical = 4.dp)) {
-            SettingRow(
-                icon = Icons.Outlined.Extension,
-                title = stringResource(R.string.decl_title),
-                // 批R4（审计 P-7）：声明状态改读 UiState（原 vm.declared 静态读数不触发重组）
-                subtitle = stringResource(R.string.decl_status, st.declared.size)
-            ) {
-                // 批S2（审计 N-2）：无 root 禁用（原开关可切但写失败静默零反馈）
-                Switch(
-                    checked = st.declarationsEnabled,
-                    enabled = st.rootGranted && st.workMode.id.name == "ROOT",
-                    onCheckedChange = { vm.setDeclarationsEnabled(it) { err -> if (err.isNotBlank()) onMsg(err) } }
-                )
-            }
-            if (!st.rootGranted) {
+    SettingsSection(stringResource(R.string.sec_declarative)) {
+        SettingsCard {
+            Column(Modifier.padding(vertical = 4.dp)) {
+                SettingRow(
+                    icon = Icons.Outlined.Extension,
+                    title = stringResource(R.string.decl_title),
+                    // 批R4（审计 P-7）：声明状态改读 UiState（原 vm.declared 静态读数不触发重组）
+                    subtitle = stringResource(R.string.decl_status, st.declared.size)
+                ) {
+                    // 批S2（审计 N-2）：无 root 禁用（原开关可切但写失败静默零反馈）
+                    Switch(
+                        checked = st.declarationsEnabled,
+                        enabled = st.rootGranted && st.workMode.id.name == "ROOT",
+                        onCheckedChange = { vm.setDeclarationsEnabled(it) { err -> if (err.isNotBlank()) onMsg(err) } }
+                    )
+                }
+                if (!st.rootGranted) {
+                    Text(
+                        stringResource(R.string.decl_need_root),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                    )
+                }
                 Text(
-                    stringResource(R.string.decl_need_root),
+                    stringResource(R.string.decl_note),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                )
+                Text(
+                    stringResource(R.string.decl_warning),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
                 )
             }
-            Text(
-                stringResource(R.string.decl_note),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-            )
-            Text(
-                stringResource(R.string.decl_warning),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-            )
         }
     }
 
@@ -323,7 +338,7 @@ internal fun DeclarativeSection(st: AppUiState, vm: AppViewModel, onMsg: (String
 internal fun EnginesSection(st: AppUiState, vm: AppViewModel) {
     // ── 禁用引擎（批N：仅 root 模式显示，二级级联） ──
     if (st.workMode.id.name == "ROOT") {
-    SectionTitle(stringResource(R.string.sec_engine))
+    SettingsSection(stringResource(R.string.sec_engine)) {
     SettingsCard {
         Column(Modifier.padding(16.dp)) {
             Text(stringResource(R.string.engine_default_title), style = MaterialTheme.typography.titleSmall)
@@ -335,7 +350,11 @@ internal fun EnginesSection(st: AppUiState, vm: AppViewModel) {
                         selected = st.defaultEngine == e,
                         onClick = { vm.setDefaultEngine(e.name) },
                         shape = SegmentedButtonDefaults.itemShape(index = i, count = Engine.entries.size)
-                    ) { Text(engineLabel(e)) }
+                    ) {
+                        // 批J1（S02）：单行标签——长中文标签换行会令各按钮高度不齐（M3 段选组
+                        // 各按钮独立测量无同高约束），单行后组内天然同高
+                        Text(engineLabel(e), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
                 }
             }
             Spacer(Modifier.height(4.dp))
@@ -393,6 +412,7 @@ internal fun EnginesSection(st: AppUiState, vm: AppViewModel) {
             }
         }
     }
+    }
 
     }
 
@@ -401,7 +421,7 @@ internal fun EnginesSection(st: AppUiState, vm: AppViewModel) {
 internal fun AutomationBackupSection(st: AppUiState, vm: AppViewModel, onShowBackup: () -> Unit) {
     // ── 自动化与备份（批N：仅 root 模式） ──
     if (st.workMode.id.name == "ROOT") {
-    SectionTitle(stringResource(R.string.sec_auto))
+    SettingsSection(stringResource(R.string.sec_auto)) {
     SettingsCard {
         Column(Modifier.padding(vertical = 4.dp)) {
             SettingRow(
@@ -414,14 +434,19 @@ internal fun AutomationBackupSection(st: AppUiState, vm: AppViewModel, onShowBac
             }
             if (st.autoReapply) {
                 // 批N：重应用档位（realtime=常驻服务/open=启动对账，默认 open）
-                Row(Modifier.padding(start = 56.dp), verticalAlignment = Alignment.CenterVertically) {
-                    SingleChoiceSegmentedButtonRow {
+                // 批J1（S03）：与其它选择组同构——fillMaxWidth+对称 end padding、标签字号
+                // 取组默认（原独用 labelSmall+无 end/宽度约束，窄屏按钮挤压）
+                Row(
+                    Modifier.fillMaxWidth().padding(start = 56.dp, end = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                         listOf("open" to stringResource(R.string.reapply_open), "realtime" to stringResource(R.string.reapply_realtime)).forEachIndexed { i, (tag, label) ->
                             SegmentedButton(
                                 selected = st.reapplyMode == tag,
                                 onClick = { vm.setReapplyMode(tag) },
                                 shape = SegmentedButtonDefaults.itemShape(index = i, count = 2)
-                            ) { Text(label, style = MaterialTheme.typography.labelSmall) }
+                            ) { Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis) }
                         }
                     }
                 }
@@ -430,7 +455,7 @@ internal fun AutomationBackupSection(st: AppUiState, vm: AppViewModel, onShowBac
                     else stringResource(R.string.reapply_open_desc),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(start = 56.dp)
+                    modifier = Modifier.padding(start = 56.dp, end = 16.dp)
                 )
             }
             if (!st.autoReapply) {
@@ -455,6 +480,7 @@ internal fun AutomationBackupSection(st: AppUiState, vm: AppViewModel, onShowBac
             }
         }
     }
+    }
 
     }
 
@@ -463,7 +489,7 @@ internal fun AutomationBackupSection(st: AppUiState, vm: AppViewModel, onShowBac
 internal fun SubscriptionsSection(st: AppUiState, vm: AppViewModel, onShowAddSource: () -> Unit, onMsg: (String) -> Unit) {
     // ── 规则订阅 ──
     var confirmRemoveSrc by remember { mutableStateOf<io.github.deserthouse.prunoid.core.rules.SettingsRepository.SubSource?>(null) }
-    SectionTitle(stringResource(R.string.sec_sub))
+    SettingsSection(stringResource(R.string.sec_sub)) {
     SettingsCard {
         Column(Modifier.padding(16.dp)) {
             Text(
@@ -532,7 +558,8 @@ internal fun SubscriptionsSection(st: AppUiState, vm: AppViewModel, onShowAddSou
                             Icon(
                                 Icons.Outlined.Launch,
                                 contentDescription = null,
-                                Modifier.size(12.dp),
+                                // 批J1（S04）：外链图标统一 16dp（原 12/14/16 三种并存）
+                                Modifier.size(16.dp),
                                 tint = MaterialTheme.colorScheme.primary
                             )
                         }
@@ -572,6 +599,7 @@ internal fun SubscriptionsSection(st: AppUiState, vm: AppViewModel, onShowAddSou
             ) { Text(stringResource(R.string.add_source_title)) }
         }
     }
+    }
     confirmRemoveSrc?.let { srcDel ->
         AlertDialog(
             onDismissRequest = { confirmRemoveSrc = null },
@@ -595,7 +623,7 @@ internal fun RecoverySection(st: AppUiState, vm: AppViewModel, onMsg: (String) -
     // ── 应急通道（F3：恢复点管理迁入 + 复制按钮 + 清除全部迁入） ──
     // 批R2（审计 P-2）：系统级毁灭操作补单次确认——批J2 拆倒计时时此键的确认被一并拆掉（git 考古 5120738）
     var confirmClearIfw by remember { mutableStateOf(false) }
-    SectionTitle(stringResource(R.string.sec_recovery))
+    SettingsSection(stringResource(R.string.sec_recovery)) {
     // 批BB RV-09：账本损坏提示 + 显式重置（证据文件保留；恢复依据由用户确认丢弃）
     if (st.ledgerCorrupted) {
         SettingsCard {
@@ -692,13 +720,14 @@ internal fun RecoverySection(st: AppUiState, vm: AppViewModel, onMsg: (String) -
             dismissButton = { TextButton(onClick = { confirmClearIfw = false }) { Text(stringResource(R.string.cancel)) } }
         )
     }
+    }
 
 }
 @Composable
 internal fun AboutSection(st: AppUiState, vm: AppViewModel) {
     val ctx = LocalContext.current
     // ── 关于（对齐 OptIcon：整卡=彩蛋按钮；GitHub 行子消费点击） ──
-    SectionTitle(stringResource(R.string.sec_about))
+    SettingsSection(stringResource(R.string.sec_about)) {
     Card(
         onClick = { vm.onAboutCardTapped() },
         shape = MaterialTheme.shapes.large,
@@ -776,7 +805,8 @@ internal fun AboutSection(st: AppUiState, vm: AppViewModel) {
                 Icon(
                     Icons.Outlined.Launch,
                     contentDescription = null,
-                    Modifier.size(14.dp),
+                    // 批J1（S04）：外链图标统一 16dp
+                    Modifier.size(16.dp),
                     tint = MaterialTheme.colorScheme.primary
                 )
             }
@@ -842,7 +872,8 @@ internal fun AboutSection(st: AppUiState, vm: AppViewModel) {
                         Icon(
                             Icons.Outlined.Launch,
                             contentDescription = null,
-                            Modifier.size(14.dp),
+                            // 批J1（S04）：外链图标统一 16dp
+                            Modifier.size(16.dp),
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
@@ -850,11 +881,12 @@ internal fun AboutSection(st: AppUiState, vm: AppViewModel) {
             }
         }
     }
+    }
 }
 @Composable
 internal fun CreditsSection() {
     // ── 致谢（对齐 OptIcon CreditEntry：项目+描述+可点链接） ──
-    SectionTitle(stringResource(R.string.about_ack_title))
+    SettingsSection(stringResource(R.string.about_ack_title)) {
     SettingsCard {
         Column(Modifier.padding(vertical = 4.dp)) {
             CreditEntry(
@@ -873,6 +905,7 @@ internal fun CreditsSection() {
                 "https://github.com/topjohnwu/libsu"
             )
         }
+    }
     }
 
 }
