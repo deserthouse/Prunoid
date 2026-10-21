@@ -1,6 +1,8 @@
 package io.github.deserthouse.prunoid.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -100,41 +102,46 @@ fun SdkManageScreen(
                 )
             }
             // 批I1（F2）：结果行消费 Operation——outcome 标签+逐 app 明细（部分失败可见可重试）
-            bulkOp?.let { op ->
-                Surface(
-                    color = when (op.outcome) {
-                        io.github.deserthouse.prunoid.ui.operations.OperationOutcome.FAILED -> MaterialTheme.colorScheme.errorContainer
-                        else -> MaterialTheme.colorScheme.secondaryContainer
-                    },
-                    contentColor = if (op.outcome == io.github.deserthouse.prunoid.ui.operations.OperationOutcome.FAILED)
-                        MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onSecondaryContainer,
-                    shape = MaterialTheme.shapes.extraSmall,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
-                ) {
-                    Column(Modifier.padding(8.dp)) {
-                        Text(op.message, style = MaterialTheme.typography.labelMedium)
-                        op.items.filter { !it.ok }.take(3).forEach { f ->
-                            Text(
-                                "✗ " + f.target + (f.detail.takeIf { it.isNotBlank() }?.let { d -> " — $d" } ?: ""),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.error,
-                                maxLines = 1, overflow = TextOverflow.Ellipsis
-                            )
+            // 批I2（F8）：结果行移入 LazyColumn stickyHeader——长清单滚动后结果仍在视口
+            LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 24.dp)) {
+                bulkOp?.let { op ->
+                    stickyHeader(key = "bulk-result") {
+                        Surface(
+                            color = when (op.outcome) {
+                                io.github.deserthouse.prunoid.ui.operations.OperationOutcome.FAILED -> MaterialTheme.colorScheme.errorContainer
+                                else -> MaterialTheme.colorScheme.secondaryContainer
+                            },
+                            contentColor = if (op.outcome == io.github.deserthouse.prunoid.ui.operations.OperationOutcome.FAILED)
+                                MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onSecondaryContainer,
+                            shape = MaterialTheme.shapes.extraSmall,
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
+                        ) {
+                            Column(Modifier.padding(8.dp)) {
+                                Text(op.message, style = MaterialTheme.typography.labelMedium)
+                                op.items.filter { !it.ok }.take(3).forEach { f ->
+                                    Text(
+                                        "✗ " + f.target + (f.detail.takeIf { it.isNotBlank() }?.let { d -> " — $d" } ?: ""),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.error,
+                                        maxLines = 1, overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
                         }
                     }
                 }
-            }
-            rowStatus?.let { stMsg ->
-                Surface(
-                    color = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                    shape = MaterialTheme.shapes.extraSmall,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
-                ) {
-                    Text(stMsg, style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(8.dp))
+                rowStatus?.let { stMsg ->
+                    item(key = "row-status") {
+                        Surface(
+                            color = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                            shape = MaterialTheme.shapes.extraSmall,
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
+                        ) {
+                            Text(stMsg, style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(8.dp))
+                        }
+                    }
                 }
-            }
-            LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 24.dp)) {
                 // 批HH2（S3）：行模型派生化——key 掺入 disN/triEnabled，live 变化必触发行重组
                 //（g_09 发现：批量后 KOOK 行刷新而 Oopz/CoolApk 滞后，根因=key 不含行状态）
                 val rowModels = filteredApps.map { a ->
@@ -148,17 +155,36 @@ fun SdkManageScreen(
                 }
                 items(rowModels, key = { it.app.packageName + ":" + it.disN + ":" + (it.tri == true) }) { row ->
                     val a = row.app
+                    // 批I2（F9）：行密度对齐主列表（卡片式两层布局）；批I2（F3/V1）：null 态行尾"未加载"辅助标识
                     ListItem(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 4.dp)
+                            .clip(MaterialTheme.shapes.small)
+                            .background(
+                                if (row.tri == true) MaterialTheme.colorScheme.secondaryContainer
+                                else MaterialTheme.colorScheme.surfaceContainerLow
+                            ),
                         headlineContent = {
                             Text(a.label.ifEmpty { a.packageName }, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         },
                         supportingContent = {
-                            Text(
-                                if (row.disN > 0) stringResource(R.string.sheet_app_disabled, row.disN, row.total)
-                                else stringResource(R.string.sheet_app_pending),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = if (row.disN > 0) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    if (row.disN > 0) stringResource(R.string.sheet_app_disabled, row.disN, row.total)
+                                    else stringResource(R.string.sheet_app_pending),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = if (row.disN > 0) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                if (row.tri == null) {
+                                    Spacer(Modifier.width(6.dp))
+                                    Text(
+                                        stringResource(R.string.manage_not_loaded),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.outline
+                                    )
+                                }
+                            }
                         },
                         trailingContent = {
                             Switch(

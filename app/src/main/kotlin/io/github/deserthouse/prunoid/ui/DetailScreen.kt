@@ -198,7 +198,8 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                 OperationOutcome.SUCCESS -> Triple(
                                     stringResource(R.string.result_success), MaterialTheme.colorScheme.primary, Icons.Outlined.CheckCircle)
                                 OperationOutcome.PARTIAL -> Triple(
-                                    stringResource(R.string.result_partial), MaterialTheme.colorScheme.tertiary, Icons.Outlined.WarningAmber)
+                                    // 批I2（F6）：结果状态色独立——PARTIAL 改 secondary，不再复用 tertiary 数据强调色
+                                    stringResource(R.string.result_partial), MaterialTheme.colorScheme.secondary, Icons.Outlined.WarningAmber)
                                 OperationOutcome.FAILED -> Triple(
                                     stringResource(R.string.result_failed), MaterialTheme.colorScheme.error, Icons.Outlined.ErrorOutline)
                                 OperationOutcome.UNVERIFIED -> Triple(
@@ -207,11 +208,15 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                             Surface(
                                 color = if (op.outcome == OperationOutcome.FAILED) MaterialTheme.colorScheme.errorContainer
                                 else MaterialTheme.colorScheme.surfaceVariant,
-                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                // 批I2（F5）：FAILED 配对 onErrorContainer（M3 容器配对规范）
+                                contentColor = if (op.outcome == OperationOutcome.FAILED) MaterialTheme.colorScheme.onErrorContainer
+                                else MaterialTheme.colorScheme.onSurfaceVariant,
                                 shape = MaterialTheme.shapes.extraSmall,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(horizontal = 16.dp, vertical = 4.dp)
+                                    // 批I2（F7）：结果卡内容变化平滑过渡（M3E 状态呈现）
+                                    .animateContentSize(MotionTokens.fastSize)
                             ) {
                                 Column(Modifier.padding(horizontal = 10.dp, vertical = 8.dp)) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {

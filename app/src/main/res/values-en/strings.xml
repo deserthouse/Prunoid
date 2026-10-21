@@ -73,6 +73,7 @@
     <string name="result_retry">Restore selection and retry</string>
     <string name="manage_subtitle">Matched on %1$d apps</string>
     <string name="manage_open">Manage %1$d apps</string>
+    <string name="manage_not_loaded">Not loaded</string>
     <string name="cd_open_sheet">Open SDK archive</string>
     <string name="unmatched_total">Unrecognized components %1$d</string>
     <string name="unmatched_desc">Not in the rule base — selecting these for blocking is your own judgment; consider contributing a rule</string>
