@@ -369,7 +369,8 @@ internal fun EnginesSection(st: AppUiState, vm: AppViewModel) {
             // 批FF-B4（方案B S2c/D03）：机制长说明默认收起、点击展开——日常设置不与原理解释争夺首屏
             var enginesOpen by remember { mutableStateOf(false) }
             Row(
-                Modifier.fillMaxWidth().clip(MaterialTheme.shapes.small).clickable { enginesOpen = !enginesOpen },
+                // 批J3（S08）：折叠行 48dp 触达（原无 min 高度=纯文本行高，触达与其它行不一致）
+                Modifier.fillMaxWidth().heightIn(min = 48.dp).clip(MaterialTheme.shapes.small).clickable { enginesOpen = !enginesOpen },
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(stringResource(R.string.engines_title), style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))

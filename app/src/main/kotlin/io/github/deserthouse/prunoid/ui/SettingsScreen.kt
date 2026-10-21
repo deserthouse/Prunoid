@@ -280,7 +280,8 @@ fun AddSourceDialog(onDismiss: () -> Unit, onConfirm: (String, String) -> Unit, 
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.add_source_title)) },
         text = {
-            Column {
+            // 批J3（S09）：滚动退路——键盘弹出/长错误时内容可滚，按钮不再被截断
+            Column(Modifier.verticalScroll(rememberScrollState())) {
                 Text(stringResource(R.string.add_source_desc))
                 Spacer(Modifier.height(8.dp))
                 OutlinedTextField(
