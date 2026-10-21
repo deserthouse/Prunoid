@@ -252,6 +252,7 @@
     <string name="vm_sdk_on_ok">已禁用 %1$d 项组件</string>
     <string name="sdk_off_full">已恢复本工具禁用的 %1$d 项组件</string>
     <string name="sdk_off_partial">已恢复本工具管理的 %1$d 项；另有 %2$d 项由外部来源禁用，已保留</string>
+    <string name="sdk_off_shared">未作更改：%1$d 项组件仍被其它 SDK 规则引用（如 %2$s），已保留</string>
     <string name="lang_section">语言</string>
     <string name="sheet_matched_line">命中 %1$d，已禁用 %2$d</string>
     <string name="filter_label">筛选</string>

@@ -364,6 +364,18 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                         app.matchedSdks.any { o -> o.ruleId != ruleId && o.matchedComponents.contains(c) }
                     }.toSet()
                     val removedEffective = removed - retainedByOthers
+                    // 批J4：共享所有权关闭——组件仍被其它 SDK 规则引用（批BB RV-03 语义②保留为
+                    // 正确行为），但 removedEff=∅ 走静默，用户视角形似开关失灵（heytap 双规则
+                    // 共罩实测）。就地点名仍引用的规则；设备侧本就无差异，不再空跑引擎与账本改写
+                    if (removedEffective.isEmpty() && removed.isNotEmpty()) {
+                        val sharers = app.matchedSdks
+                            .filter { o -> o.ruleId != ruleId && o.matchedComponents.any { it in removed } }
+                        if (sharers.isNotEmpty()) {
+                            return@withBusy appCtx.getString(
+                                R.string.sdk_off_shared, removed.size, sharers.first().name
+                            )
+                        }
+                    }
                     removedEff = removedEffective
                     val pmBucket = prev?.pm
                     val pmTargets = removedEffective.filter { c ->

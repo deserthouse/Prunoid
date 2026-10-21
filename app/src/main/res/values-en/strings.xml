@@ -236,6 +236,7 @@
     <string name="vm_sdk_on_ok">Disabled %1$d component(s)</string>
     <string name="sdk_off_full">Restored %1$d component(s) disabled by Prunoid</string>
     <string name="sdk_off_partial">Restored %1$d Prunoid-managed item(s); %2$d kept (disabled by external sources)</string>
+    <string name="sdk_off_shared">No change: %1$d component(s) still referenced by other SDK rules (e.g. %2$s), kept enabled</string>
     <string name="lang_section">Language</string>
     <string name="sheet_matched_line">%1$d matched, %2$d blocked</string>
     <string name="filter_label">Filter</string>
