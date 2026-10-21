@@ -63,8 +63,11 @@ object IfwXmlBuilder {
                 "\n  </$tag>"
         }
         if (groups.isEmpty()) return null
+        // 批J6.3：文件必须以换行收尾——无尾换行时 readLiveDisabled 的 "echo ==IFW $p" 分节头
+        // 会粘进上一文件末行（</rules>==IFW …），解析器按行前缀分节即漏掉后续整包（多包现场
+        // 读把第二包条目全错归给第一包，实机 2/2 写入后 Oopz 行仍显未加载即此因）
         return "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\" ?>\n<rules>\n" +
-            groups.joinToString("\n") + "\n</rules>"
+            groups.joinToString("\n") + "\n</rules>\n"
     }
 
     fun build(byType: Map<String, List<String>>): String? {
@@ -80,8 +83,9 @@ object IfwXmlBuilder {
                 "\n  </$tag>"
         }
         if (groups.isEmpty()) return null
+        // 批J6.3：同 buildByTag——尾换行保证（读侧分节依赖）
         return "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\" ?>\n<rules>\n" +
-            groups.joinToString("\n") + "\n</rules>"
+            groups.joinToString("\n") + "\n</rules>\n"
     }
 }
 
@@ -162,7 +166,9 @@ class DisableEngine(
         val script = buildString {
             append("for p in")
             pkgs.forEach { append(" ").append(it) }
-            append("; do echo \"==IFW \$p\"; cat ")
+            // 批J6.3：头部前先 echo 空行——存量 IFW 文件可能无尾换行（</rules> 直接收尾），
+            // 无空行时分节头粘进上一文件末行，按行前缀解析即丢包
+            append("; do echo; echo \"==IFW \$p\"; cat ")
             append(IFW_DIR)
             append("/\$p.xml 2>/dev/null; done; ")
             append("echo ==TOTAL; grep -h -o component-filter ")
