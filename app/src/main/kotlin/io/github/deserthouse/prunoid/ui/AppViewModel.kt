@@ -467,7 +467,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                         liveDisabled = liveAfter.let { l -> it.liveDisabled + (pkg to (l[pkg] ?: emptySet())) }
                     )
                 }
-                Pair(true, appCtx.getString(R.string.vm_apply_ok, "IFW", r.getOrDefault(0)))
+                Pair(true, appCtx.getString(R.string.vm_apply_ok, "IFW", r.getOrDefault(0))).also { result ->
+                    // 批I1（F4）：未识别禁用也入结果协议（详情结果卡可见）
+                    opCenter.record(
+                        OperationKind.APPLY, pkg,
+                        eff.values.flatten().map { OperationItem(it, true, "") },
+                        result.second,
+                    )
+                }
             }
             onDone(ok, msg)
         }

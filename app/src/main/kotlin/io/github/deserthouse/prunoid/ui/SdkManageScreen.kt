@@ -42,9 +42,14 @@ fun SdkManageScreen(
         a.label.contains(appQuery, true) || a.packageName.contains(appQuery, true)
     }
     // 批FF-B3：批量结果当前层呈现，按 ruleId 键控（FF1 语义）
-    var bulkMsg by remember { mutableStateOf<Pair<String, String>?>(null) }
-    var bulkMsgSeq by remember { mutableStateOf(0) }
+    // 批I1（F2）：结果行改消费 OperationCenter——逐 app 条目（协议贯通，bulkMsg 字符串退役）
     var confirmEverywhere by remember { mutableStateOf(false) }
+    // 批I1（F2）：结果行消费 OperationCenter；per-app 开关反馈走行内状态（非 Composable 回调不可直接调 Composable）
+    var rowStatus by remember { mutableStateOf<String?>(null) }
+    val bulkOperation by vm.opCenter.operations.collectAsState()
+    val bulkOp = bulkOperation.lastOrNull {
+        it.kind == OperationKind.DISABLE_EVERYWHERE && it.target == ruleId
+    }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -68,7 +73,6 @@ fun SdkManageScreen(
         snackbarHost = { SnackbarHost(snackbar) },
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
-            SnackbarEffect(snackbar, bulkMsg?.second, bulkMsgSeq)
 
             Row(
                 Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
@@ -95,14 +99,39 @@ fun SdkManageScreen(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
                 )
             }
-            bulkMsg?.let { (_, m) ->
+            // 批I1（F2）：结果行消费 Operation——outcome 标签+逐 app 明细（部分失败可见可重试）
+            bulkOp?.let { op ->
+                Surface(
+                    color = when (op.outcome) {
+                        io.github.deserthouse.prunoid.ui.operations.OperationOutcome.FAILED -> MaterialTheme.colorScheme.errorContainer
+                        else -> MaterialTheme.colorScheme.secondaryContainer
+                    },
+                    contentColor = if (op.outcome == io.github.deserthouse.prunoid.ui.operations.OperationOutcome.FAILED)
+                        MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onSecondaryContainer,
+                    shape = MaterialTheme.shapes.extraSmall,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    Column(Modifier.padding(8.dp)) {
+                        Text(op.message, style = MaterialTheme.typography.labelMedium)
+                        op.items.filter { !it.ok }.take(3).forEach { f ->
+                            Text(
+                                "✗ " + f.target + (f.detail.takeIf { it.isNotBlank() }?.let { d -> " — $d" } ?: ""),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.error,
+                                maxLines = 1, overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
+            }
+            rowStatus?.let { stMsg ->
                 Surface(
                     color = MaterialTheme.colorScheme.secondaryContainer,
                     contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                     shape = MaterialTheme.shapes.extraSmall,
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
                 ) {
-                    Text(m, style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(8.dp))
+                    Text(stMsg, style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(8.dp))
                 }
             }
             LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 24.dp)) {
@@ -137,8 +166,7 @@ fun SdkManageScreen(
                                 checked = row.tri == true,
                                 onCheckedChange = { on ->
                                     vm.setSdkForApp(a.packageName, ruleId, on) { stMsg ->
-                                        bulkMsg = ruleId to stMsg
-                                        bulkMsgSeq++
+                                        rowStatus = stMsg.takeIf { it.isNotBlank() }
                                     }
                                 },
                                 enabled = row.tri != null && !st.busy && st.workMode.capabilities.disablePerApp && st.rootGranted
@@ -158,10 +186,7 @@ fun SdkManageScreen(
                 TextButton(
                     onClick = {
                         confirmEverywhere = false
-                        vm.disableSdkEverywhere(ruleId) {
-                            bulkMsg = ruleId to it
-                            bulkMsgSeq++
-                        }
+                        vm.disableSdkEverywhere(ruleId) { it }
                     }
                 ) { Text(stringResource(R.string.risk_continue), color = MaterialTheme.colorScheme.error) }
             },

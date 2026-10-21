@@ -34,6 +34,7 @@ data class Operation(
 /**
  * 操作结果中心（AppViewModel 成员，生命周期=VM）。写路径完成后 record 一条；
  * 结果归属操作本身而非页面——离开页面不抹除，重复操作各占一条（AV06 协议层语义）。
+ * 批I1（F1）：保留最近 [MAX_KEPT] 条，防重度会话内存累积与线性扫描退化。
  */
 class OperationCenter {
     private val seq = AtomicInteger(0)
@@ -67,11 +68,16 @@ class OperationCenter {
             at = System.currentTimeMillis(),
             retryRuleIds = retryRuleIds,
         )
-        _operations.update { it + op }
+        _operations.update { current ->
+            (current + op).takeLast(MAX_KEPT)
+        }
         return op
     }
 
     companion object {
+        /** 批I1（F1）：结果列表上限——超限裁掉最旧（结果卡/管理页只消费最近数条）。 */
+        const val MAX_KEPT = 50
+
         /** 分块批量执行 → 逐项结果（快路径块级成功一次判定；失败块内逐条定位）。
          *  纯函数抽取供单测：exec(block) 由调用方注入（真机=Shell.cmd，单测=假实现）。 */
         fun <T> chunkedPerItem(
