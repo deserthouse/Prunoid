@@ -909,31 +909,3 @@ internal fun CreditsSection() {
     }
 
 }
-@Composable
-internal fun ComplianceSection() {
-    // ── AI 声明 / 免责（独立合规卡，不参与彩蛋） ──
-    SettingsCard {
-        Column(Modifier.padding(vertical = 4.dp)) {
-            SettingRow(
-                icon = Icons.Outlined.SmartToy,
-                title = stringResource(R.string.about_ai_title),
-                subtitle = stringResource(R.string.about_ai_body),
-                subtitleMaxLines = 3
-            )
-            HorizontalDivider()
-            SettingRow(
-                icon = Icons.Outlined.Share,
-                title = stringResource(R.string.about_share_title),
-                subtitle = stringResource(R.string.about_share_body),
-                subtitleMaxLines = 3
-            )
-            HorizontalDivider()
-            SettingRow(
-                icon = Icons.Outlined.GppMaybe,
-                title = stringResource(R.string.about_disclaimer_title),
-                subtitle = stringResource(R.string.about_disclaimer_body),
-                subtitleMaxLines = 3
-            )
-        }
-    }
-}

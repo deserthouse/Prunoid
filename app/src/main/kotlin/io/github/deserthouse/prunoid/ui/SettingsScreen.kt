@@ -8,6 +8,7 @@ import androidx.compose.runtime.setValue
 
 import androidx.compose.ui.res.stringResource
 import io.github.deserthouse.prunoid.R
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -88,8 +89,6 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
 
             CreditsSection()
 
-            ComplianceSection()
-
             Spacer(Modifier.height(8.dp))
         }
     }
@@ -132,7 +131,8 @@ fun BackupDialog(vm: AppViewModel, onMessage: (String) -> Unit, onDismiss: () ->
     LaunchedEffect(Unit) { backups = vm.listBackups() }
     // 批J#3：备份快照是全量状态，多选恢复语义不成立——改单选（最后选中者生效）
     var selected by remember { mutableStateOf<String?>(null) }
-    var keepText by remember { mutableStateOf(vm.state.value.backupKeep.toString()) }
+    // 批J2（S06）：显示与存储同口径——存量 0（未设置过）按生效值 1 呈现，不再显示 0 存 1
+    var keepText by remember { mutableStateOf(vm.state.value.backupKeep.coerceAtLeast(1).toString()) }
     var confirmRestore by remember { mutableStateOf(false) }
 
     AlertDialog(
@@ -171,13 +171,17 @@ fun BackupDialog(vm: AppViewModel, onMessage: (String) -> Unit, onDismiss: () ->
                     )
                 } else {
                     backups.forEach { path ->
+                        // 批J2（S07）：单选语义 RadioButton 化+整行可点（原 Checkbox 且点名称不选）
                         Row(
-                            Modifier.fillMaxWidth(),
+                            Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 40.dp)
+                                .clickable { selected = path },
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Checkbox(
-                                checked = selected == path,
-                                onCheckedChange = { on -> if (on) selected = path }
+                            RadioButton(
+                                selected = selected == path,
+                                onClick = { selected = path }
                             )
                             Text(
                                 path.substringAfterLast("/"),
@@ -212,6 +216,8 @@ fun BackupDialog(vm: AppViewModel, onMessage: (String) -> Unit, onDismiss: () ->
                         onClick = {
                             val n = keepText.toIntOrNull()?.coerceIn(1, 99999) ?: 10
                             vm.setBackupKeep(n)
+                            // 批J2（S06）：回写实际生效值——原输入 0 时提示已保存但实际存 1，字段不回写
+                            keepText = n.toString()
                             keepSaved = true
                         },
                         enabled = keepText.toIntOrNull() != null
