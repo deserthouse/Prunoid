@@ -34,12 +34,12 @@ See every SDK embedded in your apps, and decide which components to block
 
 | Engine | Mechanism | Notes |
 |---|---|---|
-| **IFW (primary)** | writes rules to `/data/system/ifw/` | invisible to apps, cannot self-recover; survives app updates |
+| **IFW (primary)** | writes rules to `/data/system/ifw/` | framework-level blocking, no APK modification; no self-recovery observed in tested scope; survives app updates |
 | **pm disable (secondary)** | system-level component disable | good compatibility; apps may detect and re-enable; survives updates |
 
 - Per-SDK checkboxes, category filters (ads/analytics/push…), select-all-filtered one-tap block
 - **Auto reapply** after app install/update (foreground guard service; toggleable)
-- **Safety layer (non-removable)**: optional auto-backup (off by default); per-app restore / backup restore / clear-all / adb emergency broadcast (requires the app’s Realtime guard to be alive — Android 16 does not dispatch the static broadcast); hard whitelist block on framework packages (bootloop-proof by design)
+- **Safety layer (non-removable)**: optional auto-backup (off by default); per-app restore / backup restore / clear-all / adb emergency broadcast (requires the app’s Realtime guard to be alive — Android 16 does not dispatch the static broadcast); hard whitelist block on framework packages (no bootloop observed in tested scope)
 
 ### Rules ecosystem
 
@@ -116,7 +116,7 @@ A: Network access only when you actively subscribe/refresh a rule source. No tel
 └────────────┘
 ```
 
-- **Third-party apps only** — framework packages are hard-blocked by whitelist; no inherent bootloop path.
+- **Third-party apps only** — framework packages are hard-blocked by whitelist; no bootloop observed in tested scope (recovery above if ever needed).
 
 ## 🤝 Acknowledgements
 
