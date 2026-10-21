@@ -83,4 +83,20 @@ class IfwXmlBuilderTest {
         val parsed = IfwXmlBuilder.parse(xml)
         assertEquals(src, parsed)
     }
+
+    // ── 批K5（尾换行契约）：IFW 文件以换行收尾是读侧分节的依赖（readLiveDisabled
+    //    的 "echo ==IFW" 分节头若粘进上一文件末行即丢包——批J6.3 P2），不是格式风格 ──
+
+    @Test
+    fun `buildByTag output ends with newline`() {
+        val xml = IfwXmlBuilder.buildByTag(mapOf("activity" to setOf("p/A")))!!
+        assertTrue("必须以 \\n</rules> 收尾（读侧分节契约）", xml.endsWith("</rules>\n"))
+        assertTrue(!xml.endsWith("</rules>"))
+    }
+
+    @Test
+    fun `build output ends with newline`() {
+        val xml = IfwXmlBuilder.build(mapOf("activity" to listOf("p/A")))!!
+        assertTrue(xml.endsWith("</rules>\n"))
+    }
 }

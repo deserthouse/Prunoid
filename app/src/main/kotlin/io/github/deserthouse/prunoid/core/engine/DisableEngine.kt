@@ -156,6 +156,21 @@ class DisableEngine(
 
         private fun ifwPath(pkg: String) = "/data/system/ifw/$pkg.xml"
         private const val IFW_DIR = "/data/system/ifw"
+
+        /** 批K5：读脚本构造器独立可测——尾换行契约（IfwXmlBuilder）与本脚本分节空行是同一
+         *  契约的写读两侧，任一侧回退即多包现场读丢包（批J6.3 P2）。测试锁定两处字符串形态。 */
+        internal fun buildReadLiveScript(pkgs: List<String>, ifwDir: String = IFW_DIR): String = buildString {
+            append("for p in")
+            pkgs.forEach { append(" ").append(it) }
+            // 批J6.3：头部前先 echo 空行——存量 IFW 文件可能无尾换行（</rules> 直接收尾），
+            // 无空行时分节头粘进上一文件末行，按行前缀解析即丢包
+            append("; do echo; echo \"==IFW \$p\"; cat ")
+            append(ifwDir)
+            append("/\$p.xml 2>/dev/null; done; ")
+            append("echo ==TOTAL; grep -h -o component-filter ")
+            append(ifwDir)
+            append("/*.xml 2>/dev/null | wc -l")
+        }
         private const val PKG_RESTRICTIONS = "/data/system/users/0/package-restrictions.xml"
     }
 
@@ -163,18 +178,7 @@ class DisableEngine(
     /** 单次合并 shell 读取多个包的现场禁用集；返回 包名→被禁组件类名集合，及全库 IFW component-filter 总条数 */
     suspend fun readLiveDisabled(pkgs: List<String>): Pair<Map<String, Set<String>>, Int> = withContext(Dispatchers.IO) {
         if (pkgs.isEmpty()) return@withContext emptyMap<String, Set<String>>() to 0
-        val script = buildString {
-            append("for p in")
-            pkgs.forEach { append(" ").append(it) }
-            // 批J6.3：头部前先 echo 空行——存量 IFW 文件可能无尾换行（</rules> 直接收尾），
-            // 无空行时分节头粘进上一文件末行，按行前缀解析即丢包
-            append("; do echo; echo \"==IFW \$p\"; cat ")
-            append(IFW_DIR)
-            append("/\$p.xml 2>/dev/null; done; ")
-            append("echo ==TOTAL; grep -h -o component-filter ")
-            append(IFW_DIR)
-            append("/*.xml 2>/dev/null | wc -l")
-        }
+        val script = buildReadLiveScript(pkgs)
         val out = Shell.cmd(script).exec().out
         android.util.Log.d("PrunoidLive", "pkgs=" + pkgs.size + " outLines=" + out.size + " scriptHead=" + script.take(120))
         val live = HashMap<String, MutableSet<String>>()
