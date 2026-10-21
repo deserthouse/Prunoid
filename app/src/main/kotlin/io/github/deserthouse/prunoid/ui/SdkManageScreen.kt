@@ -1,6 +1,5 @@
 package io.github.deserthouse.prunoid.ui
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,6 +16,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.deserthouse.prunoid.R
+import io.github.deserthouse.prunoid.core.engine.DisableEngine
 import io.github.deserthouse.prunoid.ui.operations.OperationKind
 
 /** 批FF-B3（AA3/方案B S2b）：SDK 跨应用管理目的地——
@@ -155,31 +155,32 @@ fun SdkManageScreen(
                 }
                 items(rowModels, key = { it.app.packageName + ":" + it.disN + ":" + (it.tri == true) }) { row ->
                     val a = row.app
+                    val protectedTarget = a.isSystem || DisableEngine.isForbidden(a.packageName)
                     // 批I2（F9）：行密度对齐主列表（卡片式两层布局）；批I2（F3/V1）：null 态行尾"未加载"辅助标识
                     ListItem(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp, vertical = 4.dp)
-                            .clip(MaterialTheme.shapes.small)
-                            .background(
-                                if (row.tri == true) MaterialTheme.colorScheme.secondaryContainer
+                            .clip(MaterialTheme.shapes.small),
+                        colors = ListItemDefaults.colors(
+                            containerColor = if (row.tri == true) MaterialTheme.colorScheme.secondaryContainer
                                 else MaterialTheme.colorScheme.surfaceContainerLow
-                            ),
+                        ),
                         headlineContent = {
                             Text(a.label.ifEmpty { a.packageName }, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         },
                         supportingContent = {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+                            Column {
                                 Text(
-                                    if (row.disN > 0) stringResource(R.string.sheet_app_disabled, row.disN, row.total)
+                                    if (row.tri == null) stringResource(R.string.manage_not_loaded)
+                                    else if (row.disN > 0) stringResource(R.string.sheet_app_disabled, row.disN, row.total)
                                     else stringResource(R.string.sheet_app_pending),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = if (row.disN > 0) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
-                                if (row.tri == null) {
-                                    Spacer(Modifier.width(6.dp))
+                                if (protectedTarget) {
                                     Text(
-                                        stringResource(R.string.manage_not_loaded),
+                                        stringResource(R.string.manage_protected),
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.outline
                                     )
@@ -195,7 +196,7 @@ fun SdkManageScreen(
                                         rowStatus = stMsg.takeIf { it.isNotBlank() }
                                     }
                                 },
-                                enabled = row.tri != null && !st.busy && st.workMode.capabilities.disablePerApp && st.rootGranted
+                                enabled = !protectedTarget && row.tri != null && !st.busy && st.workMode.capabilities.disablePerApp && st.rootGranted
                             )
                         }
                     )

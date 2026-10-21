@@ -74,6 +74,7 @@
     <string name="manage_subtitle">Matched on %1$d apps</string>
     <string name="manage_open">Manage %1$d apps</string>
     <string name="manage_not_loaded">Not loaded</string>
+    <string name="manage_protected">Protected app · read-only</string>
     <string name="cd_open_sheet">Open SDK archive</string>
     <string name="unmatched_total">Unrecognized components %1$d</string>
     <string name="unmatched_desc">Not in the rule base — selecting these for blocking is your own judgment; consider contributing a rule</string>
@@ -238,7 +239,8 @@
     <string name="sdk_off_partial">Restored %1$d Prunoid-managed item(s); %2$d kept (disabled by external sources)</string>
     <string name="sdk_off_shared">No change: %1$d component(s) still referenced by other SDK rules (e.g. %2$s), kept enabled</string>
     <string name="lang_section">Language</string>
-    <string name="sheet_matched_line">%1$d matched, %2$d blocked</string>
+    <string name="lang_system">System</string>
+    <string name="sheet_matched_line">%1$d matched · %2$d in Prunoid ledger</string>
     <string name="filter_label">Filter</string>
     <string name="filter_label_n">Filter (%1$d)</string>
     <string name="filter_scope">Scope</string>
@@ -274,7 +276,7 @@
     <string name="decl_status">%1$d prefixes declared</string>
     <string name="decl_note">Requires LSPosed with this module enabled (scope: system_server). Draw circles from SDK archive sheets.</string>
     <string name="decl_warning">Experimental: system_server-level hooking, on-device verification pending; enable at your own risk.</string>
-    <string name="decl_toggle">Declare globally (auto-block in future apps)</string>
+    <string name="decl_toggle">Global declaration (experimental)</string>
     <string name="decl_need_root">Root not granted — declarations unavailable (needs root + LSPosed)</string>
     <string name="decl_write_fail">Declaration write failed (retry or check root grant)</string>
     <plurals name="badge_apps"><item quantity="one">1 app</item><item quantity="other">%d apps</item></plurals>
@@ -291,7 +293,7 @@
     <string name="guide_body">1) Pull down to scan; 2) open an app and tick SDKs to block (nothing pre-checked — review each yourself); 3) tap "Apply rules". Engines and rule sources live in Settings.</string>
     <string name="guide_got_it">Got it</string>
     <string name="audit_badge">Read-only</string>
-    <string name="uninstall_note">Note: uninstalling Prunoid does not remove written IFW rules — run "Clear all IFW" above first for a clean slate.</string>
+    <string name="uninstall_note">Before uninstalling, restore Prunoid-managed rules from each app detail. Uninstalling does not remove IFW rules. "Clear all IFW" also affects other tools; use it only for a global recovery.</string>
 <string name="badge_ads_push_short">%1$d ads · %2$d push</string>
 <string name="disable_selected_n">Disable selected (%1$d)</string>
 <string name="unmatched_confirm_body">Will disable %1$d groups of unidentified components (%2$d components) in "%3$s". Unverified — may break app functionality.</string>

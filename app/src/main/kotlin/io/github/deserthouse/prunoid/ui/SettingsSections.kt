@@ -235,7 +235,7 @@ internal fun LanguageSection() {
                 SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                     // 批T7：迁官方 per-app locales（AppCompatDelegate），与系统「应用语言」入口同源
                     val cur = androidx.appcompat.app.AppCompatDelegate.getApplicationLocales().toLanguageTags()
-                    val opts = listOf("" to "System", "zh-CN" to "中文", "en" to "English")
+                    val opts = listOf("" to stringResource(R.string.lang_system), "zh-CN" to "中文", "en" to "English")
                     opts.forEachIndexed { i, (tag, label) ->
                         val selectedNow = if (cur.startsWith("zh")) "zh-CN" else if (cur.startsWith("en")) "en" else ""
                         SegmentedButton(
@@ -791,18 +791,21 @@ internal fun AboutSection(st: AppUiState, vm: AppViewModel) {
                     .padding(vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    stringResource(R.string.about_github),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(Modifier.width(6.dp))
-                Text(
-                    "github.com/deserthouse/Prunoid",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Spacer(Modifier.weight(1f))
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        stringResource(R.string.about_github),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        "github.com/deserthouse/Prunoid",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                Spacer(Modifier.width(8.dp))
                 Icon(
                     Icons.Outlined.Launch,
                     contentDescription = null,

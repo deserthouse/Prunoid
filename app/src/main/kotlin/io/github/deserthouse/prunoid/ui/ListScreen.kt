@@ -298,7 +298,10 @@ fun AppListScreen(
                         AppSort.entries.forEach { m ->
                             DropdownMenuItem(
                                 text = { Text(stringResource(m.labelRes)) },
-                                onClick = { sortName = m.name; sortMenu = false }
+                                onClick = { sortName = m.name; sortMenu = false },
+                                trailingIcon = {
+                                    if (sortMode == m) Icon(Icons.Outlined.Check, contentDescription = null)
+                                }
                             )
                         }
                     }
