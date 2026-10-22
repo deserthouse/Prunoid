@@ -206,8 +206,17 @@ fun SdkLibraryScreen(
             }
             if (rows.isEmpty()) {
                 // 批FF4（七审 U02）：Found 作用域搜不到时给作用域引导——切换不清查询词
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                // 批M2（F10）：空态文字限宽+横向安全边距（原说明行贴屏缘、跨行几乎占满宽度）
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                         Text(
                             stringResource(R.string.lib_empty),
                             style = MaterialTheme.typography.bodyMedium,

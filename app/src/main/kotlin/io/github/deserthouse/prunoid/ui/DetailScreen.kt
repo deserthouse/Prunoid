@@ -161,7 +161,9 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
         },
         bottomBar = {
             // 批T5：组件视图无选择控件，操作栏不显示（Apply 作用对象不明）
-            if (detailTab == 0) Surface(tonalElevation = 2.dp) {
+            // 批M2（F09）：消费系统导航栏 insets——按钮/只读原因行此前贴入手势区
+            //（ListScreen/SdkLibraryScreen 同款先例；app 为 edge-to-edge）
+            if (detailTab == 0) Surface(tonalElevation = 2.dp, modifier = Modifier.navigationBarsPadding()) {
                 Column(Modifier.fillMaxWidth()) {
                     if (framework) {
                         // 框架/核心层：安全层硬拦截，永不可操作
