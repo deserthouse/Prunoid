@@ -17,6 +17,7 @@ import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.FactCheck
+import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Share
@@ -452,13 +453,90 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
             }
             if (detailTab == 0) {
                 item {
-                    // 批L3：SDK 视图搜索（批Q4 统一组件）；批N2⑥ 作用域明确
-                    SearchField(
-                        value = sdkQuery,
-                        onValueChange = { sdkQuery = it },
-                        placeholder = { Text(stringResource(R.string.search_sdk_in_app)) },
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    // 批N1（F01）：清单工具收合——搜索/分类/全选默认折为工具条（原三块占 ~500px，
+                    // 360dp 首条 SDK 行被切出首屏）。零预选说明保持全文可见（验收：含义完整可读）。
+                    var toolsOpen by remember { mutableStateOf(false) }
+                    Column {
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .clip(MaterialTheme.shapes.small)
+                                .clickable { toolsOpen = !toolsOpen }
+                                .padding(vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Outlined.FilterList,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                stringResource(R.string.showing_sdks, visibleSdks.size),
+                                style = MaterialTheme.typography.labelMedium,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Icon(
+                                Icons.Outlined.ExpandMore,
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .size(16.dp)
+                                    .graphicsLayer { rotationZ = if (toolsOpen) 180f else 0f }
+                            )
+                        }
+                        Text(
+                            stringResource(R.string.precheck_note),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        androidx.compose.animation.AnimatedVisibility(visible = toolsOpen) {
+                            Column {
+                                Spacer(Modifier.height(8.dp))
+                                SearchField(
+                                    value = sdkQuery,
+                                    onValueChange = { sdkQuery = it },
+                                    placeholder = { Text(stringResource(R.string.search_sdk_in_app)) },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                Spacer(Modifier.height(8.dp))
+                                Row(
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .horizontalScroll(rememberScrollState()),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    FilterChip(
+                                        selected = catFilter == null,
+                                        onClick = { catFilter = null },
+                                        label = { Text(stringResource(R.string.filter_all)) }
+                                    )
+                                    categories.forEach { c ->
+                                        FilterChip(
+                                            selected = catFilter == c,
+                                            onClick = { catFilter = if (catFilter == c) null else c },
+                                            label = { Text(categoryLabel(c)) }
+                                        )
+                                    }
+                                }
+                                Row(
+                                    Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.End,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    TextButton(
+                                        onClick = { selected = selected + visibleSdks.map { it.ruleId }.toSet() },
+                                        enabled = visibleSdks.isNotEmpty() && !st.busy
+                                    ) { Text(stringResource(R.string.select_all_filtered)) }
+                                    TextButton(
+                                        onClick = { selected = selected - visibleSdks.map { it.ruleId }.toSet() },
+                                        enabled = visibleSdks.isNotEmpty() && !st.busy
+                                    ) { Text(stringResource(R.string.select_none)) }
+                                }
+                            }
+                        }
+                    }
                 }
             }
             if (detailTab == 1) {
@@ -548,59 +626,6 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                     )
                 }
                 } // 批HH3（S8）：else compRows 非空分支闭合
-            }
-            if (detailTab == 0 && categories.isNotEmpty()) {
-                item {
-                    Column {
-                        Row(
-                            Modifier
-                                .fillMaxWidth()
-                                .horizontalScroll(rememberScrollState()),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            FilterChip(
-                                selected = catFilter == null,
-                                onClick = { catFilter = null },
-                                label = { Text(stringResource(R.string.filter_all)) }
-                            )
-                            categories.forEach { c ->
-                                FilterChip(
-                                    selected = catFilter == c,
-                                    onClick = { catFilter = if (catFilter == c) null else c },
-                                    label = { Text(categoryLabel(c)) }
-                                )
-                            }
-                        }
-                        Row(
-                        Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // 批FF-B2（方案B S2/D01）：说明与全选按钮分行——窄宽度下说明不再挤成多行
-                        Column(Modifier.weight(1f)) {
-                            Text(
-                                stringResource(R.string.showing_sdks, visibleSdks.size),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                stringResource(R.string.precheck_note),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                        TextButton(
-                            onClick = { selected = selected + visibleSdks.map { it.ruleId }.toSet() },
-                            enabled = visibleSdks.isNotEmpty() && !st.busy
-                        ) { Text(stringResource(R.string.select_all_filtered)) }
-                        TextButton(
-                            onClick = { selected = selected - visibleSdks.map { it.ruleId }.toSet() },
-                            enabled = visibleSdks.isNotEmpty() && !st.busy
-                        ) { Text(stringResource(R.string.select_none)) }
-                    }
-                    }
-                }
             }
             if (detailTab == 0) items(visibleSdks, key = { it.ruleId }) { hit ->
                 val checked = hit.ruleId in selected
@@ -825,31 +850,8 @@ private fun DetailHeaderCard(
                                 // 批AA1：Target/Min/体积/安装时间折叠进"技术详情"（首屏让位选择任务）
                             }
                         }
-                        // 安全分布 mini-dots + 已应用状态行
-                        if (app.matchedSdks.isNotEmpty()) {
-                            Spacer(Modifier.height(8.dp))
-                            // 批T5：安全分布带文字图例（数字不再靠猜色）
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                Safety.entries.forEach { s ->
-                                    val n = app.matchedSdks.count { it.safety == s }
-                                    if (n > 0) {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Box(
-                                                Modifier
-                                                    .size(8.dp)
-                                                    .background(safetyColors(s, isDark()).container, RoundedCornerShape(50))
-                                            )
-                                            Spacer(Modifier.width(3.dp))
-                                            Text(
-                                                "$n " + safetyLabel(s),
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                        // 批N1（F01）：安全分布图例移入技术详情折叠区——360dp 首屏让位 SDK 行
+                        //（等级信息仍逐行有 SafetyBadge，不以色代义不丢失）
                         // 批AA1：已检出 SDK 快捷条折叠进技术详情（与下方列表功能重复，档案入口由
                         // 选择行行尾图标承担）
                         // 批G：现场口径行独立于 applied 记账显示（IFW+pm 两处，来源不限本应用）
@@ -915,6 +917,33 @@ private fun DetailHeaderCard(
                         }
                         if (techOpen) {
                             Column(Modifier.fillMaxWidth()) {
+                                // 批N1（F01）：安全分布图例（自首屏移入——数字+文字图例不靠猜色）
+                                if (app.matchedSdks.isNotEmpty()) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                    ) {
+                                        Safety.entries.forEach { s ->
+                                            val n = app.matchedSdks.count { it.safety == s }
+                                            if (n > 0) {
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    Box(
+                                                        Modifier
+                                                            .size(8.dp)
+                                                            .background(safetyColors(s, isDark()).container, RoundedCornerShape(50))
+                                                    )
+                                                    Spacer(Modifier.width(3.dp))
+                                                    Text(
+                                                        "$n " + safetyLabel(s),
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                    Spacer(Modifier.height(6.dp))
+                                }
                                 val appInfo = remember(app.packageName) {
                                     runCatching { pm.getApplicationInfo(app.packageName, 0) }.getOrNull()
                                 }
