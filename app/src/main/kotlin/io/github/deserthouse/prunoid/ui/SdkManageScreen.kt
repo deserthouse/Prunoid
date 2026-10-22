@@ -28,6 +28,9 @@ import io.github.deserthouse.prunoid.ui.operations.OperationKind
 fun SdkManageScreen(
     vm: AppViewModel,
     ruleId: String,
+    // 批M5（F04）：查询由根路由按 ruleId 隔离持有（管理往返不丢；分支内 remember 会随销毁丢）
+    query: String = "",
+    onQueryChange: (String) -> Unit = {},
     onBack: () -> Unit,
 ) {
     val st by vm.state.collectAsState()
@@ -38,7 +41,7 @@ fun SdkManageScreen(
     // 状态声明提升至 Scaffold 外——确认对话框在组合顶层需要引用（作用域贯通）
     val liveSet0 = st.liveDisabled
     val userApps = st.apps.filter { a -> a.matchedSdks.any { it.ruleId == ruleId } }
-    var appQuery by remember(ruleId) { mutableStateOf("") }
+    val appQuery = query
     val filteredApps = if (appQuery.isBlank()) userApps
     else userApps.filter { a ->
         a.label.contains(appQuery, true) || a.packageName.contains(appQuery, true)
@@ -138,7 +141,7 @@ fun SdkManageScreen(
             if (userApps.size > 5) {
                 SearchField(
                     value = appQuery,
-                    onValueChange = { appQuery = it },
+                    onValueChange = onQueryChange,
                     placeholder = { Text(stringResource(R.string.search_app_hint)) },
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
                 )

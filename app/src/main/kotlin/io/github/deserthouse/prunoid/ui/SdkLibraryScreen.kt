@@ -43,23 +43,27 @@ private data class LibRow(
 @Composable
 fun SdkLibraryScreen(
     vm: AppViewModel,
-    pendingQuery: String? = null,
-    onConsumeQuery: () -> Unit = {},
+    // 批M5（F04）：浏览上下文外提——query/scope/sort/滚动由根路由持有（分支内 remember
+    // 随 Crossfade 销毁，管理往返即丢查询——028→030 实证）；默认参数保持旧调用可用
+    queryState: androidx.compose.runtime.MutableState<String> = androidx.compose.runtime.mutableStateOf(""),
+    libTabState: androidx.compose.runtime.MutableState<Int> = androidx.compose.runtime.mutableStateOf(0),
+    sortByNameState: androidx.compose.runtime.MutableState<Boolean> = androidx.compose.runtime.mutableStateOf(false),
+    listState: androidx.compose.foundation.lazy.LazyListState = androidx.compose.foundation.lazy.rememberLazyListState(),
+    // 批CC4→批M5：排行联动改 ruleId 直达——打开该实体档案卡（原仅转名称 contains 搜索，
+    // 同名实体身份精度欠账）
+    pendingRuleId: String? = null,
+    onConsumePendingRule: () -> Unit = {},
     // 批FF-B3（AA3）：SDK 管理目的地入口（档案卡内按钮回调）
     onOpenManage: (String) -> Unit = {},
 ) {
     val st by vm.state.collectAsState()
     val snackbar = rememberSnackbar()
-    var query by remember { mutableStateOf("") }
-    // 批CC4：统计排行进入动作——外部注入搜索词（一次消费）
-    androidx.compose.runtime.LaunchedEffect(pendingQuery) {
-        if (!pendingQuery.isNullOrBlank()) {
-            // 批FF-B4（D05）：注入词可能是 ruleId（排行联动）——解析为实体名再搜索
-            query = vm.allRules().firstOrNull { it.id == pendingQuery }?.name ?: pendingQuery
-            onConsumeQuery()
-        }
-    }
-    var tab by remember { mutableStateOf(0) }   // 0 = 在机检出, 1 = 未检出
+    val query = queryState.value
+    val onQueryChange: (String) -> Unit = { queryState.value = it }
+    var tab = libTabState.value
+    val setTab: (Int) -> Unit = { libTabState.value = it }
+    var libSortByName = sortByNameState.value
+    val setSortByName: (Boolean) -> Unit = { sortByNameState.value = it }
     var sheetRow by remember { mutableStateOf<LibRow?>(null) }
     // 批FF-B3（AA3）：批量执行与结果行已迁至 SDK 管理目的地（本屏档案卡回归纯阅读）
 
@@ -79,6 +83,18 @@ fun SdkLibraryScreen(
     }
     val all = remember(st.sources) { vm.allRules() }
     val foundCount = remember(all, hitMap) { all.count { (hitMap[it.id] ?: IntArray(2))[0] > 0 } }
+    // 批M5（F04）：排行 ruleId 直达——定位到实体并打开档案卡（不再只灌名称搜索词，
+    // 同名实体身份精度欠账清偿）
+    androidx.compose.runtime.LaunchedEffect(pendingRuleId, all, hitMap) {
+        if (!pendingRuleId.isNullOrBlank()) {
+            val rule = all.firstOrNull { it.id == pendingRuleId }
+            if (rule != null) {
+                val h = hitMap[rule.id] ?: intArrayOf(0, 0)
+                sheetRow = LibRow(rule, h[0], h[1])
+            }
+            onConsumePendingRule()
+        }
+    }
 
     SnackbarEffect(snackbar, st.message)
 
@@ -103,7 +119,7 @@ fun SdkLibraryScreen(
         Column(Modifier.padding(padding).fillMaxSize()) {
             SearchField(
                 value = query,
-                onValueChange = { query = it },
+                onValueChange = onQueryChange,
                 placeholder = { Text(stringResource(R.string.lib_search_hint)) },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -117,12 +133,12 @@ fun SdkLibraryScreen(
             ) {
                 FilterChip(
                     selected = tab == 0,
-                    onClick = { tab = 0 },
+                    onClick = { setTab(0) },
                     label = { Text(stringResource(R.string.lib_tab_found, foundCount)) }
                 )
                 FilterChip(
                     selected = tab == 1,
-                    onClick = { tab = 1 },
+                    onClick = { setTab(1) },
                     label = { Text(stringResource(R.string.lib_tab_missing, all.size - foundCount)) }
                 )
             }
@@ -153,12 +169,12 @@ fun SdkLibraryScreen(
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.sort_default)) },
                             trailingIcon = { if (!libSortByName) Icon(Icons.Outlined.Check, contentDescription = null) },
-                            onClick = { libSortByName = false; libSortMenu = false }
+                            onClick = { setSortByName(false); libSortMenu = false }
                         )
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.sort_name)) },
                             trailingIcon = { if (libSortByName) Icon(Icons.Outlined.Check, contentDescription = null) },
-                            onClick = { libSortByName = true; libSortMenu = false }
+                            onClick = { setSortByName(true); libSortMenu = false }
                         )
                     }
                 }
@@ -229,14 +245,14 @@ fun SdkLibraryScreen(
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                            TextButton(onClick = { tab = 1 }) {
+                            TextButton(onClick = { setTab(1) }) {
                                 Text(stringResource(R.string.lib_empty_found_switch))
                             }
                         }
                     }
                 }
             } else {
-                LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 8.dp)) {
+                LazyColumn(state = listState, modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 8.dp)) {
                     items(rows, key = { it.rule.id }) { row ->
                         ListItem(
                             headlineContent = {

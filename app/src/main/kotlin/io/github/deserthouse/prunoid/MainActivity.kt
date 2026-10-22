@@ -110,13 +110,24 @@ fun SdkPrunerApp() {
     var selectedPkg by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<String?>(null) }
     var inSettings by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
     var tab by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(0) }   // 0=应用 1=SDK 库 2=统计
-    // 批CC4：统计排行 → SDK 库联动（一次性搜索词）；批EE4 同批 saveable（旋转不丢联动词）
+    // 批CC4：统计排行 → SDK 库联动；批M5（F04）：联动改传 ruleId 直达档案卡
     var pendingLibQuery by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<String?>(null) }
     // 批FF4（七审 AV05）：列表查询/排序提升至根路由层——tab 往返与详情往返都保留
     //（分支内 rememberSaveable 会随 Crossfade 分支销毁而丢，只有顶层稳定）
     val listQuery = androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("") }
     val listSortName = androidx.compose.runtime.saveable.rememberSaveable {
         mutableStateOf(io.github.deserthouse.prunoid.ui.AppSort.DEFAULT.name)
+    }
+    // 批M5（F04）：库页浏览上下文同款外提——查询/作用域/排序/滚动位（028→030 丢失实证）
+    val libQuery = androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("") }
+    val libTab = androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(0) }
+    val libSortByName = androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+    val libListState = androidx.compose.runtime.saveable.rememberSaveable(
+        saver = androidx.compose.foundation.lazy.LazyListState.Saver
+    ) { androidx.compose.foundation.lazy.LazyListState() }
+    // 批M5（F04）：管理页查询按 ruleId 隔离保存——管理往返不丢
+    val manageQueries = androidx.compose.runtime.saveable.rememberSaveable {
+        mutableStateOf<Map<String, String>>(emptyMap())
     }
     // 批FF-B1③/B3（AA3）：SDK 管理目的地路由（从库页档案卡入口进入）
     var manageRuleId by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<String?>(null) }
@@ -138,7 +149,12 @@ fun SdkPrunerApp() {
         val navApp = nav.selectedPkg?.let { pkg -> st.apps.firstOrNull { it.packageName == pkg } }
         when {
             nav.inSettings -> SettingsScreen(vm, onBack = { inSettings = false })
-            nav.manageRuleId != null -> SdkManageScreen(vm, nav.manageRuleId, onBack = { manageRuleId = null })
+            nav.manageRuleId != null -> SdkManageScreen(
+                vm, nav.manageRuleId,
+                query = manageQueries.value[nav.manageRuleId] ?: "",
+                onQueryChange = { q -> if (nav.manageRuleId != null) manageQueries.value = manageQueries.value + (nav.manageRuleId to q) },
+                onBack = { manageRuleId = null },
+            )
             navApp != null -> AppDetailScreen(navApp, vm, onBack = { selectedPkg = null })
             else -> Scaffold(
             bottomBar = {
@@ -178,9 +194,16 @@ fun SdkPrunerApp() {
                             )
                             1 -> SdkLibraryScreen(
                                 vm,
-                                pendingQuery = pendingLibQuery,
-                                onConsumeQuery = { pendingLibQuery = null },
-                                onOpenManage = { manageRuleId = it },
+                                queryState = libQuery,
+                                libTabState = libTab,
+                                sortByNameState = libSortByName,
+                                listState = libListState,
+                                pendingRuleId = pendingLibQuery,
+                                onConsumePendingRule = { pendingLibQuery = null },
+                                onOpenManage = {
+                                    manageQueries.value = manageQueries.value + (it to (manageQueries.value[it] ?: ""))
+                                    manageRuleId = it
+                                },
                             )
                             else -> StatsScreen(vm, onOpenSdk = { name ->
                                 pendingLibQuery = name
