@@ -243,6 +243,8 @@
     <string name="bulk_scope_filtered">Filtered (%1$d)</string>
     <string name="block_everywhere_confirm_plan">Will write %2$d component(s) across %1$d app(s) (engine %3$s); skipping %4$d: protected %5$d · system %6$d · no writable components %7$d. Restore anytime per app.</string>
     <string name="manage_zero_plan">No actionable targets: all hits are protected/system or lack writable components</string>
+    <string name="row_live_partial">partially disabled</string>
+    <string name="row_live_full">fully disabled</string>
     <string name="lang_section">Language</string>
     <string name="lang_system">System</string>
     <string name="sheet_matched_line">%1$d matched · %2$d in Prunoid ledger</string>

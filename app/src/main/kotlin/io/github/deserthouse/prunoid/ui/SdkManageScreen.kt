@@ -193,7 +193,10 @@ fun SdkManageScreen(
                     val disN = liveSet0[a.packageName]?.count { c ->
                         hit?.matchedComponents?.any { it == c || (a.packageName + "/" + it) == c } == true
                     } ?: 0
-                    ManageRow(a, tri, total, disN)
+                    // 批M4（F03）：现场四态分类（替代开关 any 单点表意——43/51 部分禁用曾亮 On 被误读全关）
+                    val live = io.github.deserthouse.prunoid.core.engine.RuleActionPlanner
+                        .classifyRowLive(total, disN, loaded = liveSet0.containsKey(a.packageName) && tri != null)
+                    ManageRow(a, tri, total, disN, live.live)
                 }
                 items(rowModels, key = { it.app.packageName + ":" + it.disN + ":" + (it.tri == true) }) { row ->
                     val a = row.app
@@ -205,18 +208,29 @@ fun SdkManageScreen(
                             .padding(horizontal = 16.dp, vertical = 4.dp)
                             .clip(MaterialTheme.shapes.small),
                         colors = ListItemDefaults.colors(
-                            containerColor = if (row.tri == true) MaterialTheme.colorScheme.secondaryContainer
-                                else MaterialTheme.colorScheme.surfaceContainerLow
+                            containerColor = if (row.live == io.github.deserthouse.prunoid.core.engine.RuleActionPlanner.RowLive.FULL)
+                                MaterialTheme.colorScheme.secondaryContainer
+                            else MaterialTheme.colorScheme.surfaceContainerLow
                         ),
                         headlineContent = {
                             Text(a.label.ifEmpty { a.packageName }, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         },
                         supportingContent = {
                             Column {
+                                // 批M4（F03）：状态词四态化——部分禁用显式可见（不再并入 On 的笼统读数）
                                 Text(
-                                    if (row.tri == null) stringResource(R.string.manage_not_loaded)
-                                    else if (row.disN > 0) stringResource(R.string.sheet_app_disabled, row.disN, row.total)
-                                    else stringResource(R.string.sheet_app_pending),
+                                    when (row.live) {
+                                        io.github.deserthouse.prunoid.core.engine.RuleActionPlanner.RowLive.UNKNOWN ->
+                                            stringResource(R.string.manage_not_loaded)
+                                        io.github.deserthouse.prunoid.core.engine.RuleActionPlanner.RowLive.NONE ->
+                                            stringResource(R.string.sheet_app_pending)
+                                        io.github.deserthouse.prunoid.core.engine.RuleActionPlanner.RowLive.PARTIAL ->
+                                            stringResource(R.string.sheet_app_disabled, row.disN, row.total) + " · " +
+                                                stringResource(R.string.row_live_partial)
+                                        io.github.deserthouse.prunoid.core.engine.RuleActionPlanner.RowLive.FULL ->
+                                            stringResource(R.string.sheet_app_disabled, row.disN, row.total) + " · " +
+                                                stringResource(R.string.row_live_full)
+                                    },
                                     style = MaterialTheme.typography.labelSmall,
                                     color = if (row.disN > 0) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -280,10 +294,13 @@ fun SdkManageScreen(
 private fun userAppsCount(st: io.github.deserthouse.prunoid.ui.AppUiState, ruleId: String): Int =
     st.apps.count { a -> a.matchedSdks.any { it.ruleId == ruleId } }
 
-/** 批HH2（S3）：管理页行模型——pkg+三态+计数派生后固化，key 掺状态防 LazyColumn 跳过重组 */
+/** 批HH2（S3）：管理页行模型——pkg+三态+计数派生后固化，key 掺状态防 LazyColumn 跳过重组；
+ *  批M4（F03）：live 四态（UNKNOWN/NONE/PARTIAL/FULL）进模型 */
 private data class ManageRow(
     val app: io.github.deserthouse.prunoid.core.scanner.ScannedApp,
     val tri: Boolean?,
     val total: Int,
     val disN: Int,
+    val live: io.github.deserthouse.prunoid.core.engine.RuleActionPlanner.RowLive =
+        io.github.deserthouse.prunoid.core.engine.RuleActionPlanner.RowLive.UNKNOWN,
 )

@@ -259,6 +259,8 @@
     <string name="bulk_scope_filtered">当前筛选 (%1$d)</string>
     <string name="block_everywhere_confirm_plan">将对 %1$d 个应用写入共 %2$d 个组件的禁用规则（引擎 %3$s）；跳过 %4$d 个：受保护 %5$d · 系统 %6$d · 无可写组件 %7$d。可随时在各应用详情页恢复。</string>
     <string name="manage_zero_plan">无可执行目标：命中应用均为受保护/系统包或无可写组件</string>
+    <string name="row_live_partial">部分禁用</string>
+    <string name="row_live_full">全部禁用</string>
     <string name="lang_section">语言</string>
     <string name="lang_system">系统</string>
     <string name="sheet_matched_line">命中 %1$d · 本工具账本 %2$d</string>

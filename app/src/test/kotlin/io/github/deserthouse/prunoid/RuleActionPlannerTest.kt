@@ -2,6 +2,7 @@ package io.github.deserthouse.prunoid
 
 import io.github.deserthouse.prunoid.core.engine.Engine
 import io.github.deserthouse.prunoid.core.engine.RuleActionPlanner
+import io.github.deserthouse.prunoid.core.engine.RuleActionPlanner.RowLive
 import io.github.deserthouse.prunoid.core.engine.SkipReason
 import io.github.deserthouse.prunoid.core.rules.Safety
 import io.github.deserthouse.prunoid.core.scanner.ScannedApp
@@ -89,5 +90,29 @@ class RuleActionPlannerTest {
         assertEquals(listOf("p/A", "p/B"), byType["activity"])
         assertEquals(listOf("p/C"), byType["service"])
         assertEquals(3, plan.totalComponents)
+    }
+}
+
+/** 批M4（F03）：classifyRowLive 四态边界——替代开关 any 聚合的单点 Boolean。 */
+class RowLiveClassifierTest {
+
+    private val planner = io.github.deserthouse.prunoid.core.engine.RuleActionPlanner
+
+    @Test
+    fun `four states with boundaries`() {
+        org.junit.Assert.assertEquals(RowLive.UNKNOWN, planner.classifyRowLive(5, 3, loaded = false).live)
+        org.junit.Assert.assertEquals(RowLive.UNKNOWN, planner.classifyRowLive(0, 0, loaded = true).live)
+        org.junit.Assert.assertEquals(RowLive.NONE, planner.classifyRowLive(5, 0, loaded = true).live)
+        org.junit.Assert.assertEquals(RowLive.PARTIAL, planner.classifyRowLive(5, 3, loaded = true).live)
+        org.junit.Assert.assertEquals(RowLive.FULL, planner.classifyRowLive(5, 5, loaded = true).live)
+        org.junit.Assert.assertEquals(RowLive.FULL, planner.classifyRowLive(5, 7, loaded = true).live)
+    }
+
+    @Test
+    fun `info carries counts`() {
+        val info = planner.classifyRowLive(51, 43, loaded = true)
+        org.junit.Assert.assertEquals(43, info.liveN)
+        org.junit.Assert.assertEquals(51, info.total)
+        org.junit.Assert.assertEquals(RowLive.PARTIAL, info.live)
     }
 }

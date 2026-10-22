@@ -46,6 +46,20 @@ data class RuleActionPlan(
  *  引擎安全层（DisableEngine.isForbidden 等）在执行时保留为二次复核，此处结果一致。 */
 object RuleActionPlanner {
 
+    /** 批M4（F03）：管理行现场状态四态——替代开关 any 聚合的单点 Boolean 表达
+     *  （原缺陷：43/51 部分禁用也亮 On，被误读为"该 SDK 已完全关闭"）。 */
+    enum class RowLive { UNKNOWN, NONE, PARTIAL, FULL }
+
+    data class RowLiveInfo(val live: RowLive, val liveN: Int, val total: Int)
+
+    fun classifyRowLive(total: Int, liveN: Int, loaded: Boolean): RowLiveInfo = when {
+        !loaded -> RowLiveInfo(RowLive.UNKNOWN, 0, total)
+        total <= 0 -> RowLiveInfo(RowLive.UNKNOWN, 0, total)
+        liveN <= 0 -> RowLiveInfo(RowLive.NONE, 0, total)
+        liveN >= total -> RowLiveInfo(RowLive.FULL, liveN, total)
+        else -> RowLiveInfo(RowLive.PARTIAL, liveN, total)
+    }
+
     fun planRuleAction(
         ruleId: String,
         engine: Engine,
