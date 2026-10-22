@@ -247,6 +247,10 @@
     <string name="row_live_full">fully disabled</string>
     <string name="manage_action_apply">Apply Prunoid rule</string>
     <string name="manage_action_restore">Restore Prunoid rule</string>
+    <string name="sheet_onsite_line">On-device hits %1$d · live-disabled %2$d · Prunoid ledger %3$d</string>
+    <string name="sheet_ledger_line">On-device hits %1$d · Prunoid ledger %2$d</string>
+    <string name="sheet_usage_title">Purpose &amp; impact</string>
+    <string name="sheet_data_title">Details &amp; components</string>
     <string name="lang_section">Language</string>
     <string name="lang_system">System</string>
     <string name="sheet_matched_line">%1$d matched · %2$d in Prunoid ledger</string>

@@ -263,6 +263,10 @@
     <string name="row_live_full">全部禁用</string>
     <string name="manage_action_apply">应用本工具规则</string>
     <string name="manage_action_restore">恢复本工具规则</string>
+    <string name="sheet_onsite_line">在机命中 %1$d · 现场禁用 %2$d · 本工具账本 %3$d</string>
+    <string name="sheet_ledger_line">在机命中 %1$d · 本工具账本 %2$d</string>
+    <string name="sheet_usage_title">用途与影响</string>
+    <string name="sheet_data_title">资料与组件清单</string>
     <string name="lang_section">语言</string>
     <string name="lang_system">系统</string>
     <string name="sheet_matched_line">命中 %1$d · 本工具账本 %2$d</string>

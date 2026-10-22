@@ -125,7 +125,15 @@ private fun loadLibIcons(ctx: android.content.Context): Map<String, String> {
 }
 
 @Composable
-fun SdkMonogram(ruleId: String, name: String, modifier: Modifier = Modifier, iconUrl: String? = null) {
+fun SdkMonogram(
+    ruleId: String,
+    name: String,
+    modifier: Modifier = Modifier,
+    iconUrl: String? = null,
+    // 批N3（F11）：容器/图标尺寸可调——档案卡 56dp 头像原内部图标固定 22dp 显弱
+    containerSize: androidx.compose.ui.unit.Dp = 32.dp,
+    iconSize: androidx.compose.ui.unit.Dp = 22.dp,
+) {
     val dark = isDark()
     val (bg, fg) = MONOGRAM_COLORS[ruleId.hashCode().let { if (it < 0) -it else it } % MONOGRAM_COLORS.size]
     val bgC = if (dark) fg.copy(alpha = 0.25f) else bg
@@ -145,7 +153,7 @@ fun SdkMonogram(ruleId: String, name: String, modifier: Modifier = Modifier, ico
     val brandBg = if (dark) BrandTileDark else MaterialTheme.colorScheme.surfaceVariant
     Box(
         modifier
-            .size(32.dp)
+            .size(containerSize)
             .background(if (hasBrand) brandBg else bgC, RoundedCornerShape(50))
             .semantics { contentDescription = "SDK: $name" },
         contentAlignment = Alignment.Center
@@ -160,7 +168,7 @@ fun SdkMonogram(ruleId: String, name: String, modifier: Modifier = Modifier, ico
             iconRes != null -> Icon(
                 painterResource(iconRes),
                 contentDescription = null,
-                modifier = Modifier.size(22.dp),
+                modifier = Modifier.size(iconSize),
                 tint = Color.Unspecified
             )
             else -> Text(
