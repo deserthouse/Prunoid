@@ -210,7 +210,7 @@
     <string name="sort_name">名称 A→Z</string>
     <string name="sec_engine">禁用引擎</string>
     <string name="sec_auto">自动化与备份</string>
-    <string name="sec_sub">规则订阅</string>
+    <string name="sec_sub">规则数据</string>
     <string name="sec_recovery">应急通道</string>
     <string name="sec_about">关于</string>
     <string name="notif_perm_title">通知权限</string>
@@ -268,6 +268,9 @@
     <string name="sheet_ledger_line">在机命中 %1$d · 本工具账本 %2$d</string>
     <string name="sheet_usage_title">用途与影响</string>
     <string name="sheet_data_title">资料与组件清单</string>
+    <string name="sec_general">常用偏好</string>
+    <string name="sec_exec">执行与自动化</string>
+    <string name="sec_recovery_exp">恢复与实验</string>
     <string name="lang_section">语言</string>
     <string name="lang_system">系统</string>
     <string name="sheet_matched_line">命中 %1$d · 本工具账本 %2$d</string>

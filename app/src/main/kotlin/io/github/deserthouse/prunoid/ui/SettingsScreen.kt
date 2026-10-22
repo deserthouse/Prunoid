@@ -67,21 +67,26 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
         ) {
             Spacer(Modifier.height(4.dp))
 
-            // 批AA4（M3E 评审 E04）：按用户任务重排——工作环境 → 执行与自动化 → 规则订阅 →
-            // 恢复 → 实验能力 → 偏好与关于；分区内容与 SectionTitle 样式不动（批I3 拍板维持）
-            WorkModeSection(st, vm)
+            // 批N5（F11/审查 §4-L2）：五任务组收敛——常用偏好/执行与自动化/规则数据/恢复与实验/
+            // 关于（语言与关于保持原位）；危险恢复与实验同组并强化边界语义
+            SettingsSection(stringResource(R.string.sec_general)) {
+                WorkModeCard(st, vm)
+                NotifPermCard()
+            }
 
-            NotifPermSection()
+            SettingsSection(stringResource(R.string.sec_exec)) {
+                EnginesCard(st, vm)
+                AutomationBackupCard(st, vm, onShowBackup = { showBackup = true })
+            }
 
-            EnginesSection(st, vm)
+            SettingsSection(stringResource(R.string.sec_sub)) {
+                SubscriptionsCard(st, vm, onShowAddSource = { showAddSource = true }, onMsg = { show(it) })
+            }
 
-            AutomationBackupSection(st, vm, onShowBackup = { showBackup = true })
-
-            SubscriptionsSection(st, vm, onShowAddSource = { showAddSource = true }, onMsg = { show(it) })
-
-            RecoverySection(st, vm, onMsg = { show(it) })
-
-            DeclarativeSection(st, vm, onMsg = { show(it) })
+            SettingsSection(stringResource(R.string.sec_recovery_exp)) {
+                RecoveryCards(st, vm, onMsg = { show(it) })
+                DeclarativeCard(st, vm, onMsg = { show(it) })
+            }
 
             LanguageSection()
 
