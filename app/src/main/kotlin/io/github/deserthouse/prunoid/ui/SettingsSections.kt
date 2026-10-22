@@ -174,7 +174,7 @@ internal fun SettingRow(
 }
 
 @Composable
-internal fun NotifPermSection() {
+internal fun NotifPermCard() {
     // F1：权限状态行。点击跳系统「应用通知」页——自动弹窗在用户点过 Don't allow 后
     // 永不再现（MainActivity 记忆），这里是唯一的反悔通道。
     val ctx = androidx.compose.ui.platform.LocalContext.current
@@ -199,7 +199,6 @@ internal fun NotifPermSection() {
         lifecycleOwner.lifecycle.addObserver(obs)
         onDispose { lifecycleOwner.lifecycle.removeObserver(obs) }
     }
-    SettingsSection(stringResource(R.string.notif_perm_title)) {
         SettingsCard {
             SettingRow(
                 icon = Icons.Outlined.Notifications,
@@ -223,7 +222,6 @@ internal fun NotifPermSection() {
                 )
             }
         }
-    }
 }
 
 @Composable
@@ -257,9 +255,8 @@ internal fun LanguageSection() {
 
 }
 @Composable
-internal fun WorkModeSection(st: AppUiState, vm: AppViewModel) {
+internal fun WorkModeCard(st: AppUiState, vm: AppViewModel) {
     // ── 工作方式（批N 一级）──
-    SettingsSection(stringResource(R.string.sec_workmode)) {
         SettingsCard {
             Column(Modifier.padding(16.dp)) {
                 SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
@@ -287,13 +284,11 @@ internal fun WorkModeSection(st: AppUiState, vm: AppViewModel) {
                 )
             }
         }
-    }
 
 }
 @Composable
-internal fun DeclarativeSection(st: AppUiState, vm: AppViewModel, onMsg: (String) -> Unit) {
+internal fun DeclarativeCard(st: AppUiState, vm: AppViewModel, onMsg: (String) -> Unit) {
     // ── 声明式（批P：LSPosed 模式，默认关闭） ──
-    SettingsSection(stringResource(R.string.sec_declarative)) {
         SettingsCard {
             Column(Modifier.padding(vertical = 4.dp)) {
                 SettingRow(
@@ -331,14 +326,12 @@ internal fun DeclarativeSection(st: AppUiState, vm: AppViewModel, onMsg: (String
                 )
             }
         }
-    }
 
 }
 @Composable
-internal fun EnginesSection(st: AppUiState, vm: AppViewModel) {
+internal fun EnginesCard(st: AppUiState, vm: AppViewModel) {
     // ── 禁用引擎（批N：仅 root 模式显示，二级级联） ──
     if (st.workMode.id.name == "ROOT") {
-    SettingsSection(stringResource(R.string.sec_engine)) {
     SettingsCard {
         Column(Modifier.padding(16.dp)) {
             Text(stringResource(R.string.engine_default_title), style = MaterialTheme.typography.titleSmall)
@@ -413,16 +406,14 @@ internal fun EnginesSection(st: AppUiState, vm: AppViewModel) {
             }
         }
     }
-    }
 
     }
 
 }
 @Composable
-internal fun AutomationBackupSection(st: AppUiState, vm: AppViewModel, onShowBackup: () -> Unit) {
+internal fun AutomationBackupCard(st: AppUiState, vm: AppViewModel, onShowBackup: () -> Unit) {
     // ── 自动化与备份（批N：仅 root 模式） ──
     if (st.workMode.id.name == "ROOT") {
-    SettingsSection(stringResource(R.string.sec_auto)) {
     SettingsCard {
         Column(Modifier.padding(vertical = 4.dp)) {
             SettingRow(
@@ -481,16 +472,14 @@ internal fun AutomationBackupSection(st: AppUiState, vm: AppViewModel, onShowBac
             }
         }
     }
-    }
 
     }
 
 }
 @Composable
-internal fun SubscriptionsSection(st: AppUiState, vm: AppViewModel, onShowAddSource: () -> Unit, onMsg: (String) -> Unit) {
+internal fun SubscriptionsCard(st: AppUiState, vm: AppViewModel, onShowAddSource: () -> Unit, onMsg: (String) -> Unit) {
     // ── 规则订阅 ──
     var confirmRemoveSrc by remember { mutableStateOf<io.github.deserthouse.prunoid.core.rules.SettingsRepository.SubSource?>(null) }
-    SettingsSection(stringResource(R.string.sec_sub)) {
     SettingsCard {
         Column(Modifier.padding(16.dp)) {
             Text(
@@ -600,7 +589,6 @@ internal fun SubscriptionsSection(st: AppUiState, vm: AppViewModel, onShowAddSou
             ) { Text(stringResource(R.string.add_source_title)) }
         }
     }
-    }
     confirmRemoveSrc?.let { srcDel ->
         AlertDialog(
             onDismissRequest = { confirmRemoveSrc = null },
@@ -620,11 +608,10 @@ internal fun SubscriptionsSection(st: AppUiState, vm: AppViewModel, onShowAddSou
 
 }
 @Composable
-internal fun RecoverySection(st: AppUiState, vm: AppViewModel, onMsg: (String) -> Unit) {
+internal fun RecoveryCards(st: AppUiState, vm: AppViewModel, onMsg: (String) -> Unit) {
     // ── 应急通道（F3：恢复点管理迁入 + 复制按钮 + 清除全部迁入） ──
     // 批R2（审计 P-2）：系统级毁灭操作补单次确认——批J2 拆倒计时时此键的确认被一并拆掉（git 考古 5120738）
     var confirmClearIfw by remember { mutableStateOf(false) }
-    SettingsSection(stringResource(R.string.sec_recovery)) {
     // 批BB RV-09：账本损坏提示 + 显式重置（证据文件保留；恢复依据由用户确认丢弃）
     if (st.ledgerCorrupted) {
         SettingsCard {
@@ -640,7 +627,6 @@ internal fun RecoverySection(st: AppUiState, vm: AppViewModel, onMsg: (String) -
                 }
             }
         }
-    }
     SettingsCard {
         Column(Modifier.padding(vertical = 4.dp)) {
             val clipboard = androidx.compose.ui.platform.LocalClipboardManager.current
