@@ -135,12 +135,13 @@
     <string name="lib_empty_found_hint">当前作用域只搜索在机检出；未检出页签可能仍有匹配</string>
     <string name="lib_empty_found_switch">查看未检出</string>
     <!-- 统计页 -->
-    <string name="stats_identified">在机识别 SDK</string>
-    <string name="stats_blocked">已禁用（按账本）</string>
-    <string name="stats_apps">扫描应用（含系统）</string>
-    <string name="stats_cat_title">SDK 分类分布</string>
+    <string name="stats_identified">命中次数（跨应用）</string>
+    <string name="stats_blocked">已管组件（按账本）</string>
+    <string name="stats_apps">扫描应用（含系统）%1$d</string>
+    <string name="stats_distinct">独立 SDK</string>
+    <string name="stats_cat_title">SDK 分类分布（按命中次数）</string>
     <string name="stats_title">统计</string>
-    <string name="stats_rank_title">在机 SDK 排行</string>
+    <string name="stats_rank_title">在机 SDK 排行（按命中应用数）</string>
     <string name="installed_at">安装于 %1$s</string>
     <string name="updated_at">更新于 %1$s</string>
     <!-- 设置页 -->

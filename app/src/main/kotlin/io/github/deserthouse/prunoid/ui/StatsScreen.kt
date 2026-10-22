@@ -89,33 +89,46 @@ fun StatsScreen(vm: AppViewModel, modifier: Modifier = Modifier, onOpenSdk: (Str
             style = MaterialTheme.typography.titleLarge
         )
         // 总量卡
+        // 批N4（F11）：三量分明——命中次数（跨应用）/独立 SDK/已管组件（按账本）；
+        // 扫描应用数降为卡片脚注（原"在机识别 SDK"实为命中次数，与库页独立口径混淆）
         Card(Modifier.fillMaxWidth()) {
-            Row(
-                Modifier.padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                // 批遗留#2：三列顶部对齐——标签两行的列不再把大数字居中抬高
-                verticalAlignment = Alignment.Top
-            ) {
-                listOf(
-                    stringResource(R.string.stats_identified) to "$totalIdentified",
-                    stringResource(R.string.stats_blocked) to "$totalBlocked",
-                    stringResource(R.string.stats_apps) to "${st.apps.size}"
-                ).forEach { (label, value) ->
-                    Column(
-                        Modifier.weight(1f),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = androidx.compose.foundation.layout.Arrangement.Top
-                    ) {
-                        Text(value, style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary)
-                        Text(
-                            label,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 2,
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                        )
+            Column(Modifier.padding(16.dp)) {
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    // 批遗留#2：三列顶部对齐——标签两行的列不再把大数字居中抬高
+                    verticalAlignment = Alignment.Top
+                ) {
+                    val distinctSdks = remember(st.apps) {
+                        st.apps.flatMap { a -> a.matchedSdks.map { it.ruleId } }.distinct().size
+                    }
+                    listOf(
+                        stringResource(R.string.stats_identified) to "$totalIdentified",
+                        stringResource(R.string.stats_distinct) to "$distinctSdks",
+                        stringResource(R.string.stats_blocked) to "$totalBlocked"
+                    ).forEach { (label, value) ->
+                        Column(
+                            Modifier.weight(1f),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = androidx.compose.foundation.layout.Arrangement.Top
+                        ) {
+                            Text(value, style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary)
+                            Text(
+                                label,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 2,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
+                        }
                     }
                 }
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    stringResource(R.string.stats_apps, st.apps.size),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
         // 分类环形图（SDK 分类统计为主角）
