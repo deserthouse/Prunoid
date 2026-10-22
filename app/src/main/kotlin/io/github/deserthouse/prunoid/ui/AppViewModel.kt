@@ -13,6 +13,7 @@ import io.github.deserthouse.prunoid.ui.operations.OperationKind
 import io.github.deserthouse.prunoid.ui.operations.SelectionDraft
 import io.github.deserthouse.prunoid.core.engine.Engine
 import io.github.deserthouse.prunoid.core.engine.OpCoordinator
+import io.github.deserthouse.prunoid.core.engine.RuleActionPlanner
 import io.github.deserthouse.prunoid.core.rules.RuleRepository
 import io.github.deserthouse.prunoid.core.rules.RuleSubscription
 import io.github.deserthouse.prunoid.core.rules.Safety
@@ -252,51 +253,43 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 if (!rootGate()) return@withBusy appCtx.getString(R.string.vm_need_root)
                 if (ledgerCorrupted()) return@withBusy appCtx.getString(R.string.vm_ledger_corrupted)
                 val rule = rules.rule(ruleId) ?: return@withBusy appCtx.getString(R.string.vm_no_targets)
-                // 批库链修复①：目标组件改用各 app 扫描命中的真实组件
-                // （规则锚点 87% 为空，旧实现必然 "no targets"）
-                // 白名单（系统/框架）应用一律跳过——安全层语义，不做半写
-                val targets = _state.value.apps
-                    .filter { a -> a.matchedSdks.any { it.ruleId == ruleId } }
-                    .filter { !DisableEngine.isForbidden(it.packageName) && !it.isSystem }
+                // 批M3（F02）：执行消费 RuleActionPlanner 计划——与按钮/确认同源（原在此处
+                // 二次过滤致确认数≠执行数；引擎安全层保留为二次复核语义）
+                val plan = RuleActionPlanner.planRuleAction(
+                    ruleId, _state.value.engine, _state.value.apps, rulesGeneration
+                )
+                val targets = plan.eligible
                 if (targets.isEmpty()) return@withBusy appCtx.getString(R.string.vm_no_targets)
                 if (_state.value.backupEnabled) engine.backup(_state.value.backupKeep).getOrNull() else null
                 var ok = 0
-                var total = 0
                 // 批FF3（七审 AV03）：回执组件数=各应用实际写入的唯一组件之和（不再冒用应用计数）
                 var compWritten = 0
                 val touched = mutableListOf<String>()
                 // 批HH1（S2）：批量路径接入结果协议——逐 app 成败条目（AA7 协议贯通）
                 val bulkItems = mutableListOf<OperationItem>()
-                targets.forEach { a ->
-                    val hit = a.matchedSdks.first { it.ruleId == ruleId }
-                    // 批Y2（架构评审 C3）：IFW 只写它支持的类型——native/provider 在计划层剔除，
-                    // 执行/记账/回执同源（原记账 hit.matchedComponents 含 provider，IFW 文件少于账本）
-                    val byType = hit.componentTypes.entries
-                        .groupBy({ it.value }, { it.key })
-                        .filterKeys { it != "native" && it != "provider" }
-                    if (byType.isEmpty()) return@forEach
-                    total++
-                    val prev = applied.get(a.packageName)
-                    val r = engine.applyIfw(a.packageName, byType)
+                targets.forEach { pa ->
+                    val byType = pa.byType
+                    val prev = applied.get(pa.packageName)
+                    val r = engine.applyIfw(pa.packageName, byType)
                     if (r.isSuccess) {
                         ok++
                         compWritten += byType.values.flatten().distinct().size
-                        touched.add(a.packageName)
+                        touched.add(pa.packageName)
                         // 批HH1（S2）：逐 app 条目
-                        bulkItems += OperationItem(a.packageName, true, "")
+                        bulkItems += OperationItem(pa.packageName, true, "")
                         // 批X2（审查 R04）：合并语义走 recordMerge，目标以 ruleIds 记账
                         applied.recordMerge(
-                            a.packageName, Engine.IFW.name,
+                            pa.packageName, Engine.IFW.name,
                             byType.values.flatten(),
                             byType.entries.flatMap { (t, cs) -> cs.map { it to t } }.toMap(),
                             addedRuleIds = setOf(ruleId)
                         )
                     } else {
                         // 批HH1（S2）：失败 app 也进逐项条目（部分失败可见）
-                        bulkItems += OperationItem(a.packageName, false, "ifw write failed")
+                        bulkItems += OperationItem(pa.packageName, false, "ifw write failed")
                     }
                 }
-                if (total == 0) return@withBusy appCtx.getString(R.string.vm_no_targets)
+                if (ok == 0) return@withBusy appCtx.getString(R.string.vm_no_targets)
                 // 批G：批量写入后统一重读现场
                 val live = engine.readLiveDisabled(touched).first
                 _state.update {

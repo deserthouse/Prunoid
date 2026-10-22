@@ -238,6 +238,11 @@
     <string name="sdk_off_full">Restored %1$d component(s) disabled by Prunoid</string>
     <string name="sdk_off_partial">Restored %1$d Prunoid-managed item(s); %2$d kept (disabled by external sources)</string>
     <string name="sdk_off_shared">No change: %1$d component(s) still referenced by other SDK rules (e.g. %2$s), kept enabled</string>
+    <string name="manage_plan_summary">Hits %1$d · actionable %2$d · skipped %3$d</string>
+    <string name="bulk_scope_all">All hits (%1$d)</string>
+    <string name="bulk_scope_filtered">Filtered (%1$d)</string>
+    <string name="block_everywhere_confirm_plan">Will write %2$d component(s) across %1$d app(s) (engine %3$s); skipping %4$d: protected %5$d · system %6$d · no writable components %7$d. Restore anytime per app.</string>
+    <string name="manage_zero_plan">No actionable targets: all hits are protected/system or lack writable components</string>
     <string name="lang_section">Language</string>
     <string name="lang_system">System</string>
     <string name="sheet_matched_line">%1$d matched · %2$d in Prunoid ledger</string>

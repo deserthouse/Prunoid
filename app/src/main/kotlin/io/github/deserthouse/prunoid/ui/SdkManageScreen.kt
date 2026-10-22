@@ -43,6 +43,14 @@ fun SdkManageScreen(
     else userApps.filter { a ->
         a.label.contains(appQuery, true) || a.packageName.contains(appQuery, true)
     }
+    // 批M3（F02）：批量动作消费不可变执行计划——按钮/确认/执行同源（原确认用扫描命中数，
+    // 与 disableSdkEverywhere 内部过滤不同源；provider-only 走到确认后才报零目标）
+    var bulkAllScope by remember { mutableStateOf(true) }
+    val plan = remember(ruleId, st.apps, st.engine, appQuery, bulkAllScope, vm.rulesGeneration) {
+        val src = if (bulkAllScope) userApps else filteredApps
+        io.github.deserthouse.prunoid.core.engine.RuleActionPlanner
+            .planRuleAction(ruleId, st.engine, src, vm.rulesGeneration)
+    }
     // 批FF-B3：批量结果当前层呈现，按 ruleId 键控（FF1 语义）
     // 批I1（F2）：结果行改消费 OperationCenter——逐 app 条目（协议贯通，bulkMsg 字符串退役）
     var confirmEverywhere by remember { mutableStateOf(false) }
@@ -58,8 +66,9 @@ fun SdkManageScreen(
                 title = {
                     Column {
                         Text(ruleName, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        // 批M3（F02）：副标题改计划口径——命中/可操作/跳过三分（原仅扫描命中数）
                         Text(
-                            stringResource(R.string.manage_subtitle, matchedCount),
+                            stringResource(R.string.manage_plan_summary, plan.hits, plan.eligibleCount, plan.skipped.size),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -76,6 +85,24 @@ fun SdkManageScreen(
     ) { padding ->
         Column(Modifier.padding(padding).fillMaxSize()) {
 
+            // 批M3（F02）：批量作用域显式化——筛选激活时可选"全部命中/当前筛选"（原隐式全量）
+            if (appQuery.isNotBlank()) {
+                Row(
+                    Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    FilterChip(
+                        selected = bulkAllScope,
+                        onClick = { bulkAllScope = true },
+                        label = { Text(stringResource(R.string.bulk_scope_all, userApps.size)) }
+                    )
+                    FilterChip(
+                        selected = !bulkAllScope,
+                        onClick = { bulkAllScope = false },
+                        label = { Text(stringResource(R.string.bulk_scope_filtered, filteredApps.size)) }
+                    )
+                }
+            }
             Row(
                 Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -85,12 +112,27 @@ fun SdkManageScreen(
                     style = MaterialTheme.typography.titleSmall,
                     modifier = Modifier.weight(1f)
                 )
-                FilledTonalButton(
-                    onClick = { confirmEverywhere = true },
-                    enabled = userApps.isNotEmpty() && !st.busy && st.workMode.capabilities.disablePerApp && st.rootGranted,
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
-                ) {
-                    Text(stringResource(R.string.block_everywhere, userApps.size), style = MaterialTheme.typography.labelSmall)
+                Column(horizontalAlignment = Alignment.End) {
+                    FilledTonalButton(
+                        onClick = { confirmEverywhere = true },
+                        // 批M3（F02）：按钮计数=执行口径（可操作数）；零可操作目标禁用（原因就地呈现）
+                        enabled = plan.eligibleCount > 0 && !st.busy && st.workMode.capabilities.disablePerApp && st.rootGranted,
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            stringResource(R.string.block_everywhere, plan.eligibleCount),
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
+                    // 批M3（F02）：零可操作目标给原因，不留禁用死按钮
+                    if (plan.hits > 0 && plan.eligibleCount == 0) {
+                        Text(
+                            stringResource(R.string.manage_zero_plan),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(top = 2.dp)
+                        )
+                    }
                 }
             }
             if (userApps.size > 5) {
@@ -207,8 +249,21 @@ fun SdkManageScreen(
     if (confirmEverywhere) {
         AlertDialog(
             onDismissRequest = { confirmEverywhere = false },
-            title = { Text(stringResource(R.string.block_everywhere, userApps.size)) },
-            text = { Text(stringResource(R.string.block_everywhere_confirm, userApps.size)) },
+            // 批M3（F02）：确认消费同一份计划快照——可执行应用/组件数与跳过理由逐类呈现
+            //（与按钮同源，执行再经引擎安全层二次复核）
+            title = { Text(stringResource(R.string.block_everywhere, plan.eligibleCount)) },
+            text = {
+                Text(
+                    stringResource(
+                        R.string.block_everywhere_confirm_plan,
+                        plan.eligibleCount, plan.totalComponents, plan.engine.name,
+                        plan.skipped.size,
+                        plan.skipCount(io.github.deserthouse.prunoid.core.engine.SkipReason.PROTECTED),
+                        plan.skipCount(io.github.deserthouse.prunoid.core.engine.SkipReason.SYSTEM),
+                        plan.skipCount(io.github.deserthouse.prunoid.core.engine.SkipReason.NO_WRITABLE_COMPONENTS),
+                    )
+                )
+            },
             confirmButton = {
                 TextButton(
                     onClick = {

@@ -254,6 +254,11 @@
     <string name="sdk_off_full">已恢复本工具禁用的 %1$d 项组件</string>
     <string name="sdk_off_partial">已恢复本工具管理的 %1$d 项；另有 %2$d 项由外部来源禁用，已保留</string>
     <string name="sdk_off_shared">未作更改：%1$d 项组件仍被其它 SDK 规则引用（如 %2$s），已保留</string>
+    <string name="manage_plan_summary">命中 %1$d · 可操作 %2$d · 跳过 %3$d</string>
+    <string name="bulk_scope_all">全部命中 (%1$d)</string>
+    <string name="bulk_scope_filtered">当前筛选 (%1$d)</string>
+    <string name="block_everywhere_confirm_plan">将对 %1$d 个应用写入共 %2$d 个组件的禁用规则（引擎 %3$s）；跳过 %4$d 个：受保护 %5$d · 系统 %6$d · 无可写组件 %7$d。可随时在各应用详情页恢复。</string>
+    <string name="manage_zero_plan">无可执行目标：命中应用均为受保护/系统包或无可写组件</string>
     <string name="lang_section">语言</string>
     <string name="lang_system">系统</string>
     <string name="sheet_matched_line">命中 %1$d · 本工具账本 %2$d</string>
