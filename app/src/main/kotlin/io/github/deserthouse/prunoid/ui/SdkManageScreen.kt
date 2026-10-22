@@ -13,6 +13,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.deserthouse.prunoid.R
@@ -247,6 +249,10 @@ fun SdkManageScreen(
                             }
                         },
                         trailingContent = {
+                            // 批N2（F03 残余）：开关动作语义显式化——现场状态已由行主体承载
+                            //（M4 四态），语义层点明本次点击将做什么（应用/恢复本工具规则）
+                            val actionApply = stringResource(R.string.manage_action_apply)
+                            val actionRestore = stringResource(R.string.manage_action_restore)
                             Switch(
                                 // EE5 三态 + EE3 当前层反馈（管理面同契约）
                                 checked = row.tri == true,
@@ -255,7 +261,12 @@ fun SdkManageScreen(
                                         rowStatus = stMsg.takeIf { it.isNotBlank() }
                                     }
                                 },
-                                enabled = !protectedTarget && row.tri != null && !st.busy && st.workMode.capabilities.disablePerApp && st.rootGranted
+                                enabled = !protectedTarget && row.tri != null && !st.busy && st.workMode.capabilities.disablePerApp && st.rootGranted,
+                                modifier = Modifier.semantics {
+                                    contentDescription =
+                                        if (row.live == io.github.deserthouse.prunoid.core.engine.RuleActionPlanner.RowLive.FULL)
+                                            actionRestore else actionApply
+                                }
                             )
                         }
                     )

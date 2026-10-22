@@ -261,6 +261,8 @@
     <string name="manage_zero_plan">无可执行目标：命中应用均为受保护/系统包或无可写组件</string>
     <string name="row_live_partial">部分禁用</string>
     <string name="row_live_full">全部禁用</string>
+    <string name="manage_action_apply">应用本工具规则</string>
+    <string name="manage_action_restore">恢复本工具规则</string>
     <string name="lang_section">语言</string>
     <string name="lang_system">系统</string>
     <string name="sheet_matched_line">命中 %1$d · 本工具账本 %2$d</string>
