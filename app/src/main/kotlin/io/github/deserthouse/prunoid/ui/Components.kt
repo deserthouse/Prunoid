@@ -202,7 +202,8 @@ fun SafetyBadge(s: Safety, modifier: Modifier = Modifier) {
         modifier = modifier
     ) {
         // semantics{} 非组合上下文——文案先在组合期解析（既有教训）
-        val badgeCd = safetyLabel(s) + " — " + safetyConsequence(s)
+        // 批O1（AUDIT PV-06）：cons_* 资源自带等级词头（"谨慎禁用——…"），再拼 safetyLabel 即重复播报
+        val badgeCd = safetyConsequence(s)
         Row(
             Modifier
                 .semantics { contentDescription = badgeCd }

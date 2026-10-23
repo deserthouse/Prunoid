@@ -201,7 +201,7 @@
     <string name="notif_perm_granted">Granted — guard notifications can post</string>
     <string name="notif_perm_denied">Denied — tap to open system settings and allow</string>
     <string name="notif_perm_legacy">Not required on this Android version</string>
-    <string name="stats_cat_center">SDKs identified</string>
+    <string name="stats_cat_center">Hit count</string>
     <string name="stats_prefix_title">Top 5 unrecognized prefixes</string>
     <string name="stats_prefix_hint">Not in the rule base — blocking them is your own judgment; contributions welcome</string>
     <string name="stats_prefix_count">%1$d components</string>
