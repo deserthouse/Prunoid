@@ -32,7 +32,7 @@ M1 最小可用 ──→ M2 规则生态 ──→ M3 自动化与共建
 **R4 禁用引擎 + 安全层**（2 天级，本项目的心脏，宁可慢）
 - IFW 主引擎：libsu root shell 写 `/data/system/ifw/<pkg>.xml`（参考 blocker core/ifw-api 的 CRUD 语义：空规则删文件、按包分文件）
 - pm disable 辅引擎：按组件粒度 + 状态回读
-- 安全层（M1 门槛，不可裁剪）：操作前自动全量备份（IFW 规则 + pm 状态导出）；一键恢复/一键清除全部 IFW 规则；系统/框架组件白名单硬拦截（数据底座 = blocker-general-rules 的 875 条框架组件知识）
+- 安全层（M1 门槛，不可裁剪）：一键恢复/一键清除全部 IFW 规则；系统/框架组件白名单硬拦截（数据底座 = blocker-general-rules 的 875 条框架组件知识）。~~操作前自动全量备份~~ → 2026-09-19 演进：备份转为可选机制（默认关闭、份数自由、apply 前时点快照），安全底线由写前校验+原子写入+现场正向推导恢复承担
 - 验收：模拟器验证 UI 与状态机；root 写入逻辑在脚本级单测；实机验收由用户执行
 
 **R5 M3E UI**（1~2 天级）
@@ -46,7 +46,7 @@ M1 最小可用 ──→ M2 规则生态 ──→ M3 自动化与共建
 - 规则订阅：OkHttp 拉取版本化规则源（官方源 = 我们的双仓之二），本地缓存与增量更新，支持自定义源 URL
 - 双引擎切换：IFW / pm disable 用户可选，UI 呈现两引擎差异说明（app 可自恢复 vs 无感知）
 - 安全等级细化：safeToBlock 三级展示、sideEffect 文案完善（数据来自冷启动快照的 source/confidence）
-- 可选：Exodus ODbL 通道（独立订阅源形式接入，不并入主库——规避同源义务）
+- ~~可选：Exodus ODbL 通道~~ → 2026-10-24 裁决不做：blocker 正源已同步 Exodus 名录（Apache-2.0 传导，v14 实证 ACRA/Sentry 等入库），独立通道增益趋零
 - 完工标准：换机/重装后仅凭订阅 URL 恢复全部规则
 
 ## M3：自动化与共建（依赖 M2）
@@ -76,9 +76,11 @@ M1 最小可用 ──→ M2 规则生态 ──→ M3 自动化与共建
 ## Status
 
 - ✅ M1/M2/M3 complete and verified (rooted emulator, Android 16 baseline)
-- ✅ v0.4–v0.6: i18n (zh default + en), batch polish, filter/sort & stats donut, settings regrouping, pull-to-refresh, optional backup model, live disable-state readout
-- ✅ v0.7–v0.9: community pipeline (component report share), rule governance (1929 entities), list/detail rework (LibChecker-aligned), WorkMode architecture
-- ✅ v0.10.0 (versionCode 15): phone-batch rule intake (2003 entities / 774 hits), LSPosed declarative groundwork (off by default; system_server query-layer engine mounted, launch-layer interception descoped by decision)
-- ⏭️ Next: v0.11.0 (versionCode 16) — unmatched-card expand UX fix (auto-scroll-to-top), full-scope unmatched totals with truncation note, heuristic token matching, safety badges in library rows & archive sheet, provider type-label fix, plurals; 2003-rule bundled snapshot
+- ✅ v0.10–v0.15: LSPosed declarative groundwork (experimental, off by default); walk-assert verification pipeline; M3E alignment passes
+- ✅ v0.16–v0.21: operation-result protocol (four states, per-item outcomes), SDK archive rework, RuleGuard realtime reapply hardening, batch remediation from four external audits
+- ✅ v0.22–v0.24: cross-app management destination, plan-sourced bulk actions (RuleActionPlanner), row live-state model, browsing-context preservation, settings five-task-group layout
+- ✅ v0.25–v0.26: stable line (pre-release flag dropped); detail work-zone rework closes the 360dp first-screen finding; rule repo v13/v14 with byte-level reproducible rebuilds (rebuild-check CI gate)
+- Rules repo: v14 = 2,079 entities (blocker@55ae4b9 synced; subscription endpoints main/vN both live)
+- Pending user scope: TalkBack / large-font accessibility matrix; distribution beyond GitHub Releases carries no commitment timeline
 
 > 本地维护文档，进度事实源另见 project_status.md 与持久记忆（本文件由仓库同步，Status 段对外可读）。
