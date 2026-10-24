@@ -61,7 +61,7 @@ M1 最小可用 ──→ M2 规则生态 ──→ M3 自动化与共建
 ## 分发与口径（贯穿）
 
 - 双仓：app 仓 + 规则仓，均 Apache-2.0 + NOTICE（LCR/blocker-general-rules 继承署名）
-- 渠道：GitHub Releases → IzzyOnDroid → F-Droid 渐进 + Codeberg/GitLab 镜像
+- 渠道：仅 GitHub Releases。~~IzzyOnDroid → F-Droid 渐进 + Codeberg/GitLab 镜像~~ → 2026-10-24 用户裁决：不上 GitHub 以外的其他渠道，无渠道扩展承诺
 - 对外口径：中性"SDK 组件审计/管理工具"；命名与素材无"Ad"字样（版权炮规避）
 
 ## 风险对照（详见调研报告 §5）
@@ -81,6 +81,6 @@ M1 最小可用 ──→ M2 规则生态 ──→ M3 自动化与共建
 - ✅ v0.22–v0.24: cross-app management destination, plan-sourced bulk actions (RuleActionPlanner), row live-state model, browsing-context preservation, settings five-task-group layout
 - ✅ v0.25–v0.26: stable line (pre-release flag dropped); detail work-zone rework closes the 360dp first-screen finding; rule repo v13/v14 with byte-level reproducible rebuilds (rebuild-check CI gate)
 - Rules repo: v14 = 2,079 entities (blocker@55ae4b9 synced; subscription endpoints main/vN both live)
-- Pending user scope: TalkBack / large-font accessibility matrix; distribution beyond GitHub Releases carries no commitment timeline
+- Pending user scope: TalkBack / large-font accessibility matrix. Distribution: GitHub Releases only (user decision 2026-10-24, no other channels)
 
 > 本地维护文档，进度事实源另见 project_status.md 与持久记忆（本文件由仓库同步，Status 段对外可读）。
