@@ -29,6 +29,8 @@ data class Operation(
     val at: Long,
     /** APPLY 类操作的重试参数（选中的 ruleId 集）——B2 结果卡重试钮消费。 */
     val retryRuleIds: Set<String> = emptySet(),
+    /** 批Q1（B01）：产出本结果的冻结计划身份（RuleActionPlan.planId）——结果与确认对账。 */
+    val planId: String = "",
 )
 
 /**
@@ -47,6 +49,7 @@ class OperationCenter {
         items: List<OperationItem>,
         message: String,
         retryRuleIds: Set<String> = emptySet(),
+        planId: String = "",
     ): Operation {
         val ok = items.count { it.ok }
         val fail = items.size - ok
@@ -67,6 +70,7 @@ class OperationCenter {
             message = message,
             at = System.currentTimeMillis(),
             retryRuleIds = retryRuleIds,
+            planId = planId,
         )
         _operations.update { current ->
             (current + op).takeLast(MAX_KEPT)

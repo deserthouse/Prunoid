@@ -235,6 +235,8 @@
     <string name="easter_author_handle">@deserthouse</string>
     <string name="easter_author_en">Ling the Wolp</string>
     <string name="vm_sdk_everywhere_ok">%1$s: applied to %2$d of %3$d matching apps, %4$d components written</string>
+    <string name="vm_sdk_everywhere_fail">%1$s: all %2$d app(s) failed to write (no components written)</string>
+    <string name="vm_plan_stale">Rules updated since confirmation — review the plan and confirm again</string>
     <string name="vm_sdk_on_ok">Disabled %1$d component(s)</string>
     <string name="sdk_off_full">Restored %1$d component(s) disabled by Prunoid</string>
     <string name="sdk_off_partial">Restored %1$d Prunoid-managed item(s); %2$d kept (disabled by external sources)</string>

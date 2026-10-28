@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.deserthouse.prunoid.core.engine.AppliedRulesStore
+import io.github.deserthouse.prunoid.core.engine.BulkPlanExecutor
 import io.github.deserthouse.prunoid.core.engine.DisableEngine
 import io.github.deserthouse.prunoid.ui.operations.OperationCenter
 import io.github.deserthouse.prunoid.ui.operations.OperationItem
@@ -13,7 +14,7 @@ import io.github.deserthouse.prunoid.ui.operations.OperationKind
 import io.github.deserthouse.prunoid.ui.operations.SelectionDraft
 import io.github.deserthouse.prunoid.core.engine.Engine
 import io.github.deserthouse.prunoid.core.engine.OpCoordinator
-import io.github.deserthouse.prunoid.core.engine.RuleActionPlanner
+import io.github.deserthouse.prunoid.core.engine.RuleActionPlan
 import io.github.deserthouse.prunoid.core.rules.RuleRepository
 import io.github.deserthouse.prunoid.core.rules.RuleSubscription
 import io.github.deserthouse.prunoid.core.rules.Safety
@@ -246,52 +247,53 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /** 批I：手动语言（"" = 跟随系统）；落盘完成后 UI 再 recreate，避免竞态读旧值 */
-    /** 批I：跨应用统一禁用某 SDK——对规则库中命中该 SDK 的所有已安装应用写 IFW（组件取规则全量，覆盖未来更新） */
-    fun disableSdkEverywhere(ruleId: String, onDone: (String) -> Unit) {
+    /** 批I：跨应用统一禁用某 SDK——执行确认时冻结的 RuleActionPlan。
+     *  批Q1（B01）：计划显式传入——不再用全量 apps 重算（原缺陷：确认"当前筛选"后执行扩回全部命中）、
+     *  按计划 engine 分派（原固定走 IFW 致 PM 计划 provider 目标零写入仍报成功）、账本记实际 engine。
+     *  锁内仅做安全/代次复核，不重排目标集；plan.rulesGeneration 与当前不符 → 拒绝并要求重新审阅。
+     *  批Q4（B04）：凡通过前置检查的提交必产终态 Operation（含全失败）；全失败不再误报"无目标"。
+     *  回执契约：执行路径返回 ""（结果经 OperationCenter 呈现，UI 不二次展示）；前置拒绝返回原因文本。 */
+    fun disableSdkEverywhere(plan: RuleActionPlan, onDone: (String) -> Unit) {
         viewModelScope.launch {
             val msg = withBusy("everywhere", locked = true) {
                 if (!rootGate()) return@withBusy appCtx.getString(R.string.vm_need_root)
                 if (ledgerCorrupted()) return@withBusy appCtx.getString(R.string.vm_ledger_corrupted)
-                val rule = rules.rule(ruleId) ?: return@withBusy appCtx.getString(R.string.vm_no_targets)
-                // 批M3（F02）：执行消费 RuleActionPlanner 计划——与按钮/确认同源（原在此处
-                // 二次过滤致确认数≠执行数；引擎安全层保留为二次复核语义）
-                val plan = RuleActionPlanner.planRuleAction(
-                    ruleId, _state.value.engine, _state.value.apps, rulesGeneration
-                )
+                val rule = rules.rule(plan.ruleId) ?: return@withBusy appCtx.getString(R.string.vm_no_targets)
+                if (plan.rulesGeneration != rulesGeneration) {
+                    return@withBusy appCtx.getString(R.string.vm_plan_stale)
+                }
                 val targets = plan.eligible
                 if (targets.isEmpty()) return@withBusy appCtx.getString(R.string.vm_no_targets)
                 if (_state.value.backupEnabled) engine.backup(_state.value.backupKeep).getOrNull() else null
-                var ok = 0
-                // 批FF3（七审 AV03）：回执组件数=各应用实际写入的唯一组件之和（不再冒用应用计数）
-                var compWritten = 0
-                val touched = mutableListOf<String>()
-                // 批HH1（S2）：批量路径接入结果协议——逐 app 成败条目（AA7 协议贯通）
-                val bulkItems = mutableListOf<OperationItem>()
-                targets.forEach { pa ->
-                    val byType = pa.byType
-                    val prev = applied.get(pa.packageName)
-                    val r = engine.applyIfw(pa.packageName, byType)
-                    if (r.isSuccess) {
-                        ok++
-                        compWritten += byType.values.flatten().distinct().size
-                        touched.add(pa.packageName)
-                        // 批HH1（S2）：逐 app 条目
-                        bulkItems += OperationItem(pa.packageName, true, "")
-                        // 批X2（审查 R04）：合并语义走 recordMerge，目标以 ruleIds 记账
+                val exec = BulkPlanExecutor.execute(
+                    plan,
+                    applyIfw = { pkg, byType -> engine.applyIfw(pkg, byType) },
+                    applyPm = { pkg, comps -> engine.applyPm(pkg, comps) },
+                )
+                // 批X2（审查 R04）+批Q1：成功目标合并入账本——按计划/实际 engine 记账（原固定 IFW）
+                plan.eligible.zip(exec.items).forEach { (pa, res) ->
+                    if (res.ok) {
                         applied.recordMerge(
-                            pa.packageName, Engine.IFW.name,
-                            byType.values.flatten(),
-                            byType.entries.flatMap { (t, cs) -> cs.map { it to t } }.toMap(),
-                            addedRuleIds = setOf(ruleId)
+                            pa.packageName, exec.engine.name,
+                            pa.byType.values.flatten().distinct(),
+                            pa.byType.entries.flatMap { (t, cs) -> cs.map { it to t } }.toMap(),
+                            addedRuleIds = setOf(plan.ruleId)
                         )
-                    } else {
-                        // 批HH1（S2）：失败 app 也进逐项条目（部分失败可见）
-                        bulkItems += OperationItem(pa.packageName, false, "ifw write failed")
                     }
                 }
-                if (ok == 0) return@withBusy appCtx.getString(R.string.vm_no_targets)
+                val bulkItems = exec.items.map { OperationItem(it.pkg, it.ok, it.detail) }
+                // 批Q4（B04）：全失败也是终态——先记录再返回，管理页结果行即时可见（不再停留旧成功）
+                if (exec.ok == 0) {
+                    opCenter.record(
+                        OperationKind.DISABLE_EVERYWHERE, plan.ruleId,
+                        bulkItems,
+                        appCtx.getString(R.string.vm_sdk_everywhere_fail, rule.name, targets.size),
+                        planId = plan.planId,
+                    )
+                    return@withBusy ""
+                }
                 // 批G：批量写入后统一重读现场
-                val live = engine.readLiveDisabled(touched).first
+                val live = engine.readLiveDisabled(exec.touched).first
                 _state.update {
                     it.copy(
                         applied = applied.all(),
@@ -301,11 +303,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 }
                 // 批HH1（S2）：批量结果记入 Operation——逐 app 条目（协议贯通，管理页结果行消费）
                 opCenter.record(
-                    OperationKind.DISABLE_EVERYWHERE, ruleId,
-                    bulkItems.toList(),
-                    appCtx.getString(R.string.vm_sdk_everywhere_ok, rule.name, ok, targets.size, compWritten),
+                    OperationKind.DISABLE_EVERYWHERE, plan.ruleId,
+                    bulkItems,
+                    appCtx.getString(
+                        R.string.vm_sdk_everywhere_ok, rule.name, exec.ok, targets.size, exec.compWritten
+                    ),
+                    planId = plan.planId,
                 )
-                appCtx.getString(R.string.vm_sdk_everywhere_ok, rule.name, ok, targets.size, compWritten)
+                ""
             }
             onDone(msg)
         }

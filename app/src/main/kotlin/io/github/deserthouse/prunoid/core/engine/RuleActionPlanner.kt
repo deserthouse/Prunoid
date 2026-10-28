@@ -36,6 +36,8 @@ data class RuleActionPlan(
     val eligible: List<PlannedApp>,   // 可执行目标
     val skipped: List<SkippedApp>,    // 跳过明细（逐原因）
     val rulesGeneration: Long,
+    /** 批Q1（B01）：计划冻结身份——执行与结果按此对账（同输入同值，构造期固化）。 */
+    val planId: String = "",
 ) {
     val eligibleCount: Int get() = eligible.size
     val totalComponents: Int get() = eligible.sumOf { it.componentCount }
@@ -102,6 +104,9 @@ object RuleActionPlanner {
             eligible = eligible,
             skipped = skipped,
             rulesGeneration = rulesGeneration,
+            // 批Q1（B01）：构造期固化计划身份（规则代次+目标集指纹），执行/结果对账用
+            planId = "${ruleId}@r${rulesGeneration}#" +
+                (eligible.joinToString(",") { it.packageName + ":" + it.componentCount }).hashCode(),
         )
     }
 }

@@ -251,6 +251,8 @@
     <string name="easter_author_handle">@deserthouse</string>
     <string name="easter_author_en">Ling the Wolp</string>
     <string name="vm_sdk_everywhere_ok">%1$s：完成 %2$d/%3$d 个命中应用，共写入 %4$d 个组件</string>
+    <string name="vm_sdk_everywhere_fail">%1$s：%2$d 个应用全部写入失败（未写入任何组件）</string>
+    <string name="vm_plan_stale">规则已更新，计划已过期——请重新审阅并确认后再执行</string>
     <string name="vm_sdk_on_ok">已禁用 %1$d 项组件</string>
     <string name="sdk_off_full">已恢复本工具禁用的 %1$d 项组件</string>
     <string name="sdk_off_partial">已恢复本工具管理的 %1$d 项；另有 %2$d 项由外部来源禁用，已保留</string>

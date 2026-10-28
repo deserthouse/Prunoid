@@ -263,9 +263,11 @@ fun SdkManageScreen(
                                 },
                                 enabled = !protectedTarget && row.tri != null && !st.busy && st.workMode.capabilities.disablePerApp && st.rootGranted,
                                 modifier = Modifier.semantics {
+                                    // 批Q2（B02）：读屏描述=真实下一动作——按开关当前值（tri，点击分派
+                                    // 的唯一依据）推导；原按 live==FULL 判定致 PARTIAL+On 描述"应用"
+                                    // 而实际分派恢复。现场四态仍由行主体文字独立承载。
                                     contentDescription =
-                                        if (row.live == io.github.deserthouse.prunoid.core.engine.RuleActionPlanner.RowLive.FULL)
-                                            actionRestore else actionApply
+                                        if (row.tri == true) actionRestore else actionApply
                                 }
                             )
                         }
@@ -296,7 +298,13 @@ fun SdkManageScreen(
                 TextButton(
                     onClick = {
                         confirmEverywhere = false
-                        vm.disableSdkEverywhere(ruleId) { it }
+                        // 批Q1（B01）：把确认所见的那份计划冻结传给执行（原只传 ruleId，VM 全量重算
+                        // 致"当前筛选"扩回全部命中、PM 计划暗走 IFW）。执行回执经 OperationCenter
+                        // 呈现（executed→""，不与结果行重复）；前置拒绝（根/账本/代次过期/零目标）
+                        // 返回原因文本 → rowStatus 就地展示（批Q4/B04）。
+                        vm.disableSdkEverywhere(plan) { msg ->
+                            rowStatus = msg.takeIf { it.isNotBlank() }
+                        }
                     }
                 ) { Text(stringResource(R.string.risk_continue), color = MaterialTheme.colorScheme.error) }
             },
