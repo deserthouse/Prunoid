@@ -627,6 +627,10 @@ internal fun RecoveryCards(st: AppUiState, vm: AppViewModel, onMsg: (String) -> 
                 }
             }
         }
+    }
+    // 批Q3（B03）：损坏警告卡条件在此收口——下方常规应急恢复卡（adb 命令/清全部 IFW/卸载提示）
+    // 恒渲染；原括号把常规卡与确认框一并裹进 ledgerCorrupted，健康账本下整个救援区不可见
+    //（批N 1768fdd 拆卡引入的回归，0.26.0/0.26.1 已发版带病）。
     SettingsCard {
         Column(Modifier.padding(vertical = 4.dp)) {
             val clipboard = androidx.compose.ui.platform.LocalClipboardManager.current
@@ -706,7 +710,6 @@ internal fun RecoveryCards(st: AppUiState, vm: AppViewModel, onMsg: (String) -> 
             },
             dismissButton = { TextButton(onClick = { confirmClearIfw = false }) { Text(stringResource(R.string.cancel)) } }
         )
-    }
     }
 
 }
