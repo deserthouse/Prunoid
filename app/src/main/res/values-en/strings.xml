@@ -201,7 +201,7 @@
     <string name="notif_perm_granted">Granted — guard notifications can post</string>
     <string name="notif_perm_denied">Denied — tap to open system settings and allow</string>
     <string name="notif_perm_legacy">Not required on this Android version</string>
-    <string name="stats_cat_center">Hit count</string>
+    <string name="stats_cat_total_line">%1$d hits in total (cross-app)</string>
     <string name="stats_prefix_title">Top 5 unrecognized prefixes</string>
     <string name="stats_prefix_hint">Not in the rule base — blocking them is your own judgment; contributions welcome</string>
     <string name="stats_prefix_count">%1$d components</string>
@@ -239,6 +239,9 @@
     <string name="engine_entry_label">Disable engine</string>
     <string name="cd_engine_select">Choose disable engine</string>
     <string name="manage_plan_line">Plan: %1$s · %2$d components · %3$s</string>
+    <string name="sheet_alias">Aliases</string>
+    <string name="backup_sheet_summary">%1$d restore point(s) · keeping up to %2$d</string>
+    <string name="backup_store_details">Storage details (how it works · path · notes)</string>
     <string name="manage_backup_title">Manage backups</string>
     <string name="manage_backup_sub">Restore points and retention (currently %1$d)</string>
     <string name="vm_plan_stale">Rules updated since confirmation — review the plan and confirm again</string>

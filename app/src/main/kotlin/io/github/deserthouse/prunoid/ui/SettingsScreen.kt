@@ -13,6 +13,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -128,10 +129,13 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BackupDialog(vm: AppViewModel, onMessage: (String) -> Unit, onDismiss: () -> Unit) {
-    // F3：备份=可选机制。对话框披露用法/路径/恢复点/份数（自由填写，不再滑杆）
-    // 批R4（审计 P-6）：组合期 runBlocking 改 LaunchedEffect 异步加载（备份多时不再卡主线程）
+    // F3：备份=可选机制。批S3（V09）：自 AlertDialog 改任务底表——十份时间戳文件/路径说明/
+    // 份数编辑超出对话框承载量（长说明把控件推到末尾）；底表顶部=份数与保留摘要，
+    // 列表=人可读日期主行+文件名次级，存储说明折叠进"存储详情"，恢复动作绑定所选。
+    // 批R4（审计 P-6）：LaunchedEffect 异步加载（备份多时不再卡主线程）
     var backups by remember { mutableStateOf<List<String>>(emptyList()) }
     LaunchedEffect(Unit) { backups = vm.listBackups() }
     // 批J#3：备份快照是全量状态，多选恢复语义不成立——改单选（最后选中者生效）
@@ -139,114 +143,179 @@ fun BackupDialog(vm: AppViewModel, onMessage: (String) -> Unit, onDismiss: () ->
     // 批J2（S06）：显示与存储同口径——存量 0（未设置过）按生效值 1 呈现，不再显示 0 存 1
     var keepText by remember { mutableStateOf(vm.state.value.backupKeep.coerceAtLeast(1).toString()) }
     var confirmRestore by remember { mutableStateOf(false) }
+    var storeOpen by remember { mutableStateOf(false) }
+    // 批S3 lint：组合期读 StateFlow.value 禁用——collectAsState 订阅
+    val bSt by vm.state.collectAsState()
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.backup_entry_title)) },
-        text = {
-            Column(Modifier.verticalScroll(rememberScrollState())) {
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp)
+                .padding(bottom = 24.dp)
+        ) {
+            Text(stringResource(R.string.backup_entry_title), style = MaterialTheme.typography.titleLarge)
+            Spacer(Modifier.height(4.dp))
+            Text(
+                stringResource(
+                    R.string.backup_sheet_summary,
+                    backups.size, bSt.backupKeep.coerceAtLeast(1)
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(Modifier.height(12.dp))
+            // ── 保留份数（自由填写，不再滑杆）──
+            var keepSaved by remember { mutableStateOf(false) }
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    stringResource(R.string.backup_howto),
+                    stringResource(R.string.backup_keep_title),
+                    style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.weight(1f)
+                )
+                OutlinedTextField(
+                    value = keepText,
+                    onValueChange = { v ->
+                        keepText = v.filter { it.isDigit() }.take(5)
+                        keepSaved = false
+                    },
+                    singleLine = true,
+                    modifier = Modifier.width(110.dp)
+                )
+                Spacer(Modifier.width(8.dp))
+                TextButton(
+                    onClick = {
+                        val n = keepText.toIntOrNull()?.coerceIn(1, 99999) ?: 10
+                        vm.setBackupKeep(n)
+                        // 批J2（S06）：回写实际生效值——原输入 0 时提示已保存但实际存 1
+                        keepText = n.toString()
+                        keepSaved = true
+                    },
+                    enabled = keepText.toIntOrNull() != null
+                ) { Text(stringResource(R.string.save)) }
+                if (keepSaved) {
+                    Text(
+                        stringResource(R.string.backup_keep_saved),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+            Spacer(Modifier.height(12.dp))
+            // ── 恢复点：人可读日期主行 + 文件名次级 ──
+            Text(stringResource(R.string.backup_points_title), style = MaterialTheme.typography.titleSmall)
+            if (backups.isEmpty()) {
+                Text(
+                    stringResource(R.string.recovery_empty),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Spacer(Modifier.height(6.dp))
-                Text(
-                    stringResource(R.string.backup_path_label),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    "/data/data/io.github.deserthouse.prunoid/files/backups/",
-                    fontFamily = FontFamily.Monospace,
-                    style = MaterialTheme.typography.labelSmall
-                )
-                Text(
-                    stringResource(R.string.backup_path_note),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(Modifier.height(10.dp))
-                Text(stringResource(R.string.backup_points_title), style = MaterialTheme.typography.titleSmall)
-                if (backups.isEmpty()) {
-                    Text(
-                        stringResource(R.string.recovery_empty),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                } else {
-                    backups.forEach { path ->
-                        // 批J2（S07）：单选语义 RadioButton 化+整行可点（原 Checkbox 且点名称不选）
-                        Row(
-                            Modifier
-                                .fillMaxWidth()
-                                .heightIn(min = 40.dp)
-                                .clickable { selected = path },
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = selected == path,
-                                onClick = { selected = path }
+            } else {
+                Spacer(Modifier.height(4.dp))
+                backups.forEach { path ->
+                    val fname = path.substringAfterLast("/")
+                    // backup_yyyyMMdd-HHmmss.tar.gz → "yyyy-MM-dd HH:mm:ss"
+                    val human = Regex("""backup_(\d{8})-(\d{6})\.tar\.gz""").find(fname)
+                        ?.let { m ->
+                            val (d, t) = m.destructured
+                            "${d.substring(0, 4)}-${d.substring(4, 6)}-${d.substring(6, 8)} " +
+                                "${t.substring(0, 2)}:${t.substring(2, 4)}:${t.substring(4, 6)}"
+                        }
+                    // 批J2（S07）：单选语义 RadioButton 化+整行可点
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 48.dp)
+                            .clip(MaterialTheme.shapes.small)
+                            .clickable { selected = path }
+                            .padding(vertical = 2.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = selected == path,
+                            onClick = { selected = path }
+                        )
+                        Column(Modifier.weight(1f)) {
+                            Text(
+                                human ?: fname,
+                                style = MaterialTheme.typography.bodyMedium,
+                                maxLines = 1, overflow = TextOverflow.Ellipsis
                             )
                             Text(
-                                path.substringAfterLast("/"),
+                                fname,
                                 fontFamily = FontFamily.Monospace,
                                 style = MaterialTheme.typography.labelSmall,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1, overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
-                    TextButton(
-                        onClick = { confirmRestore = true },
-                        enabled = selected != null
-                    ) { Text(stringResource(R.string.restore_selected)) }
                 }
-                Spacer(Modifier.height(10.dp))
-                Text(stringResource(R.string.backup_keep_title), style = MaterialTheme.typography.titleSmall)
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    // 批R5（审计 P-11）：保存给内嵌成功反馈（原 onMessage("") 静默；且 Snackbar 会被对话框 dim 层遮住——批G4 教训）
-                    var keepSaved by remember { mutableStateOf(false) }
-                    OutlinedTextField(
-                        value = keepText,
-                        onValueChange = { v ->
-                            keepText = v.filter { it.isDigit() }.take(5)
-                            keepSaved = false
-                        },
-                        singleLine = true,
-                        modifier = Modifier.width(120.dp)
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    TextButton(
-                        onClick = {
-                            val n = keepText.toIntOrNull()?.coerceIn(1, 99999) ?: 10
-                            vm.setBackupKeep(n)
-                            // 批J2（S06）：回写实际生效值——原输入 0 时提示已保存但实际存 1，字段不回写
-                            keepText = n.toString()
-                            keepSaved = true
-                        },
-                        enabled = keepText.toIntOrNull() != null
-                    ) { Text(stringResource(R.string.save)) }
-                    if (keepSaved) {
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            stringResource(R.string.backup_keep_saved),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
+                Button(
+                    onClick = { confirmRestore = true },
+                    enabled = selected != null,
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                ) { Text(stringResource(R.string.restore_selected)) }
+            }
+            Spacer(Modifier.height(8.dp))
+            // ── 存储详情折叠（howto/路径/说明）──
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .clip(MaterialTheme.shapes.small)
+                    .clickable { storeOpen = !storeOpen }
+                    .padding(vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
-                    stringResource(R.string.backup_keep_note),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    stringResource(R.string.backup_store_details),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f)
+                )
+                Icon(
+                    Icons.Outlined.ExpandMore,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp)
                 )
             }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.close)) }
+            androidx.compose.animation.AnimatedVisibility(
+                visible = storeOpen,
+                enter = androidx.compose.animation.expandVertically() + androidx.compose.animation.fadeIn(),
+                exit = androidx.compose.animation.shrinkVertically() + androidx.compose.animation.fadeOut()
+            ) {
+                Column {
+                    Text(
+                        stringResource(R.string.backup_howto),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        stringResource(R.string.backup_path_label),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        "/data/data/io.github.deserthouse.prunoid/files/backups/",
+                        fontFamily = FontFamily.Monospace,
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                    Text(
+                        stringResource(R.string.backup_path_note),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        stringResource(R.string.backup_keep_note),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
         }
-    )
+    }
 
     if (confirmRestore) {
         AlertDialog(

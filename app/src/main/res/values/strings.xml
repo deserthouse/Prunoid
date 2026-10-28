@@ -217,7 +217,7 @@
     <string name="notif_perm_granted">已授权——守护通知可以发出</string>
     <string name="notif_perm_denied">已拒绝——点按打开系统设置重新允许</string>
     <string name="notif_perm_legacy">此 Android 版本无需该权限</string>
-    <string name="stats_cat_center">命中次数</string>
+    <string name="stats_cat_total_line">共 %1$d 次命中（跨应用）</string>
     <string name="stats_prefix_title">未识别组件前缀 Top 5</string>
     <string name="stats_prefix_hint">不在规则库中——勾选禁用属人工判断；欢迎贡献规则</string>
     <string name="stats_prefix_count">%1$d 组件</string>
@@ -255,6 +255,9 @@
     <string name="engine_entry_label">禁用引擎</string>
     <string name="cd_engine_select">选择禁用引擎</string>
     <string name="manage_plan_line">计划：%1$s · %2$d 个组件 · %3$s</string>
+    <string name="sheet_alias">别名</string>
+    <string name="backup_sheet_summary">%1$d 份恢复点 · 保留上限 %2$d 份</string>
+    <string name="backup_store_details">存储详情（机制 · 路径 · 说明）</string>
     <string name="manage_backup_title">管理备份</string>
     <string name="manage_backup_sub">恢复点列表与保留份数（当前 %1$d 份）</string>
     <string name="vm_plan_stale">规则已更新，计划已过期——请重新审阅并确认后再执行</string>

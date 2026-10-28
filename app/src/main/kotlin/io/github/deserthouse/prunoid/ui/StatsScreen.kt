@@ -2,8 +2,6 @@ package io.github.deserthouse.prunoid.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.draw.clip
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -13,10 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -131,27 +126,38 @@ fun StatsScreen(vm: AppViewModel, modifier: Modifier = Modifier, onOpenSdk: (Str
                 )
             }
         }
-        // 分类环形图（SDK 分类统计为主角）
+        // 分类分布（批S2/V08）：条形行替代环图+图例——148dp 环图+独立图例的纵向成本
+        // 减半，每类"计数·占比+比例条"直接可读；不靠颜色单独承载数值。
         Card(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp)) {
                 Text(stringResource(R.string.stats_cat_title), style = MaterialTheme.typography.titleSmall)
-                Spacer(Modifier.height(12.dp))
-                // 批AA5（E05）+批CC（R5）：响应式按卡片实际可用宽度（非屏幕宽）——
-                // 宽度足够并排，窄内容区上下排列（不靠缩小文字维持横排）
-                androidx.compose.foundation.layout.BoxWithConstraints {
-                    val wide = maxWidth >= 400.dp
-                    if (wide) {
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    stringResource(R.string.stats_cat_total_line, catTotal),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.height(6.dp))
+                catDist.forEach { (cat, n) ->
+                    Column(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            DonutChart(catDist, catTotal, dark, Modifier.size(148.dp))
-                            Spacer(Modifier.width(16.dp))
-                            LegendList(catDist, catPct, dark, Modifier.weight(1f))
+                            Box(Modifier.size(9.dp).background(categoryColor(cat, dark), RoundedCornerShape(50)))
+                            Spacer(Modifier.width(6.dp))
+                            Text(categoryLabel(cat), style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
+                            Text(
+                                "$n · ${catPct[cat] ?: 0}%",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontFamily = FontFamily.Monospace,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
-                    } else {
-                        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                            DonutChart(catDist, catTotal, dark, Modifier.size(148.dp))
-                            Spacer(Modifier.height(12.dp))
-                            LegendList(catDist, catPct, dark, Modifier.fillMaxWidth())
-                        }
+                        Spacer(Modifier.height(3.dp))
+                        Box(
+                            Modifier
+                                .fillMaxWidth(n.toFloat() / catTotal.coerceAtLeast(1))
+                                .height(6.dp)
+                                .background(categoryColor(cat, dark), RoundedCornerShape(50))
+                        )
                     }
                 }
             }
@@ -231,86 +237,4 @@ fun StatsScreen(vm: AppViewModel, modifier: Modifier = Modifier, onOpenSdk: (Str
         }
     }
 }
-
-
-// 批AA5：环图与图例提取为独立 Composable——响应式排列（宽并排/窄上下）复用同一渲染
-@Composable
-private fun DonutChart(
-    catDist: List<Map.Entry<String, Int>>,
-    catTotal: Int,
-    dark: Boolean,
-    modifier: Modifier = Modifier
-) {
-    Box(modifier, contentAlignment = Alignment.Center) {
-        // E10：数据从空到有的过渡（保留原行为，注释如实——非每次入场动画）
-        val sweepIn by animateFloatAsState(
-            targetValue = if (catTotal > 0) 1f else 0f,
-            animationSpec = MotionTokens.chart(),
-            label = "donutSweep"
-        )
-        Canvas(Modifier.fillMaxSize()) {
-            val stroke = 26.dp.toPx()
-            val inset = stroke / 2
-            val arcSize = Size(size.width - stroke, size.height - stroke)
-            var start = -90f
-            if (catTotal > 0) {
-                catDist.forEach { (cat, n) ->
-                    val sweep = n.toFloat() / catTotal * 360f * sweepIn
-                    drawArc(
-                        color = categoryColor(cat, dark),
-                        startAngle = start,
-                        sweepAngle = sweep,
-                        useCenter = false,
-                        topLeft = Offset(inset, inset),
-                        size = arcSize,
-                        style = Stroke(width = stroke)
-                    )
-                    start += sweep
-                }
-            } else {
-                drawArc(
-                    color = Color.Gray.copy(alpha = 0.2f),
-                    startAngle = 0f, sweepAngle = 360f, useCenter = false,
-                    topLeft = Offset(inset, inset), size = arcSize,
-                    style = Stroke(width = stroke)
-                )
-            }
-        }
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("$catTotal", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary)
-            Text(
-                stringResource(R.string.stats_cat_center),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
-@Composable
-private fun LegendList(
-    catDist: List<Map.Entry<String, Int>>,
-    catPct: Map<String, Int>,
-    dark: Boolean,
-    modifier: Modifier = Modifier
-) {
-    Column(modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        catDist.forEach { (cat, n) ->
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.size(9.dp).background(categoryColor(cat, dark), RoundedCornerShape(50)))
-                Spacer(Modifier.width(6.dp))
-                Text(
-                    categoryLabel(cat),
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.weight(1f)
-                )
-                Text(
-                    "$n · ${catPct[cat] ?: 0}%",
-                    style = MaterialTheme.typography.labelSmall,
-                    fontFamily = FontFamily.Monospace,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-    }
-}
+// 批S2（V08）：DonutChart/LegendList 随环图方案退役——分类分布由条形行直接承载

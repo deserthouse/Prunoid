@@ -77,28 +77,27 @@ fun SdkArchiveSheet(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp)
                 .padding(bottom = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.Start
         ) {
-            // ── 头部：品牌/名称/别名/类别/安全（批N3：56dp 容器图标自适应，去固定 22dp）──
-            SdkMonogram(hit.ruleId, hit.name, Modifier.size(56.dp), vm.ruleInfo(hit.ruleId)?.iconUrl, iconSize = 36.dp)
-            Spacer(Modifier.height(8.dp))
-            Text(hit.name, style = MaterialTheme.typography.titleLarge)
-            // 批#11：组内英文别名展示（合并实体的另一名字）
-            vm.aliasesFor(hit.name).takeIf { it.isNotBlank() }?.let { alias ->
-                Text(
-                    alias,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            // ── 头部（批S1/V05）：紧凑左对齐身份行——原 56dp 居中 monogram+多行堆叠占据
+            // 首屏主轴；现身份一行（图标+名称/类别+安全徽标），别名降入资料折叠区。
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                SdkMonogram(hit.ruleId, hit.name, Modifier.size(40.dp), vm.ruleInfo(hit.ruleId)?.iconUrl, iconSize = 24.dp)
+                Spacer(Modifier.width(12.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(hit.name, style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        categoryLabel(hit.category),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                // judge 拉通重审补：档案卡头部四级安全徽标（详情 SDK 行一致性）
+                SafetyBadge(hit.safety)
             }
-            Text(
-                categoryLabel(hit.category),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            // judge 拉通重审补：档案卡头部补四级安全徽标（详情 SDK 行有而此处缺，一致性）
-            Spacer(Modifier.height(6.dp))
-            SafetyBadge(hit.safety)
             Spacer(Modifier.height(10.dp))
             // ── 数据行（批N3/F05）：三分口径同屏对照 ──
             if (!libraryContext) {
@@ -240,6 +239,13 @@ fun SdkArchiveSheet(
                 exit = shrinkVertically() + fadeOut()
             ) {
                 Column {
+                    // 批S1（V05）：别名自首屏头部降入资料区（合并实体的另一名字）
+                    vm.aliasesFor(hit.name).takeIf { it.isNotBlank() }?.let { alias ->
+                        ArchiveFieldCard(stringResource(R.string.sheet_alias)) {
+                            Text(alias, style = MaterialTheme.typography.bodySmall)
+                        }
+                        Spacer(Modifier.height(8.dp))
+                    }
                     info?.sourceLink?.takeIf { it.isNotBlank() }?.let { link ->
                         // 批R5（审计 P-11）：sourceLink 改可点（原 tertiary 色形似链接却只读不可点；CreditEntry 同款触达）
                         val ctx = androidx.compose.ui.platform.LocalContext.current
