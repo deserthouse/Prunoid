@@ -295,6 +295,57 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                 )
                             }
                         }
+                        // 批R1（V02）：引擎=提交计划区的低一级入口——当前引擎可见可改，
+                        // 机制说明随菜单按需展开（原列表内全宽段选已移除）
+                        var engineMenuOpen by remember { mutableStateOf(false) }
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 2.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                stringResource(R.string.engine_entry_label),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Box {
+                                TextButton(
+                                    onClick = { engineMenuOpen = true },
+                                    enabled = !st.busy,
+                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                                ) {
+                                    Text(engineLabel(st.engine), style = MaterialTheme.typography.labelLarge)
+                                    Icon(
+                                        Icons.Outlined.ExpandMore,
+                                        contentDescription = stringResource(R.string.cd_engine_select),
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                                DropdownMenu(expanded = engineMenuOpen, onDismissRequest = { engineMenuOpen = false }) {
+                                    Engine.entries.forEach { e ->
+                                        DropdownMenuItem(
+                                            text = {
+                                                Column(Modifier.padding(vertical = 4.dp)) {
+                                                    Text(engineLabel(e), style = MaterialTheme.typography.labelLarge)
+                                                    Text(
+                                                        stringResource(if (e == Engine.IFW) R.string.ifw_desc else R.string.pm_desc),
+                                                        style = MaterialTheme.typography.bodySmall,
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                    )
+                                                }
+                                            },
+                                            onClick = {
+                                                vm.selectEngine(e)
+                                                engineMenuOpen = false
+                                            },
+                                            enabled = !st.busy
+                                        )
+                                    }
+                                }
+                            }
+                        }
                         Row(
                             Modifier
                                 .fillMaxWidth()
@@ -389,53 +440,9 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item { DetailHeaderCard(app, st, appliedEntry, pm, versionName) { sheetFor = it } }
-            item {
-                Column {
-                    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-                        Engine.entries.forEachIndexed { i, e ->
-                            SegmentedButton(
-                                selected = st.engine == e,
-                                onClick = { vm.selectEngine(e) },
-                                enabled = !st.busy,
-                                shape = SegmentedButtonDefaults.itemShape(
-                                    index = i, count = Engine.entries.size
-                                )
-                            ) { Text(engineLabel(e)) }
-                        }
-                    }
-                    Spacer(Modifier.height(4.dp))
-                    // 批CC（R5）：引擎说明默认单行摘要、点击展开全文——
-                    // 选择任务优先，长机制说明不再占据首屏高度
-                    var engineHelpOpen by remember { mutableStateOf(false) }
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .clip(MaterialTheme.shapes.small)
-                            .clickable { engineHelpOpen = !engineHelpOpen }
-                            .padding(vertical = 2.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            if (st.engine == Engine.IFW)
-                                stringResource(R.string.ifw_desc)
-                            else
-                                stringResource(R.string.pm_desc),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = if (engineHelpOpen) Int.MAX_VALUE else 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f)
-                        )
-                        Icon(
-                            Icons.Outlined.ExpandMore,
-                            contentDescription = null,
-                            modifier = Modifier
-                                .size(16.dp)
-                                .graphicsLayer { rotationZ = if (engineHelpOpen) 180f else 0f }
-                        )
-                    }
-                }
-            }
+            // 批R1（V02）：引擎选择自列表主路径移除——原全宽段选与视图切换同排同强轮廓，
+            // 策略与导航争夺同一级注意力；引擎降为底部提交计划区的低一级入口（见 bottomBar），
+            // 机制说明随菜单按需展开（原单行折叠摘要一并移除）。
             // 分类筛选：按 category 过滤 + 批量勾选操作
             item {
                 SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
@@ -651,47 +658,11 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                     val metaText = if (disN > 0) categoryLabel(hit.category) + " · " + stringResource(R.string.disabled_count, disN)
                         else categoryLabel(hit.category)
                     val metaColor = if (disN > 0) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant
-                    if (LocalConfiguration.current.screenWidthDp < 380) {
-                        Column(Modifier.padding(horizontal = 10.dp, vertical = 12.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Checkbox(
-                                    checked = checked,
-                                    onCheckedChange = { on ->
-                                        if (!st.busy) selected = if (on) selected + hit.ruleId else selected - hit.ruleId
-                                    },
-                                    enabled = !st.busy
-                                )
-                                SdkMonogram(hit.ruleId, hit.name, Modifier.padding(end = 8.dp), vm.ruleInfo(hit.ruleId)?.iconUrl)
-                                Text(
-                                    hit.name,
-                                    style = MaterialTheme.typography.titleSmall,
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.weight(1f)
-                                )
-                                IconButton(onClick = { sheetFor = hit }) {
-                                    Icon(
-                                        Icons.Outlined.Info,
-                                        contentDescription = stringResource(R.string.cd_open_sheet),
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
-                            }
-                            Row(Modifier.padding(start = 50.dp), verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    metaText,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = metaColor,
-                                    modifier = Modifier.weight(1f)
-                                )
-                                SafetyBadge(hit.safety)
-                            }
-                        }
-                    } else {
-                        Row(
-                            Modifier.padding(horizontal = 10.dp, vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
+                    // 批R1（V03）：SDK 行统一两层合同——首行=名称+Info（身份优先），次行=类别·现场状态+安全
+                    // 徽标（风险语义与元数据分离）。原 <380dp 分支造成 411dp 单行拥挤与 360dp 行高跳变
+                    // 两套阅读节奏；全宽度同构后触区不变（整行选择+Info 独立）。
+                    Column(Modifier.padding(horizontal = 10.dp, vertical = 12.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                             Checkbox(
                                 checked = checked,
                                 onCheckedChange = { on ->
@@ -700,12 +671,13 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                 enabled = !st.busy
                             )
                             SdkMonogram(hit.ruleId, hit.name, Modifier.padding(end = 8.dp), vm.ruleInfo(hit.ruleId)?.iconUrl)
-                            Column(Modifier.weight(1f)) {
-                                // 批P3：审计对象名优先——允许两行
-                                Text(hit.name, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                                Text(metaText, style = MaterialTheme.typography.labelSmall, color = metaColor)
-                            }
-                            SafetyBadge(hit.safety)
+                            Text(
+                                hit.name,
+                                style = MaterialTheme.typography.titleSmall,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f)
+                            )
                             IconButton(onClick = { sheetFor = hit }) {
                                 Icon(
                                     Icons.Outlined.Info,
@@ -713,6 +685,15 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                     modifier = Modifier.size(20.dp)
                                 )
                             }
+                        }
+                        Row(Modifier.padding(start = 50.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                metaText,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = metaColor,
+                                modifier = Modifier.weight(1f)
+                            )
+                            SafetyBadge(hit.safety)
                         }
                     }
                 }
@@ -823,7 +804,10 @@ private fun DetailHeaderCard(
     // 首屏让位给"对象+识别范围+当前状态"，选择任务优先
     var techOpen by remember { mutableStateOf(false) }
             Card(Modifier.fillMaxWidth()) {
-                    Column(Modifier.padding(16.dp)) {
+                    // 批R1（V02）：头部卡去重压缩——应用名归顶栏（原卡内 titleMedium 与顶栏重复），
+                    // 图标 52→40dp、内边距 16→12dp；保留两项有标签事实（现场禁用/本工具管理）
+                    // 与技术详情折叠，首屏高度让位 SDK 工作区。
+                    Column(Modifier.padding(12.dp)) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -832,10 +816,9 @@ private fun DetailHeaderCard(
                             coil.compose.AsyncImage(
                                 model = icon,
                                 contentDescription = null,
-                                modifier = Modifier.size(52.dp)
+                                modifier = Modifier.size(40.dp)
                             )
                             Column {
-                                Text(app.label, style = MaterialTheme.typography.titleMedium)
                                 Text(
                                     app.packageName,
                                     fontFamily = FontFamily.Monospace,

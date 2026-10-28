@@ -1,6 +1,7 @@
 package io.github.deserthouse.prunoid.ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -125,7 +126,10 @@ internal fun SectionTitle(title: String) {
 internal fun SettingsSection(title: String, content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit) {
     Column {
         SectionTitle(title)
-        content()
+        // 批R2（V06）：组内明确 12dp 间隔——五个组的子项均为独立任务卡（报告 V06 方案B：
+        // 独立任务卡保独立轮廓+组内间隔；普通设置行才合组单 Surface）。原零缝相贴=
+        // 组与卡两套边界语法叠加的根因表象；全局统一加距会制造其它多余空隙，只在组内层负责。
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) { content() }
     }
 }
 
@@ -420,7 +424,9 @@ internal fun AutomationBackupCard(st: AppUiState, vm: AppViewModel, onShowBackup
                 icon = Icons.Outlined.Autorenew,
                 title = stringResource(R.string.auto_title),
                 subtitle = stringResource(R.string.auto_summary),
-                subtitleMaxLines = 4
+                subtitleMaxLines = 4,
+                // 批R2（V07）：布尔行合同——正文与开关同一切换动作（原仅开关响应，外观近导航行）
+                onClick = { vm.setAutoReapply(!st.autoReapply) }
             ) {
                 Switch(checked = st.autoReapply, onCheckedChange = { vm.setAutoReapply(it) })
             }
@@ -461,14 +467,28 @@ internal fun AutomationBackupCard(st: AppUiState, vm: AppViewModel, onShowBackup
             }
             HorizontalDivider(Modifier.padding(vertical = 4.dp))
             // 批N：备份默认关闭——开关行 + 入口行（开关开后 apply 前才 tar）
+            // 批R2（V07）：拆两个可理解的动作——布尔行整行点击=切换（与开关一致），
+            // "管理备份"独立导航行（尾箭头）；原单行双合同（点正文=管理、点开关=切换）不可预测
             SettingRow(
                 icon = Icons.Outlined.Shield,
                 title = stringResource(R.string.backup_entry_title),
                 subtitle = if (st.backupEnabled) stringResource(R.string.backup_entry_sub, st.backupKeep)
                            else stringResource(R.string.backup_off_sub),
-                onClick = onShowBackup
+                onClick = { vm.setBackupEnabled(!st.backupEnabled) }
             ) {
                 Switch(checked = st.backupEnabled, onCheckedChange = { vm.setBackupEnabled(it) })
+            }
+            SettingRow(
+                icon = Icons.Outlined.Restore,
+                title = stringResource(R.string.manage_backup_title),
+                subtitle = stringResource(R.string.manage_backup_sub, st.backupKeep),
+                onClick = onShowBackup
+            ) {
+                Icon(
+                    Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }

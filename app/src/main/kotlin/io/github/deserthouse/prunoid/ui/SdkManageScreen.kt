@@ -108,35 +108,61 @@ fun SdkManageScreen(
                     )
                 }
             }
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
+            // 批R2（V04）：计划摘要卡——"范围 · 组件数 · 引擎"绑定动作，应用总数降为弱背景；
+            // 原标题行+按钮散排无容器语义，计划与清单混在一行
+            Surface(
+                color = MaterialTheme.colorScheme.surfaceContainerLow,
+                shape = MaterialTheme.shapes.small,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp)
             ) {
-                Text(
-                    stringResource(R.string.sheet_apps_title, userApps.size),
-                    style = MaterialTheme.typography.titleSmall,
-                    modifier = Modifier.weight(1f)
-                )
-                Column(horizontalAlignment = Alignment.End) {
-                    FilledTonalButton(
-                        onClick = { confirmEverywhere = true },
-                        // 批M3（F02）：按钮计数=执行口径（可操作数）；零可操作目标禁用（原因就地呈现）
-                        enabled = plan.eligibleCount > 0 && !st.busy && st.workMode.capabilities.disablePerApp && st.rootGranted,
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
-                    ) {
+                Row(
+                    Modifier.padding(start = 12.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(Modifier.weight(1f)) {
                         Text(
-                            stringResource(R.string.block_everywhere, plan.eligibleCount),
-                            style = MaterialTheme.typography.labelSmall
+                            stringResource(R.string.sheet_apps_title, userApps.size),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                    }
-                    // 批M3（F02）：零可操作目标给原因，不留禁用死按钮
-                    if (plan.hits > 0 && plan.eligibleCount == 0) {
                         Text(
-                            stringResource(R.string.manage_zero_plan),
+                            stringResource(
+                                R.string.manage_plan_line,
+                                stringResource(if (bulkAllScope) R.string.bulk_scope_all else R.string.bulk_scope_filtered, plan.hits),
+                                plan.totalComponents,
+                                io.github.deserthouse.prunoid.ui.engineLabel(plan.engine)
+                            ),
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            stringResource(R.string.manage_plan_summary, plan.hits, plan.eligibleCount, plan.skipped.size),
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.padding(top = 2.dp)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                        if (plan.hits > 0 && plan.eligibleCount == 0) {
+                            // 批M3（F02）：零可操作目标给原因，不留禁用死按钮
+                            Text(
+                                stringResource(R.string.manage_zero_plan),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+                    Column(horizontalAlignment = Alignment.End) {
+                        FilledTonalButton(
+                            onClick = { confirmEverywhere = true },
+                            // 批M3（F02）：按钮计数=执行口径（可操作数）；零可操作目标禁用（原因就地呈现）
+                            enabled = plan.eligibleCount > 0 && !st.busy && st.workMode.capabilities.disablePerApp && st.rootGranted,
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                        ) {
+                            Text(
+                                stringResource(R.string.block_everywhere, plan.eligibleCount),
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                        }
                     }
                 }
             }

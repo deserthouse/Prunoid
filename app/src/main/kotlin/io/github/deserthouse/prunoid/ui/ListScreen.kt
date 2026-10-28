@@ -472,40 +472,32 @@ fun AppListScreen(
                             },
                             trailingContent = {
                                 if (app.matchedSdks.isNotEmpty()) {
-                                    // 批I2（M3E）：元数据徽标=tonal Surface（非 SuggestionChip——那是输入建议语义）；
-                                    // 色点带 surface 描边环保证浅底可见；行整体点击进详情，徽标不再重复交互
-                                    Surface(
-                                        shape = MaterialTheme.shapes.small,
-                                        color = MaterialTheme.colorScheme.surfaceContainerHighest,
-                                        contentColor = MaterialTheme.colorScheme.onSurface
-                                    ) {
-                                        Column(
-                                            horizontalAlignment = Alignment.CenterHorizontally,
-                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                                        ) {
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                                if (worst != null) Box(
-                                                    Modifier
-                                                        .size(8.dp)
-                                                        .background(safetyColors(worst, dark).container, RoundedCornerShape(50))
-                                                        .border(1.dp, MaterialTheme.colorScheme.surfaceContainer, RoundedCornerShape(50))
-                                                )
-                                                Spacer(Modifier.width(5.dp))
-                                                Text(
-                                                    pluralStringResource(R.plurals.badge_sdks, app.matchedSdks.size, app.matchedSdks.size),
-                                                    style = MaterialTheme.typography.labelMedium,
-                                                    fontWeight = FontWeight.Medium
-                                                )
-                                            }
-                                            val adsN = app.matchedSdks.count { it.category == "ads" }
-                                            val pushN = app.matchedSdks.count { it.category == "push" }
-                                            if (adsN + pushN > 0) {
-                                                Text(
-                                                    stringResource(R.string.badge_ads_push_short, adsN, pushN),
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                                )
-                                            }
+                                    // 批R2（V01）：命中数与广告/推送降为次级文本——原 tonal 数字块
+                                    // 形成与应用名称争夺视线的第二焦点；应用是行主角，统计只作背景。
+                                    // 风险色点保留（形状信号，不以色代义）。
+                                    Column(horizontalAlignment = Alignment.End) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            if (worst != null) Box(
+                                                Modifier
+                                                    .size(8.dp)
+                                                    .background(safetyColors(worst, dark).container, RoundedCornerShape(50))
+                                                    .border(1.dp, MaterialTheme.colorScheme.surfaceContainer, RoundedCornerShape(50))
+                                            )
+                                            Spacer(Modifier.width(5.dp))
+                                            Text(
+                                                pluralStringResource(R.plurals.badge_sdks, app.matchedSdks.size, app.matchedSdks.size),
+                                                style = MaterialTheme.typography.labelMedium,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                        val adsN = app.matchedSdks.count { it.category == "ads" }
+                                        val pushN = app.matchedSdks.count { it.category == "push" }
+                                        if (adsN + pushN > 0) {
+                                            Text(
+                                                stringResource(R.string.badge_ads_push_short, adsN, pushN),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
                                         }
                                     }
                                 }
