@@ -228,7 +228,7 @@
     <string name="about_disclaimer_title">免责声明</string>
     <string name="about_disclaimer_body">按“现状”提供，不附带任何担保；root 操作风险自担；与任何商标持有方无关联</string>
     <string name="backup_entry_title">备份与恢复</string>
-    <string name="backup_entry_sub">自动备份 · 当前保留 %1$d 份 · 点按管理</string>
+    <string name="backup_entry_sub">自动备份 · 当前保留 %1$d 份（整行点按切换）</string>
     <string name="backup_howto">每次应用规则前自动创建时点快照（IFW 规则目录 + pm 组件停用状态，单个 tar.gz 归档）。恢复会把所选归档解回原路径并修复归属。</string>
     <string name="backup_path_label">备份存放路径（应用私有目录，卸载即随数据清除；如需留存请先 adb pull）：</string>
     <string name="backup_path_note">此为可选功能：不使用本工具的备份也可通过单 app 恢复 / 清除全部 IFW / adb 应急命令回滚。</string>
@@ -307,7 +307,7 @@
     <string name="reapply_realtime">实时</string>
     <string name="reapply_realtime_desc">常驻前台服务，应用装/更即时重应用（占用一条常驻通知）。</string>
     <string name="reapply_open_desc">启动 Prunoid 时对账一次，缺口提示补齐；无常驻服务（默认）。</string>
-    <string name="backup_off_sub">备份已关闭（可选功能，点开管理）</string>
+    <string name="backup_off_sub">备份已关闭（可选功能；管理见下一行）</string>
     <string name="share_report">分享组件清单（供规则仓研判）</string>
     <string name="about_share_title">组件清单分享说明</string>
     <string name="about_share_body">分享仅包含包名与组件类名（客观事实），不含个人信息；不自动上传，由你经系统分享器手动发出。</string>
