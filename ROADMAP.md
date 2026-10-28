@@ -80,6 +80,7 @@ M1 最小可用 ──→ M2 规则生态 ──→ M3 自动化与共建
 - ✅ v0.16–v0.21: operation-result protocol (four states, per-item outcomes), SDK archive rework, RuleGuard realtime reapply hardening, batch remediation from four external audits
 - ✅ v0.22–v0.24: cross-app management destination, plan-sourced bulk actions (RuleActionPlanner), row live-state model, browsing-context preservation, settings five-task-group layout
 - ✅ v0.25–v0.26: stable line (pre-release flag dropped); detail work-zone rework closes the 360dp first-screen finding; rule repo v13/v14 with byte-level reproducible rebuilds (rebuild-check CI gate)
+- Scheduled next (2026-10-28 review): contract-fix patch (bulk-action plan pass-through incl. scope/engine, partial-row switch action semantics, recovery-card visibility regression, all-fail terminal result), followed by a UI task-structure rework minor (detail workspace, manage scope→plan→result, settings grouping)
 - Rules repo: v14 = 2,079 entities (blocker@55ae4b9 synced; subscription endpoints main/vN both live)
 - Pending user scope: TalkBack / large-font accessibility matrix. Distribution: GitHub Releases only (user decision 2026-10-24, no other channels)
 
