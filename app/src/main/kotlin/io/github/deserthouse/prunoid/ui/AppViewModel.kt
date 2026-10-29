@@ -265,19 +265,38 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 val targets = plan.eligible
                 if (targets.isEmpty()) return@withBusy appCtx.getString(R.string.vm_no_targets)
                 if (_state.value.backupEnabled) engine.backup(_state.value.backupKeep).getOrNull() else null
+                // 批T1（C01）：PM 写前现场读（写锁内一致）——外部已禁用组件入账本 preExisting，
+                // 恢复不误启用（对齐详情路径批Z3/RV-01；原批量 PM 路径完全缺失此步）。
+                val pmBefore = if (plan.engine == Engine.PM) {
+                    plan.eligible.associate { it.packageName to engine.readPmDisabled(it.packageName) }
+                } else emptyMap<String, Set<String>>()
                 val exec = BulkPlanExecutor.execute(
                     plan,
                     applyIfw = { pkg, byType -> engine.applyIfw(pkg, byType) },
-                    applyPm = { pkg, comps -> engine.applyPm(pkg, comps) },
+                    // 批T2（C02）：PM 逐项执行——回执/账本只认实际成功组件
+                    applyPm = { pkg, comps -> engine.applyPmPerItem(pkg, comps) },
                 )
-                // 批X2（审查 R04）+批Q1：成功目标合并入账本——按计划/实际 engine 记账（原固定 IFW）
+                // 批X2（R04）+批Q1+批T1/T2：按实际 engine 记账；只记实际成功组件集；
+                // PM 部分成功包也入账（有真实写入必须可恢复），preExisting=外部既有禁用。
+                val ownedSnapshots = plan.eligible.associate { it.packageName to
+                    applied.get(it.packageName)?.pm?.components.orEmpty().toSet() }
                 plan.eligible.zip(exec.items).forEach { (pa, res) ->
-                    if (res.ok) {
+                    if (res.okComponents.isNotEmpty()) {
+                        val okSet = res.okComponents.toSet()
+                        val preEx = if (plan.engine == Engine.PM) {
+                            BulkPlanExecutor.pmPreExisting(
+                                res.okComponents,
+                                pmBefore[pa.packageName].orEmpty(),
+                                ownedSnapshots[pa.packageName].orEmpty(),
+                            )
+                        } else emptyList()
                         applied.recordMerge(
                             pa.packageName, exec.engine.name,
-                            pa.byType.values.flatten().distinct(),
-                            pa.byType.entries.flatMap { (t, cs) -> cs.map { it to t } }.toMap(),
-                            addedRuleIds = setOf(plan.ruleId)
+                            res.okComponents,
+                            pa.byType.entries.flatMap { (t, cs) -> cs.map { it to t } }
+                                .filter { it.first in okSet }.toMap(),
+                            addedRuleIds = setOf(plan.ruleId),
+                            preExisting = preEx,
                         )
                     }
                 }

@@ -33,6 +33,10 @@ class BulkPlanExecutorTest {
     private class FakeEngine(
         var ifwFailFor: Set<String> = emptySet(),
         var pmFailFor: Set<String> = emptySet(),
+        // 批T2（C02）：部分失败构造——包名→失败组件集（其余组件成功）
+        var pmPartialFor: Map<String, Set<String>> = emptyMap(),
+        // 批T2：IFW 成功但零写入（Result.success(0) 不再冒报计划数）
+        var ifwZeroWriteFor: Set<String> = emptySet(),
     ) {
         val ifwCalls = mutableListOf<Pair<String, Map<String, List<String>>>>()
         val pmCalls = mutableListOf<Pair<String, List<String>>>()
@@ -41,13 +45,14 @@ class BulkPlanExecutorTest {
             { pkg, byType ->
                 ifwCalls += pkg to byType
                 if (pkg in ifwFailFor) Result.failure(IllegalStateException("ifw write failed"))
-                else Result.success(byType.values.sumOf { it.size })
+                else Result.success(if (pkg in ifwZeroWriteFor) 0 else byType.values.sumOf { it.size })
             }
-        val applyPm: suspend (String, List<String>) -> Result<Int> =
+        // 批T2：PM 逐项回执（组件→成败）
+        val applyPm: suspend (String, List<String>) -> List<Pair<String, Boolean>> =
             { pkg, comps ->
                 pmCalls += pkg to comps
-                if (pkg in pmFailFor) Result.failure(IllegalStateException("pm disable failed"))
-                else Result.success(comps.size)
+                val failed = pmPartialFor[pkg].orEmpty()
+                comps.map { it to (pkg !in pmFailFor && it !in failed) }
             }
     }
 
@@ -108,6 +113,46 @@ class BulkPlanExecutorTest {
         assertEquals(listOf("com.ok.app"), exec.touched)
         assertEquals(1, exec.items.count { it.ok })
         assertEquals(1, exec.items.count { !it.ok })
+    }
+
+    @Test
+    fun `pm partial success counts real components and keeps package in touched`() = runBlocking {
+        // 批T2（C02）：PM 部分成功——ok 只计全成功包，但部分成功包有真实写入：
+        // 必须入 touched（现场回读）且 okComponents=成功集（账本只记成项）
+        val apps = listOf(app("com.a", components = mapOf("p/X" to "service", "p/Y" to "receiver")))
+        val plan = RuleActionPlanner.planRuleAction("r1", Engine.PM, apps)
+        val fake = FakeEngine(pmPartialFor = mapOf("com.a" to setOf("p/X")))
+        val exec = BulkPlanExecutor.execute(plan, fake.applyIfw, fake.applyPm)
+        assertEquals(0, exec.ok)                      // 部分成功不计全成功
+        assertEquals(listOf("com.a"), exec.touched)   // 但有真实写入→回读
+        assertEquals(1, exec.compWritten)             // 账本只记成功组件
+        val item = exec.items.single()
+        assertEquals(false, item.ok)
+        assertEquals(listOf("p/Y"), item.okComponents)
+        assertTrue(item.detail.contains("partial 1/2"))
+    }
+
+    @Test
+    fun `ifw zero-write success no longer inflates compWritten`() = runBlocking {
+        // 批T2（C02）反例锁定：Result.success(0)（如 idempotent 无新增）不冒报计划数
+        val apps = listOf(app("com.a", components = mapOf("p/X" to "activity")))
+        val plan = RuleActionPlanner.planRuleAction("r1", Engine.IFW, apps)
+        val fake = FakeEngine(ifwZeroWriteFor = setOf("com.a"))
+        val exec = BulkPlanExecutor.execute(plan, fake.applyIfw, fake.applyPm)
+        assertEquals(1, exec.ok)
+        assertEquals(0, exec.compWritten)
+        assertEquals(0, exec.items.single().compWritten)
+    }
+
+    @Test
+    fun `pmPreExisting keeps external disables and excludes owned`() {
+        // 批T1（C01）：external = before ∩ targets − owned
+        val out = BulkPlanExecutor.pmPreExisting(
+            targets = listOf("p/X", "p/Y", "p/Z"),
+            beforeDisabled = setOf("p/X", "p/Y", "p/W"),  // W 不在目标=与本工具无关
+            owned = setOf("p/Y"),                          // Y 已是本工具写入
+        )
+        assertEquals(listOf("p/X"), out)
     }
 
     @Test

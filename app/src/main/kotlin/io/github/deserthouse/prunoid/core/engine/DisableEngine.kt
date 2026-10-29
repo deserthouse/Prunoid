@@ -406,7 +406,7 @@ class DisableEngine(
             runCatching {
                 require(!isBlockedTarget(context, pkg)) { "system app blocked by whitelist: $pkg" }
                 if (componentNames.isEmpty()) return@runCatching 0
-                val cmds = componentNames.joinToString("; ") { "pm disable $pkg/$it" }
+                val cmds = componentNames.joinToString(" && ") { "pm disable $pkg/$it" }
                 val r = Shell.cmd(cmds).exec()
                 check(r.isSuccess) { "pm disable failed: ${r.err}" }
                 componentNames.size
@@ -417,7 +417,7 @@ class DisableEngine(
         withContext(Dispatchers.IO) {
             runCatching {
                 if (componentNames.isEmpty()) return@runCatching 0
-                val cmds = componentNames.joinToString("; ") { "pm enable $pkg/$it" }
+                val cmds = componentNames.joinToString(" && ") { "pm enable $pkg/$it" }
                 val r = Shell.cmd(cmds).exec()
                 check(r.isSuccess) { "pm enable failed: ${r.err}" }
                 componentNames.size
@@ -431,7 +431,7 @@ class DisableEngine(
             runCatching {
                 require(!isBlockedTarget(context, pkg)) { "system app blocked by whitelist: $pkg" }
                 OperationCenter.chunkedPerItem(componentNames) { block ->
-                    val cmds = block.joinToString("; ") { "pm disable $pkg/$it" }
+                    val cmds = block.joinToString(" && ") { "pm disable $pkg/$it" }
                     Shell.cmd(cmds).exec().isSuccess
                 }
             }.getOrDefault(emptyList())
@@ -442,7 +442,7 @@ class DisableEngine(
             runCatching {
                 if (componentNames.isEmpty()) return@runCatching emptyList()
                 OperationCenter.chunkedPerItem(componentNames) { block ->
-                    val cmds = block.joinToString("; ") { "pm enable $pkg/$it" }
+                    val cmds = block.joinToString(" && ") { "pm enable $pkg/$it" }
                     Shell.cmd(cmds).exec().isSuccess
                 }
             }.getOrDefault(emptyList())

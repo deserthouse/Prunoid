@@ -75,9 +75,13 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
                 NotifPermCard()
             }
 
-            SettingsSection(stringResource(R.string.sec_exec)) {
-                EnginesCard(st, vm)
-                AutomationBackupCard(st, vm, onShowBackup = { showBackup = true })
+            // 批T3（C07 短修）：两个内容卡均仅 ROOT 渲染——非 ROOT 下整组隐藏（不再空标题占位）；
+            // 完整能力分层（根页当前值+二级页）归批U。
+            if (st.workMode.id.name == "ROOT") {
+                SettingsSection(stringResource(R.string.sec_exec)) {
+                    EnginesCard(st, vm)
+                    AutomationBackupCard(st, vm, onShowBackup = { showBackup = true })
+                }
             }
 
             SettingsSection(stringResource(R.string.sec_sub)) {
