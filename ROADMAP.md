@@ -81,6 +81,8 @@ M1 最小可用 ──→ M2 规则生态 ──→ M3 自动化与共建
 - ✅ v0.22–v0.24: cross-app management destination, plan-sourced bulk actions (RuleActionPlanner), row live-state model, browsing-context preservation, settings five-task-group layout
 - ✅ v0.25–v0.26: stable line (pre-release flag dropped); detail work-zone rework closes the 360dp first-screen finding; rule repo v13/v14 with byte-level reproducible rebuilds (rebuild-check CI gate)
 - ✅ v0.26.2–v0.28.0 (2026-10-28 review consumed): contract fixes (frozen bulk plan incl. scope/engine pass-through, all-fail terminal result, recovery card always visible) followed by UI task-structure rework (detail workspace, manage plan card, settings grouping, archive/stats/backup presentation)
+- ✅ v0.28.1–v0.29.0 (2026-10-29 source review consumed): bulk PM ownership/preExisting, per-item receipts, result identity & full-detail sheet, bottom-bar height budget, backup sheet states, shared text tracks
+- Scheduled next (2026-10-30 M3E code+visual reviews): consistency batch — stats top bar & empty state, list scroll preservation, unified failure indicators, light-theme risk-dot visibility, 360dp package name room, settings secondary page (minor)
 - Rules repo: v14 = 2,079 entities (blocker@55ae4b9 synced; subscription endpoints main/vN both live)
 - Pending user scope: TalkBack / large-font accessibility matrix. Distribution: GitHub Releases only (user decision 2026-10-24, no other channels)
 
