@@ -201,7 +201,8 @@
     <string name="notif_perm_granted">Granted — guard notifications can post</string>
     <string name="notif_perm_denied">Denied — tap to open system settings and allow</string>
     <string name="notif_perm_legacy">Not required on this Android version</string>
-    <string name="stats_cat_total_line">%1$d hits in total (cross-app)</string>
+        <string name="stats_cat_total_line">%1$d hits in total (cross-app)</string>
+    <string name="stats_cats_more">Show remaining %1$d categories (%2$d hits)</string>
     <string name="stats_prefix_title">Top 5 unrecognized prefixes</string>
     <string name="stats_prefix_hint">Not in the rule base — blocking them is your own judgment; contributions welcome</string>
     <string name="stats_prefix_count">%1$d components</string>
@@ -237,12 +238,17 @@
     <string name="vm_sdk_everywhere_ok">%1$s: applied to %2$d of %3$d matching apps, %4$d components written</string>
     <string name="vm_sdk_everywhere_fail">%1$s: all %2$d app(s) failed to write (no components written)</string>
     <string name="vm_sdk_everywhere_partial">%1$s: partially written — %2$d components applied, %3$d failed (across %4$d app(s)); failed items are not recorded as managed</string>
+    <string name="manage_result_current">Result for the current plan</string>
+    <string name="result_view_all">View all %1$d items</string>
+    <string name="manage_result_history">Historical result — not the current plan (scope/engine/rules changed)</string>
     <string name="engine_entry_label">Disable engine</string>
     <string name="cd_engine_select">Choose disable engine</string>
     <string name="manage_plan_line">Plan: %1$s · %2$d components · %3$s</string>
     <string name="sheet_alias">Aliases</string>
     <string name="backup_sheet_summary">%1$d restore point(s) · keeping up to %2$d</string>
     <string name="backup_store_details">Storage details (how it works · path · notes)</string>
+    <string name="backup_loading">Reading restore points…</string>
+    <string name="backup_load_error">Failed to read restore points — reopen the sheet or check storage</string>
     <string name="manage_backup_title">Manage backups</string>
     <string name="manage_backup_sub">Restore points and retention (currently %1$d)</string>
     <string name="vm_plan_stale">Rules updated since confirmation — review the plan and confirm again</string>

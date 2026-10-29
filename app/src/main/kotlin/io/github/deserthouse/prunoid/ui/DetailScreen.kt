@@ -197,6 +197,9 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                         // 失败项可持续查看、APPLY 可重试）；重试走同一 VM 提交路径（单一执行入口）
                         val ops by vm.opCenter.operations.collectAsState()
                         ops.lastOrNull { it.target == app.packageName }?.let { op ->
+                            // 批U2（C05）：声明在 let 顶层——折叠态与明细底表共用
+                            var resultOpen by remember { mutableStateOf(false) }
+                            var showResultSheet by remember { mutableStateOf(false) }
                             val (label, color, icon) = when (op.outcome) {
                                 OperationOutcome.SUCCESS -> Triple(
                                     stringResource(R.string.result_success), MaterialTheme.colorScheme.primary, Icons.Outlined.CheckCircle)
@@ -222,7 +225,18 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                     .animateContentSize(MotionTokens.fastSize)
                             ) {
                                 Column(Modifier.padding(horizontal = 10.dp, vertical = 8.dp)) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                    // 批U2（C04/C05）：底栏高度预算——结果卡默认折叠为单行状态
+                                    // （失败明细与重试收进展开区，固定区不再随失败数量无限增高）；
+                                    // 逐项全量明细走共享 OpResultSheet（原 take(3) 截断）
+                                    var resultOpen by remember { mutableStateOf(false) }
+                                    var showResultSheet by remember { mutableStateOf(false) }
+                                    Row(
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .clip(MaterialTheme.shapes.small)
+                                            .clickable { resultOpen = !resultOpen },
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
                                         Icon(icon, contentDescription = null, modifier = Modifier.size(16.dp), tint = color)
                                         Spacer(Modifier.width(6.dp))
                                         Text(
@@ -231,7 +245,16 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                             color = color,
                                             modifier = Modifier.weight(1f)
                                         )
+                                        Icon(
+                                            Icons.Outlined.ExpandMore,
+                                            contentDescription = null,
+                                            modifier = Modifier
+                                                .size(16.dp)
+                                                .graphicsLayer { rotationZ = if (resultOpen) 180f else 0f }
+                                        )
                                     }
+                                    androidx.compose.animation.AnimatedVisibility(visible = resultOpen) {
+                                        Column {
                                     val fails = op.items.filter { !it.ok }
                                     fails.take(3).forEach { f ->
                                         // 批HH3（S6）："✗" 字符改矢量图标（ErrorOutline 12dp）
@@ -253,11 +276,13 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                         }
                                     }
                                     if (fails.size > 3) {
-                                        Text(
-                                            stringResource(R.string.result_more, fails.size - 3),
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
+                                        // 批U2（C05）：截断改全量明细入口（共享 OpResultSheet）
+                                        TextButton(onClick = { showResultSheet = true }) {
+                                            Text(
+                                                stringResource(R.string.result_view_all, fails.size),
+                                                style = MaterialTheme.typography.labelSmall
+                                            )
+                                        }
                                     }
                                     if (op.kind == OperationKind.APPLY && op.retryRuleIds.isNotEmpty()) {
                                         TextButton(
@@ -269,7 +294,13 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                             enabled = !st.busy && st.workMode.capabilities.disablePerApp && st.rootGranted
                                         ) { Text(stringResource(R.string.result_retry)) }
                                     }
+                                        }
+                                    }
                                 }
+                            }
+                            if (showResultSheet) {
+                                // 批U2（C05）：全量明细底表
+                                OpResultSheet(op = op) { showResultSheet = false }
                             }
                         }
                         // 批AA7（M3E 评审 E11）：选择计数随勾选持续可见——滚动后仍知道选了什么；
@@ -661,39 +692,46 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                     // 批R1（V03）：SDK 行统一两层合同——首行=名称+Info（身份优先），次行=类别·现场状态+安全
                     // 徽标（风险语义与元数据分离）。原 <380dp 分支造成 411dp 单行拥挤与 360dp 行高跳变
                     // 两套阅读节奏；全宽度同构后触区不变（整行选择+Info 独立）。
-                    Column(Modifier.padding(horizontal = 10.dp, vertical = 12.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Checkbox(
-                                checked = checked,
-                                onCheckedChange = { on ->
-                                    if (!st.busy) selected = if (on) selected + hit.ruleId else selected - hit.ruleId
-                                },
-                                enabled = !st.busy
-                            )
-                            SdkMonogram(hit.ruleId, hit.name, Modifier.padding(end = 8.dp), vm.ruleInfo(hit.ruleId)?.iconUrl)
-                            Text(
-                                hit.name,
-                                style = MaterialTheme.typography.titleSmall,
-                                maxLines = 2,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.weight(1f)
-                            )
-                            IconButton(onClick = { sheetFor = hit }) {
-                                Icon(
-                                    Icons.Outlined.Info,
-                                    contentDescription = stringResource(R.string.cd_open_sheet),
-                                    modifier = Modifier.size(20.dp)
+                    // 批U4（C08）：共享文本轨道——名称与元数据同一 weight 文本列（原第二层
+                    // 硬编码 start50 形成双轨道）；Checkbox/Info 固定前后列，整行选择语义不变
+                    Row(
+                        Modifier.padding(horizontal = 10.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Checkbox(
+                            checked = checked,
+                            onCheckedChange = { on ->
+                                if (!st.busy) selected = if (on) selected + hit.ruleId else selected - hit.ruleId
+                            },
+                            enabled = !st.busy
+                        )
+                        Column(Modifier.weight(1f)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                SdkMonogram(hit.ruleId, hit.name, Modifier.padding(end = 8.dp), vm.ruleInfo(hit.ruleId)?.iconUrl)
+                                Text(
+                                    hit.name,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f)
                                 )
                             }
+                            Row(Modifier.padding(start = 40.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    metaText,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = metaColor,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                SafetyBadge(hit.safety)
+                            }
                         }
-                        Row(Modifier.padding(start = 50.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                metaText,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = metaColor,
-                                modifier = Modifier.weight(1f)
+                        IconButton(onClick = { sheetFor = hit }) {
+                            Icon(
+                                Icons.Outlined.Info,
+                                contentDescription = stringResource(R.string.cd_open_sheet),
+                                modifier = Modifier.size(20.dp)
                             )
-                            SafetyBadge(hit.safety)
                         }
                     }
                 }

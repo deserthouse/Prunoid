@@ -61,6 +61,8 @@ fun SdkManageScreen(
     var confirmEverywhere by remember { mutableStateOf(false) }
     // 批I1（F2）：结果行消费 OperationCenter；per-app 开关反馈走行内状态（非 Composable 回调不可直接调 Composable）
     var rowStatus by remember { mutableStateOf<String?>(null) }
+    // 批U2（C05）：全量结果明细底表
+    var showResultSheet by remember { mutableStateOf(false) }
     val bulkOperation by vm.opCenter.operations.collectAsState()
     val bulkOp = bulkOperation.lastOrNull {
         it.kind == OperationKind.DISABLE_EVERYWHERE && it.target == ruleId
@@ -178,6 +180,9 @@ fun SdkManageScreen(
             // 批I2（F8）：结果行移入 LazyColumn stickyHeader——长清单滚动后结果仍在视口
             LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 24.dp)) {
                 bulkOp?.let { op ->
+                    // 批U1（C03）：结果与计划身份对账——planId 不匹配=历史结果（引擎/范围变更或
+                    // 规则刷新后残留），显式标注防止误读为本次执行结论
+                    val isCurrent = op.planId == plan.planId
                     stickyHeader(key = "bulk-result") {
                         Surface(
                             color = when (op.outcome) {
@@ -190,6 +195,13 @@ fun SdkManageScreen(
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
                         ) {
                             Column(Modifier.padding(8.dp)) {
+                                Text(
+                                    stringResource(
+                                        if (isCurrent) R.string.manage_result_current else R.string.manage_result_history
+                                    ),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    modifier = Modifier.padding(bottom = 2.dp)
+                                )
                                 Text(op.message, style = MaterialTheme.typography.labelMedium)
                                 op.items.filter { !it.ok }.take(3).forEach { f ->
                                     Text(
@@ -198,6 +210,15 @@ fun SdkManageScreen(
                                         color = MaterialTheme.colorScheme.error,
                                         maxLines = 1, overflow = TextOverflow.Ellipsis
                                     )
+                                }
+                                if (op.items.count { !it.ok } > 3) {
+                                    // 批U2（C05）：全量明细入口（共享 OpResultSheet）
+                                    TextButton(onClick = { showResultSheet = true }) {
+                                        Text(
+                                            stringResource(R.string.result_view_all, op.items.count { !it.ok }),
+                                            style = MaterialTheme.typography.labelSmall
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -300,6 +321,11 @@ fun SdkManageScreen(
                     )
                 }
             }
+        }
+    }
+    bulkOp?.let { op ->
+        if (showResultSheet) {
+            OpResultSheet(op = op) { showResultSheet = false }
         }
     }
     if (confirmEverywhere) {

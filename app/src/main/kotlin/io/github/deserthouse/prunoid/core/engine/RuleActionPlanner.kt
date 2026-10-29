@@ -104,9 +104,14 @@ object RuleActionPlanner {
             eligible = eligible,
             skipped = skipped,
             rulesGeneration = rulesGeneration,
-            // 批Q1（B01）：构造期固化计划身份（规则代次+目标集指纹），执行/结果对账用
-            planId = "${ruleId}@r${rulesGeneration}#" +
-                (eligible.joinToString(",") { it.packageName + ":" + it.componentCount }).hashCode(),
+            // 批Q1（B01）+批U1（C03）：构造期固化计划身份——指纹含规则代次/引擎/排序后的
+            // 包·类型·组件全量（原仅包名+组件数：同数量异组件/异引擎得到相同指纹）
+            planId = "${ruleId}@r${rulesGeneration}#${engine.name}#" +
+                eligible
+                    .flatMap { pa -> pa.byType.entries.flatMap { (t, cs) -> cs.map { "${pa.packageName}|$t|$it" } } }
+                    .sorted()
+                    .joinToString(",")
+                    .hashCode(),
         )
     }
 }

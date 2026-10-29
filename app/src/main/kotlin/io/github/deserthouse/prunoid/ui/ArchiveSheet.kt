@@ -159,6 +159,20 @@ fun SdkArchiveSheet(
                     Switch(checked = checked, onCheckedChange = onToggle)
                 }
             }
+            if (libraryContext) {
+                // 批FF-B3（AA3）：管理职责移至独立目的地——档案弹层回归阅读 + 管理入口行
+                Spacer(Modifier.height(12.dp))
+                val st0 = vm.state.collectAsState().value
+                val userApps = st0.apps.filter { a -> a.matchedSdks.any { it.ruleId == hit.ruleId } }
+                Button(
+                    onClick = { onOpenManage?.invoke() },
+                    enabled = onOpenManage != null && userApps.isNotEmpty(),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(stringResource(R.string.manage_open, userApps.size))
+                }
+            }
+            // 批U4（C09）：管理入口先于实验声明——主要下一步优先
             // 批P：全局声明开关（所有档案卡可见；写 declarations.json）
             val vmDecl = vm.state.collectAsState().value
             var declFail by remember { mutableStateOf(false) }
@@ -197,19 +211,6 @@ fun SdkArchiveSheet(
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.error
                     )
-                }
-            }
-            if (libraryContext) {
-                // 批FF-B3（AA3）：管理职责移至独立目的地——档案弹层回归阅读 + 管理入口行
-                Spacer(Modifier.height(12.dp))
-                val st0 = vm.state.collectAsState().value
-                val userApps = st0.apps.filter { a -> a.matchedSdks.any { it.ruleId == hit.ruleId } }
-                Button(
-                    onClick = { onOpenManage?.invoke() },
-                    enabled = onOpenManage != null && userApps.isNotEmpty(),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(stringResource(R.string.manage_open, userApps.size))
                 }
             }
             Spacer(Modifier.height(12.dp))

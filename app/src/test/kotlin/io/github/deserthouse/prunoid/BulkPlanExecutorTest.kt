@@ -193,6 +193,15 @@ class BulkPlanExecutorTest {
         assertEquals(p1.planId, p1Again.planId)
         assertNotEquals(p1.planId, pGen.planId)
         assertNotEquals(p1.planId, pScope.planId)
-        assertTrue(p1.planId.startsWith("r1@r3#"))
+        assertTrue(p1.planId.startsWith("r1@r3#IFW#"))
+        // 批U1（C03）：指纹含引擎与组件名——同数量异引擎/异组件不得共指纹
+        val pEngine = RuleActionPlanner.planRuleAction("r1", Engine.PM, apps, rulesGeneration = 3)
+        val pComps = RuleActionPlanner.planRuleAction(
+            "r1", Engine.IFW,
+            listOf(app("com.a", components = mapOf("p/Q" to "activity")), app("com.b", components = mapOf("p/R" to "service"))),
+            rulesGeneration = 3,
+        )
+        assertNotEquals(p1.planId, pEngine.planId)
+        assertNotEquals(p1.planId, pComps.planId)   // 同为 2 组件但名称/类型不同
     }
 }

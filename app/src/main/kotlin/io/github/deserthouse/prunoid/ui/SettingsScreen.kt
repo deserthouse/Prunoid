@@ -141,7 +141,16 @@ fun BackupDialog(vm: AppViewModel, onMessage: (String) -> Unit, onDismiss: () ->
     // 列表=人可读日期主行+文件名次级，存储说明折叠进"存储详情"，恢复动作绑定所选。
     // 批R4（审计 P-6）：LaunchedEffect 异步加载（备份多时不再卡主线程）
     var backups by remember { mutableStateOf<List<String>>(emptyList()) }
-    LaunchedEffect(Unit) { backups = vm.listBackups() }
+    // 批U3（C06）：加载/失败/空三态区分——加载中不再冒充"0 份空态"
+    var loadState by remember { mutableStateOf("loading") }  // loading/ready/error
+    LaunchedEffect(Unit) {
+        loadState = try {
+            backups = vm.listBackups()
+            "ready"
+        } catch (e: Exception) {
+            "error"
+        }
+    }
     // 批J#3：备份快照是全量状态，多选恢复语义不成立——改单选（最后选中者生效）
     var selected by remember { mutableStateOf<String?>(null) }
     // 批J2（S06）：显示与存储同口径——存量 0（未设置过）按生效值 1 呈现，不再显示 0 存 1
@@ -162,12 +171,17 @@ fun BackupDialog(vm: AppViewModel, onMessage: (String) -> Unit, onDismiss: () ->
             Text(stringResource(R.string.backup_entry_title), style = MaterialTheme.typography.titleLarge)
             Spacer(Modifier.height(4.dp))
             Text(
-                stringResource(
-                    R.string.backup_sheet_summary,
-                    backups.size, bSt.backupKeep.coerceAtLeast(1)
-                ),
+                when (loadState) {
+                    "loading" -> stringResource(R.string.backup_loading)
+                    "error" -> stringResource(R.string.backup_load_error)
+                    else -> stringResource(
+                        R.string.backup_sheet_summary,
+                        backups.size, bSt.backupKeep.coerceAtLeast(1)
+                    )
+                },
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = if (loadState == "error") MaterialTheme.colorScheme.error
+                else MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(Modifier.height(12.dp))
             // ── 保留份数（自由填写，不再滑杆）──
@@ -207,17 +221,19 @@ fun BackupDialog(vm: AppViewModel, onMessage: (String) -> Unit, onDismiss: () ->
                 }
             }
             Spacer(Modifier.height(12.dp))
-            // ── 恢复点：人可读日期主行 + 文件名次级 ──
+            // ── 恢复点：LazyColumn 受限高度（批U3/C06——eager forEach 成本随份数线性增长）──
             Text(stringResource(R.string.backup_points_title), style = MaterialTheme.typography.titleSmall)
-            if (backups.isEmpty()) {
+            if (loadState == "ready" && backups.isEmpty()) {
                 Text(
                     stringResource(R.string.recovery_empty),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-            } else {
+            } else if (loadState == "ready") {
                 Spacer(Modifier.height(4.dp))
-                backups.forEach { path ->
+                androidx.compose.foundation.lazy.LazyColumn(Modifier.heightIn(max = 340.dp)) {
+                    items(backups.size) { idx ->
+                        val path = backups[idx]
                     val fname = path.substringAfterLast("/")
                     // backup_yyyyMMdd-HHmmss.tar.gz → "yyyy-MM-dd HH:mm:ss"
                     val human = Regex("""backup_(\d{8})-(\d{6})\.tar\.gz""").find(fname)
@@ -256,6 +272,8 @@ fun BackupDialog(vm: AppViewModel, onMessage: (String) -> Unit, onDismiss: () ->
                         }
                     }
                 }
+                }
+                // 批U3（C06）：恢复动作固定于列表之后一次可达（不穿越全部条目）
                 Button(
                     onClick = { confirmRestore = true },
                     enabled = selected != null,

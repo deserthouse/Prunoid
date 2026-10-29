@@ -138,7 +138,12 @@ fun StatsScreen(vm: AppViewModel, modifier: Modifier = Modifier, onOpenSdk: (Str
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(Modifier.height(6.dp))
-                catDist.forEach { (cat, n) ->
+                // 批U4（C10）：Top N+其余合计——类目线性增长的高度成本有界（报告 C10）
+                var showAllCats by remember { mutableStateOf(false) }
+                val visibleCats = if (showAllCats || catDist.size <= 8) catDist else catDist.take(8)
+                val restCount = catDist.size - visibleCats.size
+                val restSum = catDist.drop(visibleCats.size).sumOf { it.value }
+                visibleCats.forEach { (cat, n) ->
                     Column(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Box(Modifier.size(9.dp).background(categoryColor(cat, dark), RoundedCornerShape(50)))
@@ -157,6 +162,14 @@ fun StatsScreen(vm: AppViewModel, modifier: Modifier = Modifier, onOpenSdk: (Str
                                 .fillMaxWidth(n.toFloat() / catTotal.coerceAtLeast(1))
                                 .height(6.dp)
                                 .background(categoryColor(cat, dark), RoundedCornerShape(50))
+                        )
+                    }
+                }
+                if (restCount > 0) {
+                    TextButton(onClick = { showAllCats = true }) {
+                        Text(
+                            stringResource(R.string.stats_cats_more, restCount, restSum),
+                            style = MaterialTheme.typography.labelSmall
                         )
                     }
                 }
