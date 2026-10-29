@@ -71,18 +71,50 @@ fun StatsScreen(vm: AppViewModel, modifier: Modifier = Modifier, onOpenSdk: (Str
         m.entries.sortedByDescending { it.value }.take(5)
     }
 
+    // 批V4（ME-01/VV-02）：统计页补 TopAppBar——标题常驻（原滚动列内 Text 滚出视口后
+    // 页面失去上下文）；副标题给三量摘要，与其他根 tab 骨架同构
+    androidx.compose.material3.Scaffold(
+        topBar = {
+            androidx.compose.material3.TopAppBar(
+                title = {
+                    Column {
+                        Text(stringResource(R.string.stats_title), style = MaterialTheme.typography.titleLarge)
+                        Text(
+                            stringResource(R.string.stats_summary_line, totalIdentified, st.apps.size),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            )
+        }
+    ) { innerPadding ->
     Column(
         modifier = Modifier
+            .padding(innerPadding)
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // 批AA5（M3E 评审 E05）：页面标题与其他主页面一致（此前统计页无标题区）
-        Text(
-            stringResource(R.string.stats_title),
-            style = MaterialTheme.typography.titleLarge
-        )
+        // 批V5（ME-04）：空数据态——"先扫描"引导替代零值卡堆（工具应用第一印象路径）
+        if (st.apps.isEmpty()) {
+            Card(Modifier.fillMaxWidth()) {
+                Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        stringResource(R.string.stats_empty_title),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        stringResource(R.string.stats_empty_body),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+        if (st.apps.isNotEmpty()) {
         // 总量卡
         // 批N4（F11）：三量分明——命中次数（跨应用）/独立 SDK/已管组件（按账本）；
         // 扫描应用数降为卡片脚注（原"在机识别 SDK"实为命中次数，与库页独立口径混淆）
@@ -157,12 +189,20 @@ fun StatsScreen(vm: AppViewModel, modifier: Modifier = Modifier, onOpenSdk: (Str
                             )
                         }
                         Spacer(Modifier.height(3.dp))
+                        // 批V5（VV-03）：满宽底轨提供 100% 参照（surfaceVariant 高 6dp 同圆角）
                         Box(
                             Modifier
-                                .fillMaxWidth(n.toFloat() / catTotal.coerceAtLeast(1))
+                                .fillMaxWidth()
                                 .height(6.dp)
-                                .background(categoryColor(cat, dark), RoundedCornerShape(50))
-                        )
+                                .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(50))
+                        ) {
+                            Box(
+                                Modifier
+                                    .fillMaxWidth(n.toFloat() / catTotal.coerceAtLeast(1))
+                                    .height(6.dp)
+                                    .background(categoryColor(cat, dark), RoundedCornerShape(50))
+                            )
+                        }
                     }
                 }
                 if (restCount > 0) {
@@ -175,8 +215,8 @@ fun StatsScreen(vm: AppViewModel, modifier: Modifier = Modifier, onOpenSdk: (Str
                 }
             }
         }
-        // 在机 SDK 排行
-        Card(Modifier.fillMaxWidth()) {
+        // 在机 SDK 排行（批V5：空数据不渲染空壳卡）
+        if (rows.isNotEmpty()) Card(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp)) {
                 Text(stringResource(R.string.stats_rank_title), style = MaterialTheme.typography.titleSmall)
                 Spacer(Modifier.height(8.dp))
@@ -248,6 +288,8 @@ fun StatsScreen(vm: AppViewModel, modifier: Modifier = Modifier, onOpenSdk: (Str
                 }
             }
         }
+        }
+    }
     }
 }
 // 批S2（V08）：DonutChart/LegendList 随环图方案退役——分类分布由条形行直接承载

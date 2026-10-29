@@ -118,6 +118,11 @@ fun SdkPrunerApp() {
     val listSortName = androidx.compose.runtime.saveable.rememberSaveable {
         mutableStateOf(io.github.deserthouse.prunoid.ui.AppSort.DEFAULT.name)
     }
+    // 批V4（ME-02）：列表滚动位同款提升——tab 往返保持（原 rememberLazyListState 在
+    // tab 分支内，分支切换即销毁回顶；库页 libListState 已有先例）
+    val listListState = androidx.compose.runtime.saveable.rememberSaveable(
+        saver = androidx.compose.foundation.lazy.LazyListState.Saver
+    ) { androidx.compose.foundation.lazy.LazyListState() }
     // 批M5（F04）：库页浏览上下文同款外提——查询/作用域/排序/滚动位（028→030 丢失实证）
     val libQuery = androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("") }
     val libTab = androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(0) }
@@ -184,6 +189,7 @@ fun SdkPrunerApp() {
                         when (nav.tab) {
                             0 -> AppListScreen(
                                 vm,
+                                listStateState = listListState,
                                 queryState = listQuery,
                                 onQueryChange = { listQuery.value = it },
                                 sortNameState = listSortName,

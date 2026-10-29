@@ -38,8 +38,6 @@ fun SdkManageScreen(
     val st by vm.state.collectAsState()
     val snackbar = rememberSnackbar()
     val ruleName = remember(ruleId) { vm.allRules().firstOrNull { it.id == ruleId }?.name ?: ruleId }
-    // 批HH3（S4）：topBar 副标题计数 remember 化——避免每次重组全表扫
-    val matchedCount = remember(ruleId, st.apps) { userAppsCount(st, ruleId) }
     // 状态声明提升至 Scaffold 外——确认对话框在组合顶层需要引用（作用域贯通）
     val liveSet0 = st.liveDisabled
     val userApps = st.apps.filter { a -> a.matchedSdks.any { it.ruleId == ruleId } }
@@ -204,12 +202,8 @@ fun SdkManageScreen(
                                 )
                                 Text(op.message, style = MaterialTheme.typography.labelMedium)
                                 op.items.filter { !it.ok }.take(3).forEach { f ->
-                                    Text(
-                                        "✗ " + f.target + (f.detail.takeIf { it.isNotBlank() }?.let { d -> " — $d" } ?: ""),
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.error,
-                                        maxLines = 1, overflow = TextOverflow.Ellipsis
-                                    )
+                                    // 批V2（ME-03）：共享失败行构件（原 "✗" 文本前缀）
+                                    FailureItemRow(f)
                                 }
                                 if (op.items.count { !it.ok } > 3) {
                                     // 批U2（C05）：全量明细入口（共享 OpResultSheet）
@@ -364,9 +358,6 @@ fun SdkManageScreen(
         )
     }
 }
-
-private fun userAppsCount(st: io.github.deserthouse.prunoid.ui.AppUiState, ruleId: String): Int =
-    st.apps.count { a -> a.matchedSdks.any { it.ruleId == ruleId } }
 
 /** 批HH2（S3）：管理页行模型——pkg+三态+计数派生后固化，key 掺状态防 LazyColumn 跳过重组；
  *  批M4（F03）：live 四态（UNKNOWN/NONE/PARTIAL/FULL）进模型 */

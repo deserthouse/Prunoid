@@ -40,6 +40,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.res.stringResource
@@ -77,6 +78,7 @@ fun AppListScreen(
     onSortNameChange: (String) -> Unit,
     onOpen: (ScannedApp) -> Unit,
     onOpenSettings: () -> Unit,
+    listStateState: androidx.compose.foundation.lazy.LazyListState,
     onOpenLibrary: () -> Unit
 ) {
     val st by vm.state.collectAsState()
@@ -128,7 +130,8 @@ fun AppListScreen(
             }
     }
 
-    val listState = rememberLazyListState()
+    // 批V4（ME-02）：state 自根路由传入（tab 往返保持滚动位）
+    val listState = listStateState
     val scope = rememberCoroutineScope()
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },
@@ -139,7 +142,7 @@ fun AppListScreen(
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
-                            .clip(androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
+                            .clip(MaterialTheme.shapes.small)
                             .clickable {
                                 scope.launch { listState.animateScrollToItem(0) }
                             }
@@ -480,8 +483,12 @@ fun AppListScreen(
                                             if (worst != null) Box(
                                                 Modifier
                                                     .size(8.dp)
-                                                    .background(safetyColors(worst, dark).container, RoundedCornerShape(50))
-                                                    .border(1.dp, MaterialTheme.colorScheme.surfaceContainer, RoundedCornerShape(50))
+                                                    // 批V3（VV-01）：亮暗可见性对称——container 色在浅色
+                                                    // 主题近白底不可见（FFDAD5 vs surface），改双层：
+                                                    // onContainer 实心（深色、两主题均可辨）+ container 外环
+                                                    // 保留色相语义；形状信号不以亮度依赖。
+                                                    .background(safetyColors(worst, dark).onContainer, RoundedCornerShape(50))
+                                                    .border(2.dp, safetyColors(worst, dark).container, RoundedCornerShape(50))
                                             )
                                             Spacer(Modifier.width(5.dp))
                                             Text(
@@ -493,11 +500,16 @@ fun AppListScreen(
                                         val adsN = app.matchedSdks.count { it.category == "ads" }
                                         val pushN = app.matchedSdks.count { it.category == "push" }
                                         if (adsN + pushN > 0) {
-                                            Text(
-                                                stringResource(R.string.badge_ads_push_short, adsN, pushN),
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
+                                            // 批V6（VV-04）：窄屏（内容宽 <380dp）仅保留 SDK 数主行——
+                                            // 广告/推送次级让位（包名是判别信息，不再被挤至过激省略）；
+                                            // 详情页仍可见完整构成
+                                            if (LocalConfiguration.current.screenWidthDp >= 380) {
+                                                Text(
+                                                    stringResource(R.string.badge_ads_push_short, adsN, pushN),
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                            }
                                         }
                                     }
                                 }

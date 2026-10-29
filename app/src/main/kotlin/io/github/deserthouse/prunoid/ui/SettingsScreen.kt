@@ -1,6 +1,7 @@
 package io.github.deserthouse.prunoid.ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
@@ -38,6 +39,9 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
     var addSourceError by remember { mutableStateOf<String?>(null) }
     var showAddSource by remember { mutableStateOf(false) }
     var showBackup by remember { mutableStateOf(false) }
+    // 批V7（ME-05）：执行与自动化二级页——根页留当前值+导航行，机制全文/引擎段选/备份明细下沉
+    var showExec by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+    androidx.activity.compose.BackHandler(enabled = showExec) { showExec = false }
 
     SnackbarEffect(snackbar, msg, msgSeq)
 
@@ -75,12 +79,25 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
                 NotifPermCard()
             }
 
-            // 批T3（C07 短修）：两个内容卡均仅 ROOT 渲染——非 ROOT 下整组隐藏（不再空标题占位）；
-            // 完整能力分层（根页当前值+二级页）归批U。
-            if (st.workMode.id.name == "ROOT") {
-                SettingsSection(stringResource(R.string.sec_exec)) {
-                    EnginesCard(st, vm)
-                    AutomationBackupCard(st, vm, onShowBackup = { showBackup = true })
+            // 批V7（ME-05 完整分层）：执行与自动化下沉二级页——根页仅导航行+当前值
+            // （默认引擎/自动重应用）；机制全文、引擎段选、备份明细随二级页。
+            // 批T3 空组问题随之消解（导航行恒在、副标题如实呈现当前模式）。
+            SettingsSection(stringResource(R.string.sec_exec)) {
+                SettingRow(
+                    icon = Icons.Outlined.Tune,
+                    title = stringResource(R.string.sec_exec),
+                    subtitle = stringResource(
+                        R.string.exec_nav_sub,
+                        engineLabel(st.defaultEngine),
+                        if (st.autoReapply) stringResource(R.string.common_on) else stringResource(R.string.common_off)
+                    ),
+                    onClick = { showExec = true }
+                ) {
+                    Icon(
+                        Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
 
@@ -103,11 +120,14 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
         }
     }
 
-    if (showBackup) {
-        BackupDialog(
+    if (showExec) {
+        SettingsExecScreen(
             vm = vm,
             onMessage = { show(it) },
-            onDismiss = { showBackup = false }
+            showBackup = showBackup,
+            onShowBackup = { showBackup = true },
+            onDismissBackup = { showBackup = false },
+            onBack = { showExec = false }
         )
     }
 
@@ -422,4 +442,59 @@ fun AddSourceDialog(onDismiss: () -> Unit, onConfirm: (String, String) -> Unit, 
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } }
     )
+}
+
+/** 批V7（ME-05）：执行与自动化二级页——EnginesCard/AutomationBackupCard 自根页下沉；
+ *  机制全文、引擎段选与备份明细在此层，根页保留导航行+当前值摘要。 */
+@Composable
+fun SettingsExecScreen(
+    vm: AppViewModel,
+    onMessage: (String) -> Unit,
+    showBackup: Boolean,
+    onShowBackup: () -> Unit,
+    onDismissBackup: () -> Unit,
+    onBack: () -> Unit
+) {
+    val st by vm.state.collectAsState()
+    val snackbar = rememberSnackbar()
+    // 批V7：备份操作消息在本层 Snackbar 呈现（根页被本页覆盖，根页 snackbar 不可见）；
+    // msgSeq 计数保证同文本连发也能重弹
+    var subMsg by remember { mutableStateOf<String?>(null) }
+    var subMsgSeq by remember { mutableStateOf(0) }
+    val onSubMsg: (String) -> Unit = { subMsg = it; subMsgSeq++ }
+    SnackbarEffect(snackbar, subMsg, subMsgSeq)
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        snackbarHost = { SnackbarHost(snackbar) },
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.sec_exec), style = MaterialTheme.typography.titleLarge) },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
+            )
+        }
+    ) { padding ->
+        Column(
+            Modifier
+                .padding(padding)
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp)
+        ) {
+            Spacer(Modifier.height(4.dp))
+            SettingsSection(stringResource(R.string.sec_exec)) {
+                EnginesCard(st, vm)
+                AutomationBackupCard(st, vm, onShowBackup = onShowBackup)
+            }
+            Spacer(Modifier.height(8.dp))
+        }
+    }
+    if (showBackup) {
+        BackupDialog(vm = vm, onMessage = onSubMsg, onDismiss = onDismissBackup)
+    }
 }

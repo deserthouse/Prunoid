@@ -4,6 +4,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
+import androidx.compose.ui.Alignment
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.Icons
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -47,35 +50,30 @@ fun OpResultSheet(op: Operation, onDismiss: () -> Unit) {
                 Modifier
                     .fillMaxWidth()
                     .heightIn(max = 420.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 items(op.items, key = { it.target + it.detail + it.ok.toString() }) { item ->
-                    Row(Modifier.fillMaxWidth()) {
-                        Text(
-                            if (item.ok) "✓" else "✗",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = if (item.ok) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
-                            modifier = Modifier.width(20.dp)
-                        )
-                        Column {
+                    // 批V2（ME-03）：失败项走共享 FailureItemRow（矢量图标+语义描述）；
+                    // 成功项行用 CheckCircle 同构（原 ✓/✗ 文本字符退役）
+                    if (item.ok) {
+                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Outlined.CheckCircle,
+                                contentDescription = null,
+                                modifier = Modifier.size(14.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(Modifier.width(4.dp))
                             Text(
                                 item.target,
                                 style = MaterialTheme.typography.bodySmall,
                                 fontFamily = FontFamily.Monospace,
-                                maxLines = 2,
+                                maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
-                            if (item.detail.isNotBlank()) {
-                                Text(
-                                    item.detail,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = if (item.ok) MaterialTheme.colorScheme.onSurfaceVariant
-                                    else MaterialTheme.colorScheme.error,
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
                         }
+                    } else {
+                        FailureItemRow(item)
                     }
                 }
             }

@@ -13,7 +13,6 @@ import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.expressiveLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -52,6 +51,9 @@ private val AppShapes = Shapes(
 )
 
 // 动效规格（批Q2）："克制 100~500ms tween"契约的代码载体；图表入场单独放行 600ms。
+// 批V8（ME-06）：导航运动规则唯一事实源——根 tab 间=瞬时切换（同层高频切换不做过渡），
+// 目的地进出=Crossfade(MotionTokens.fastFloat)；新导航代码不得另起规格。
+// 批V8（ME-08）：表面内容边距唯一规则——全屏页面横向 16dp；ModalBottomSheet 横向 20dp。
 object MotionTokens {
     const val FAST_MS = 150
     const val SHEET_MS = 300

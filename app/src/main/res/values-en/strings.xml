@@ -202,7 +202,13 @@
     <string name="notif_perm_denied">Denied — tap to open system settings and allow</string>
     <string name="notif_perm_legacy">Not required on this Android version</string>
         <string name="stats_cat_total_line">%1$d hits in total (cross-app)</string>
-    <string name="stats_cats_more">Show remaining %1$d categories (%2$d hits)</string>
+        <string name="stats_cats_more">Show remaining %1$d categories (%2$d hits)</string>
+        <string name="stats_summary_line">%1$d hits · %2$d apps scanned</string>
+        <string name="stats_empty_title">No scan data yet</string>
+    <string name="exec_nav_sub">Default engine %1$s · auto re-apply %2$s</string>
+    <string name="common_on">On</string>
+    <string name="common_off">Off</string>
+    <string name="stats_empty_body">Pull to scan from the Apps tab. Once scanned, hits, category distribution and rankings appear here.</string>
     <string name="stats_prefix_title">Top 5 unrecognized prefixes</string>
     <string name="stats_prefix_hint">Not in the rule base — blocking them is your own judgment; contributions welcome</string>
     <string name="stats_prefix_count">%1$d components</string>
@@ -239,7 +245,8 @@
     <string name="vm_sdk_everywhere_fail">%1$s: all %2$d app(s) failed to write (no components written)</string>
     <string name="vm_sdk_everywhere_partial">%1$s: partially written — %2$d components applied, %3$d failed (across %4$d app(s)); failed items are not recorded as managed</string>
     <string name="manage_result_current">Result for the current plan</string>
-    <string name="result_view_all">View all %1$d items</string>
+        <string name="result_view_all">View all %1$d items</string>
+    <string name="result_item_failed">failed</string>
     <string name="manage_result_history">Historical result — not the current plan (scope/engine/rules changed)</string>
     <string name="engine_entry_label">Disable engine</string>
     <string name="cd_engine_select">Choose disable engine</string>

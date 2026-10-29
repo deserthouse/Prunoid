@@ -257,23 +257,8 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                         Column {
                                     val fails = op.items.filter { !it.ok }
                                     fails.take(3).forEach { f ->
-                                        // 批HH3（S6）："✗" 字符改矢量图标（ErrorOutline 12dp）
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Icon(
-                                                Icons.Outlined.ErrorOutline,
-                                                contentDescription = null,
-                                                modifier = Modifier.size(12.dp),
-                                                tint = MaterialTheme.colorScheme.error
-                                            )
-                                            Spacer(Modifier.width(4.dp))
-                                            Text(
-                                                f.target + (f.detail.takeIf { it.isNotBlank() }?.let { d -> " — $d" } ?: ""),
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = MaterialTheme.colorScheme.error,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis
-                                            )
-                                        }
+                                        // 批V2（ME-03）：共享失败行构件（HH3 矢量图标方案收编为共享件）
+                                        FailureItemRow(f)
                                     }
                                     if (fails.size > 3) {
                                         // 批U2（C05）：截断改全量明细入口（共享 OpResultSheet）
