@@ -252,6 +252,7 @@
     <string name="easter_author_en">Ling the Wolp</string>
     <string name="vm_sdk_everywhere_ok">%1$s：完成 %2$d/%3$d 个命中应用，共写入 %4$d 个组件</string>
     <string name="vm_sdk_everywhere_fail">%1$s：%2$d 个应用全部写入失败（未写入任何组件）</string>
+    <string name="vm_sdk_everywhere_partial">%1$s：部分写入 %2$d 个组件、%3$d 个失败（涉及 %4$d 个应用）；失败的组件未计入本工具账本</string>
     <string name="engine_entry_label">禁用引擎</string>
     <string name="cd_engine_select">选择禁用引擎</string>
     <string name="manage_plan_line">计划：%1$s · %2$d 个组件 · %3$s</string>

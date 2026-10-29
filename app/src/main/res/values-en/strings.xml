@@ -236,6 +236,7 @@
     <string name="easter_author_en">Ling the Wolp</string>
     <string name="vm_sdk_everywhere_ok">%1$s: applied to %2$d of %3$d matching apps, %4$d components written</string>
     <string name="vm_sdk_everywhere_fail">%1$s: all %2$d app(s) failed to write (no components written)</string>
+    <string name="vm_sdk_everywhere_partial">%1$s: partially written — %2$d components applied, %3$d failed (across %4$d app(s)); failed items are not recorded as managed</string>
     <string name="engine_entry_label">Disable engine</string>
     <string name="cd_engine_select">Choose disable engine</string>
     <string name="manage_plan_line">Plan: %1$s · %2$d components · %3$s</string>

@@ -301,8 +301,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     }
                 }
                 val bulkItems = exec.items.map { OperationItem(it.pkg, it.ok, it.detail) }
-                // 批Q4（B04）：全失败也是终态——先记录再返回，管理页结果行即时可见（不再停留旧成功）
-                if (exec.ok == 0) {
+                // 批Q4（B04）+批T2 收尾：真全失败=零成功包且零写入；有部分成功包（compWritten>0）
+                // 不再误报"全部写入失败"（AVD 实证 46/51 曾被误分类）——照常记账+回读，消息用部分文案
+                if (exec.ok == 0 && exec.compWritten == 0) {
                     opCenter.record(
                         OperationKind.DISABLE_EVERYWHERE, plan.ruleId,
                         bulkItems,
@@ -321,12 +322,19 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     )
                 }
                 // 批HH1（S2）：批量结果记入 Operation——逐 app 条目（协议贯通，管理页结果行消费）
+                val doneMsg = if (exec.ok == targets.size)
+                    appCtx.getString(
+                        R.string.vm_sdk_everywhere_ok, rule.name, exec.ok, targets.size, exec.compWritten
+                    )
+                else
+                    appCtx.getString(
+                        R.string.vm_sdk_everywhere_partial, rule.name, exec.compWritten,
+                        targets.sumOf { it.componentCount } - exec.compWritten, exec.touched.size
+                    )
                 opCenter.record(
                     OperationKind.DISABLE_EVERYWHERE, plan.ruleId,
                     bulkItems,
-                    appCtx.getString(
-                        R.string.vm_sdk_everywhere_ok, rule.name, exec.ok, targets.size, exec.compWritten
-                    ),
+                    doneMsg,
                     planId = plan.planId,
                 )
                 ""
