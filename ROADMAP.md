@@ -82,7 +82,8 @@ M1 最小可用 ──→ M2 规则生态 ──→ M3 自动化与共建
 - ✅ v0.25–v0.26: stable line (pre-release flag dropped); detail work-zone rework closes the 360dp first-screen finding; rule repo v13/v14 with byte-level reproducible rebuilds (rebuild-check CI gate)
 - ✅ v0.26.2–v0.28.0 (2026-10-28 review consumed): contract fixes (frozen bulk plan incl. scope/engine pass-through, all-fail terminal result, recovery card always visible) followed by UI task-structure rework (detail workspace, manage plan card, settings grouping, archive/stats/backup presentation)
 - ✅ v0.28.1–v0.29.0 (2026-10-29 source review consumed): bulk PM ownership/preExisting, per-item receipts, result identity & full-detail sheet, bottom-bar height budget, backup sheet states, shared text tracks
-- Scheduled next (2026-10-30 M3E code+visual reviews): consistency batch — stats top bar & empty state, list scroll preservation, unified failure indicators, light-theme risk-dot visibility, 360dp package name room, settings secondary page (minor)
+- ✅ v0.30.0 (2026-10-30 M3E reviews consumed): consistency batch — risk-dot light/dark parity, stats top bar & empty state, list scroll preservation, unified failure indicators, settings secondary page
+- Scheduled next (2026-11-05 seven-model synthesis): recovery & integrity patch (restore crash, atomic ledger, restore transaction lock, auto-reapply per-item accounting, shell input hardening), then interaction-state & docs batch (sort shadow, backup error states, audit-mode gating, receivers async, EN README wording, about screenshot re-capture)
 - Rules repo: v14 = 2,079 entities (blocker@55ae4b9 synced; subscription endpoints main/vN both live)
 - Pending user scope: TalkBack / large-font accessibility matrix. Distribution: GitHub Releases only (user decision 2026-10-24, no other channels)
 
