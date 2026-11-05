@@ -356,10 +356,10 @@ class DisableEngine(
 
 
     // ── IFW 主引擎 ────────────────────────────────────────────────
-                    requireValidTarget(pkg, byType.values.flatten())
     suspend fun applyIfw(pkg: String, byType: Map<String, List<String>>): Result<Int> =
         withContext(Dispatchers.IO) {
             runCatching {
+                requireValidTarget(pkg, byType.values.flatten())
                 // 批X4（审查 R09）：生产入口与 build() 对齐——provider 不受 IFW 支持且如实从计数剔除
                 val filtered = byType.filterKeys { it != "provider" }
                 require(!isBlockedTarget(context, pkg)) { "system app blocked by whitelist: $pkg" }
@@ -392,10 +392,10 @@ class DisableEngine(
             }
         }
 
-                    requireValidTarget(pkg, removeComponents.orEmpty())
     suspend fun removeIfw(pkg: String, removeComponents: Set<String>? = null): Result<Unit> =
         withContext(Dispatchers.IO) {
             runCatching {
+                requireValidTarget(pkg, removeComponents.orEmpty())
                 require(!isBlockedTarget(context, pkg)) { "system app blocked by whitelist: $pkg" }
                 if (removeComponents != null) {
                     // 批J#1：参数语义修正（二轮实测删过头的根因=形参名 keep 实为删除集导致调用方传反）。
@@ -430,10 +430,10 @@ class DisableEngine(
     }
 
     // ── pm disable 辅引擎（app 可运行时自恢复；跨更新保留）────────
-                    if (componentNames.isNotEmpty()) requireValidTarget(pkg, componentNames)
     suspend fun applyPm(pkg: String, componentNames: List<String>): Result<Int> =
         withContext(Dispatchers.IO) {
             runCatching {
+                if (componentNames.isNotEmpty()) requireValidTarget(pkg, componentNames)
                 require(!isBlockedTarget(context, pkg)) { "system app blocked by whitelist: $pkg" }
                 if (componentNames.isEmpty()) return@runCatching 0
                 val cmds = componentNames.joinToString(" && ") { "pm disable $pkg/$it" }
@@ -443,10 +443,10 @@ class DisableEngine(
             }
         }
 
-                    if (componentNames.isNotEmpty()) requireValidTarget(pkg, componentNames)
     suspend fun enablePm(pkg: String, componentNames: List<String>): Result<Int> =
         withContext(Dispatchers.IO) {
             runCatching {
+                if (componentNames.isNotEmpty()) requireValidTarget(pkg, componentNames)
                 if (componentNames.isEmpty()) return@runCatching 0
                 val cmds = componentNames.joinToString(" && ") { "pm enable $pkg/$it" }
                 val r = Shell.cmd(cmds).exec()
@@ -457,10 +457,10 @@ class DisableEngine(
 
     // ── 批FF-B1①（七审 AA7 / 方案B S1）：PM 逐项执行——快路径块级判定，
     //    失败块内逐条定位；部分失败不再被整体退出码吞掉 ────────
-                    if (componentNames.isNotEmpty()) requireValidTarget(pkg, componentNames)
     suspend fun applyPmPerItem(pkg: String, componentNames: List<String>): List<Pair<String, Boolean>> =
         withContext(Dispatchers.IO) {
             runCatching {
+                if (componentNames.isNotEmpty()) requireValidTarget(pkg, componentNames)
                 require(!isBlockedTarget(context, pkg)) { "system app blocked by whitelist: $pkg" }
                 OperationCenter.chunkedPerItem(componentNames) { block ->
                     val cmds = block.joinToString(" && ") { "pm disable $pkg/$it" }
@@ -469,10 +469,10 @@ class DisableEngine(
             }.getOrDefault(emptyList())
         }
 
-                    if (componentNames.isNotEmpty()) requireValidTarget(pkg, componentNames)
     suspend fun enablePmPerItem(pkg: String, componentNames: List<String>): List<Pair<String, Boolean>> =
         withContext(Dispatchers.IO) {
             runCatching {
+                if (componentNames.isNotEmpty()) requireValidTarget(pkg, componentNames)
                 if (componentNames.isEmpty()) return@runCatching emptyList()
                 OperationCenter.chunkedPerItem(componentNames) { block ->
                     val cmds = block.joinToString(" && ") { "pm enable $pkg/$it" }
