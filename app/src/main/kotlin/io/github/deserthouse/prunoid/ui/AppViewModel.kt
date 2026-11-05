@@ -417,15 +417,39 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                         )
                     }
                     val pmFailCount = perItem.count { !it.second }
-                    val r1 = if (pmFailCount == 0) Result.success(pmTargets.size)
-                    else Result.failure<Int>(IllegalStateException("pm enable: $pmFailCount failed"))
                     val r2 = engine.removeIfw(pkg, removeComponents = removedEffective)
-                    // 批X2：写失败不谎报；账本替换语义——双桶全空自动删除（修 R04-b 复活问题）
-                    check(r1.isSuccess && r2.isSuccess)
+                    // 批W1（M01/P1）：恢复失败不再 check 崩溃（withBusy 仅 finally，check 异常
+                    // 直接炸出 launch）——按实际成功集撤账，失败组件保持禁用并保留恢复依据（可重试）。
+                    // 账本替换语义保持：双桶全空自动删除（修 R04-b 复活问题）
+                    val pmOkSet = perItem.filter { it.second }.map { it.first }.toSet()
+                    val ifwOk = r2.isSuccess
+                    val restoredOk = buildSet {
+                        if (ifwOk) addAll(removedEffective.filter { it !in pmTargets })
+                        addAll(pmOkSet)
+                    }
+                    val failedCount = removedEffective.size - restoredOk.size
+                    if (restoredOk.isEmpty()) {
+                        // 真全失败：账本原样保留（恢复依据不丢），终态 Operation 如实呈现
+                        if (perItem.isNotEmpty()) {
+                            opCenter.record(
+                                OperationKind.SET_SDK_FOR_APP, pkg,
+                                perItem.map { (c, ok) -> OperationItem(c, ok, if (ok) "" else "pm enable failed") } +
+                                    OperationItem("ifw", r2.isSuccess, if (r2.isSuccess) "" else "ifw remove failed"),
+                                appCtx.getString(R.string.sdk_off_restore_failed, removedEffective.size),
+                            )
+                        } else if (!r2.isSuccess) {
+                            opCenter.record(
+                                OperationKind.SET_SDK_FOR_APP, pkg,
+                                listOf(OperationItem("ifw", false, "ifw remove failed")),
+                                appCtx.getString(R.string.sdk_off_restore_failed, removedEffective.size),
+                            )
+                        }
+                        return@withBusy appCtx.getString(R.string.sdk_off_restore_failed, removedEffective.size)
+                    }
                     fun minus(b: AppliedRulesStore.EngineChange?) = b?.copy(
-                        components = b.components.filter { it !in removedEffective },
-                        types = b.types.filterKeys { it !in removedEffective },
-                        preExisting = b.preExisting.filter { it !in removedEffective },
+                        components = b.components.filter { it !in restoredOk },
+                        types = b.types.filterKeys { it !in restoredOk },
+                        preExisting = b.preExisting.filter { it !in restoredOk },
                         // 批BB RV-02：关闭 SDK 同步终止该桶内对此 SDK 的意图
                         ruleIds = b.ruleIds - ruleId
                     )?.takeIf { b2 -> b2.components.isNotEmpty() || b2.ruleIds.isNotEmpty() }
@@ -435,6 +459,24 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                         pm = minus(prev?.pm),
                         fallbackRuleIds = prev?.ruleIds.orEmpty() - ruleId
                     )
+                    if (failedCount > 0) {
+                        // 批W1：部分恢复——失败组件保持禁用并入可重试明细
+                        val failItems = perItem.filter { !it.second }.map { (c, _) ->
+                            OperationItem(c, false, "pm enable failed")
+                        } + listOfNotNull(
+                            if (!ifwOk) OperationItem("ifw", false, "ifw remove failed") else null
+                        )
+                        if (failItems.isNotEmpty()) {
+                            opCenter.record(
+                                OperationKind.SET_SDK_FOR_APP, pkg,
+                                failItems,
+                                appCtx.getString(R.string.sdk_off_restore_partial, restoredOk.size, failedCount),
+                            )
+                        }
+                        return@withBusy appCtx.getString(
+                            R.string.sdk_off_restore_partial, restoredOk.size, failedCount
+                        )
+                    }
                 }
                 val liveAfter = engine.readLiveDisabled(listOf(pkg)).first
                 // 批FF2（七审 AV02）：写后同帧发布 applied——单 SDK 开关与批量路径同契约，
@@ -824,24 +866,26 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch {
             var ok = false
             var partialNote = ""
-            // 批BB RV-05：locked=false——restoreBackup 内部含共锁段与 PM 失败传播；
-            // 账本同步按实际成功范围执行（失败桶保留恢复依据）
-            val msg = withBusy("backup") {
-                engine.restoreBackup(path).fold(
-                    onSuccess = { report ->
-                        ok = report.ifwOk
-                        withContext(Dispatchers.IO) {
+            // 批BB RV-05 + 批W3（M03）：恢复事务（引擎写回 + 账本同步）整体纳入
+            // OpCoordinator 共锁——与手动 apply/自动重应用/clearIfw 串行，不再交错
+            // （原注释声称"内部含共锁段"但引擎 restoreBackup 实际无锁；账本同步按实际
+            // 成功范围执行，失败桶保留恢复依据）。引擎内不调 OpCoordinator，无重入风险。
+            val msg = withBusy("backup", locked = false) {
+                OpCoordinator.write {
+                    engine.restoreBackup(path).fold(
+                        onSuccess = { report ->
+                            ok = report.ifwOk
                             if (report.ifwOk) applied.removeEngine(Engine.IFW.name)
                             if (report.pmOk) applied.removeEngine(Engine.PM.name)
-                        }
-                        // 失败桶如实告知（PM 恢复失败→pm 账本保留=恢复依据仍在）
-                        if (!report.pmOk && report.pmInArchive) {
-                            partialNote = appCtx.getString(R.string.vm_restore_backup_pm_fail)
-                        }
-                        appCtx.getString(R.string.vm_restore_backup_ok)
-                    },
-                    onFailure = { appCtx.getString(R.string.vm_restore_backup_fail, it.message ?: "") }
-                )
+                            // 失败桶如实告知（PM 恢复失败→pm 账本保留=恢复依据仍在）
+                            if (!report.pmOk && report.pmInArchive) {
+                                partialNote = appCtx.getString(R.string.vm_restore_backup_pm_fail)
+                            }
+                            appCtx.getString(R.string.vm_restore_backup_ok)
+                        },
+                        onFailure = { appCtx.getString(R.string.vm_restore_backup_fail, it.message ?: "") }
+                    )
+                }
             }
             _state.update { it.copy(applied = withContext(Dispatchers.IO) { applied.all() }, ledgerCorrupted = applied.corrupted) }
             if (ok) rescan()  // 批P2#30：恢复后现场与记录可能漂移，重扫校准

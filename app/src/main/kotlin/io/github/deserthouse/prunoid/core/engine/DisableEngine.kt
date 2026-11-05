@@ -56,10 +56,12 @@ object IfwXmlBuilder {
      *  账本污染产生的类名伪标签、native/provider 漏网）在构建边界丢弃，防畸形 XML */
     fun buildByTag(byTag: Map<String, Set<String>>): String? {
         val allowed = setOf("activity", "service", "receiver")
+        fun xmlEscape(v: String): String = v
+            .replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;")
         val groups = byTag.mapNotNull { (tag, comps) ->
             if (tag !in allowed || comps.isEmpty()) return@mapNotNull null
             "  <$tag block=\"true\" log=\"true\">\n" +
-                comps.sorted().joinToString("\n") { "    <component-filter name=\"$it\" />" } +
+                comps.sorted().joinToString("\n") { "    <component-filter name=\"${xmlEscape(it)}\" />" } +
                 "\n  </$tag>"
         }
         if (groups.isEmpty()) return null
@@ -118,6 +120,19 @@ class DisableEngine(
 
         fun isForbidden(packageName: String): Boolean =
             packageName in SYSTEM_PREFIXES || SYSTEM_PREFIXES.any { packageName.startsWith(it) }
+
+        // 批W5（M09）：包名/组件名白名单——壳插值与 XML 属性插值前统一防线（规则/账本数据
+        // 可能含订阅来源内容）；合法字符集=Android 组件名（字母数字下划线美元+点），长度有界。
+        // 校验在引擎公共入口执行，调用方（VM/规划器/订阅）无需各自重复。
+        private val COMP_NAME_RE = Regex("^[A-Za-z0-9_$][A-Za-z0-9_$.]*$")
+        private val PKG_NAME_RE = Regex("^[A-Za-z0-9_][A-Za-z0-9_.]*\$")
+        private const val COMP_NAME_MAX = 500
+        internal fun validPkgName(n: String): Boolean = n.length <= 255 && PKG_NAME_RE.matches(n)
+        internal fun validCompName(n: String): Boolean = n.length <= COMP_NAME_MAX && COMP_NAME_RE.matches(n)
+        fun requireValidTarget(pkg: String, comps: Collection<String>) {
+            require(validPkgName(pkg)) { "invalid package name" }
+            require(comps.isNotEmpty() && comps.all { validCompName(it) }) { "invalid component name" }
+        }
 
         // 批X1（审查 R03）：真实包属性判定——前缀表只是附加保护，不能代替 FLAG_SYSTEM
         private val systemFlagCache = java.util.concurrent.ConcurrentHashMap<String, Boolean>()
@@ -266,14 +281,23 @@ class DisableEngine(
             // 流程：隔离目录解包 → 备份内的受管文件逐个还原 → 当前受管文件中备份没有的删除 → 校验。
             // 批BB RV-05：先探归档成员判定 PM 段；PM 恢复链去掉 || true（失败必须传播）。
             val stage = "/data/local/tmp/prunoid_restore"
+            // 批W5（M09）：备份路径白名单——仅接受本应用 backups 目录下的时点备份文件名
+            //（listBackups 同源），阻断任意路径拼接进 tar/shell 命令
+            val backupsPrefix = context.filesDir.absolutePath + "/backups/"
+            require(
+                backupPath.startsWith(backupsPrefix) &&
+                    Regex("backup_\\d{8}-\\d{6}\\.tar\\.gz$").containsMatchIn(backupPath)
+            ) { "backup path outside managed directory" }
             val pre = Shell.cmd(
-                "rm -rf $stage && mkdir -p $stage && tar -xzf $backupPath -C $stage"
+                "rm -rf $stage && mkdir -p $stage && tar -xzf '$backupPath' -C $stage"
             ).exec()
             check(pre.isSuccess) { "restore unpack failed: ${pre.err}" }
             val pmInArchive = Shell.cmd("tar -tzf $backupPath 2>/dev/null | grep -c package-restrictions")
                 .exec().out.firstOrNull()?.trim()?.toIntOrNull()?.let { it > 0 } ?: false
             var ifwOk = true
             var pmOk = false
+            // 批W5（M11）：stage 清理收进 finally——check/异常分支不再残留半成品
+            try {
             val restore = StringBuilder("set -e")
             val ifwStage = "$stage$IFW_DIR"
             val backupFiles = Shell.cmd("ls $ifwStage/*.xml 2>/dev/null").exec().out
@@ -306,6 +330,9 @@ class DisableEngine(
             }
             Shell.cmd("rm -rf $stage").exec()
             RestoreReport(ifwOk = true, pmOk = pmOk, pmInArchive = pmInArchive)
+            } finally {
+                Shell.cmd("rm -rf $stage").exec()
+            }
         }
     }
 
@@ -329,6 +356,7 @@ class DisableEngine(
 
 
     // ── IFW 主引擎 ────────────────────────────────────────────────
+                    requireValidTarget(pkg, byType.values.flatten())
     suspend fun applyIfw(pkg: String, byType: Map<String, List<String>>): Result<Int> =
         withContext(Dispatchers.IO) {
             runCatching {
@@ -364,6 +392,7 @@ class DisableEngine(
             }
         }
 
+                    requireValidTarget(pkg, removeComponents.orEmpty())
     suspend fun removeIfw(pkg: String, removeComponents: Set<String>? = null): Result<Unit> =
         withContext(Dispatchers.IO) {
             runCatching {
@@ -401,6 +430,7 @@ class DisableEngine(
     }
 
     // ── pm disable 辅引擎（app 可运行时自恢复；跨更新保留）────────
+                    if (componentNames.isNotEmpty()) requireValidTarget(pkg, componentNames)
     suspend fun applyPm(pkg: String, componentNames: List<String>): Result<Int> =
         withContext(Dispatchers.IO) {
             runCatching {
@@ -413,6 +443,7 @@ class DisableEngine(
             }
         }
 
+                    if (componentNames.isNotEmpty()) requireValidTarget(pkg, componentNames)
     suspend fun enablePm(pkg: String, componentNames: List<String>): Result<Int> =
         withContext(Dispatchers.IO) {
             runCatching {
@@ -426,6 +457,7 @@ class DisableEngine(
 
     // ── 批FF-B1①（七审 AA7 / 方案B S1）：PM 逐项执行——快路径块级判定，
     //    失败块内逐条定位；部分失败不再被整体退出码吞掉 ────────
+                    if (componentNames.isNotEmpty()) requireValidTarget(pkg, componentNames)
     suspend fun applyPmPerItem(pkg: String, componentNames: List<String>): List<Pair<String, Boolean>> =
         withContext(Dispatchers.IO) {
             runCatching {
@@ -437,6 +469,7 @@ class DisableEngine(
             }.getOrDefault(emptyList())
         }
 
+                    if (componentNames.isNotEmpty()) requireValidTarget(pkg, componentNames)
     suspend fun enablePmPerItem(pkg: String, componentNames: List<String>): List<Pair<String, Boolean>> =
         withContext(Dispatchers.IO) {
             runCatching {

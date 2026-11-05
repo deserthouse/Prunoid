@@ -278,7 +278,9 @@
     <string name="vm_sdk_on_ok">已禁用 %1$d 项组件</string>
     <string name="sdk_off_full">已恢复本工具禁用的 %1$d 项组件</string>
     <string name="sdk_off_partial">已恢复本工具管理的 %1$d 项；另有 %2$d 项由外部来源禁用，已保留</string>
-    <string name="sdk_off_shared">未作更改：%1$d 项组件仍被其它 SDK 规则引用（如 %2$s），已保留</string>
+        <string name="sdk_off_shared">未作更改：%1$d 项组件仍被其它 SDK 规则引用（如 %2$s），已保留</string>
+    <string name="sdk_off_restore_failed">恢复失败：%1$d 项未能恢复（已保持禁用，可重试）</string>
+    <string name="sdk_off_restore_partial">部分恢复：%1$d 项成功，%2$d 项失败（保持禁用，可重试）</string>
     <string name="manage_plan_summary">命中 %1$d · 可操作 %2$d · 跳过 %3$d</string>
     <string name="bulk_scope_all">全部命中 (%1$d)</string>
     <string name="bulk_scope_filtered">当前筛选 (%1$d)</string>

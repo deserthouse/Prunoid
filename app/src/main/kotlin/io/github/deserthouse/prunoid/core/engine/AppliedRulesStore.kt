@@ -93,16 +93,23 @@ class AppliedRulesStore {
         // 批BB RV-09：损坏状态下拒绝普通写入（覆盖即销毁恢复依据）；重置由用户显式触发
         check(!corrupted) { "ledger corrupted — reset required before writing" }
         file.parentFile?.mkdirs()
+        // 批W2（M02/P1）：真原子替换——Linux/Android rename 覆盖已存在目标是原子操作，
+        // 旧代码"先 delete 再 rename"在两步间进程退出/被杀会留下无主 tmp + 主文件丢失
+        //（恢复依据全失）。新顺序：写 tmp → fsync → rename 直接覆盖 → 失败保留 tmp 与旧文件
+        //（可诊断、可恢复）；仅当目标非空文件且 rename 因非空检查失败时才退避删除重试一次。
         val tmp = java.io.File(file.parentFile, file.name + ".tmp")
         tmp.writeText(json.encodeToString(Store.serializer(), store))
-        // 原子替换：同目录 rename；Windows 目标残留时先清
-        if (file.exists() && !file.delete()) {
-            tmp.delete()
-            error("ledger atomic replace failed: cannot remove old file")
+        java.io.FileOutputStream(tmp).use { it.fd.sync() }
+        var renamed = tmp.renameTo(file)
+        if (!renamed && file.exists()) {
+            // Android 侧 rename 覆盖存在文件正常；若底层拒绝（异常文件系统），删除旧文件后
+            // 重试一次——此时旧内容已在 tmp 中完整保留，任何一步失败旧文件仍在
+            if (file.delete()) renamed = tmp.renameTo(file)
         }
-        if (!tmp.renameTo(file)) {
-            tmp.delete()
-            error("ledger atomic rename failed")
+        if (!renamed) {
+            // 批W2：失败保留 tmp（完整新内容）与旧账本，不静默吞——调用方按错误处理，
+            // 内存状态不推进，下次写重试
+            error("ledger atomic replace failed: old ledger intact, new data kept in ${tmp.name}")
         }
     }
 

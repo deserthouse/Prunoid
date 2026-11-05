@@ -262,7 +262,9 @@
     <string name="vm_sdk_on_ok">Disabled %1$d component(s)</string>
     <string name="sdk_off_full">Restored %1$d component(s) disabled by Prunoid</string>
     <string name="sdk_off_partial">Restored %1$d Prunoid-managed item(s); %2$d kept (disabled by external sources)</string>
-    <string name="sdk_off_shared">No change: %1$d component(s) still referenced by other SDK rules (e.g. %2$s), kept enabled</string>
+        <string name="sdk_off_shared">No change: %1$d component(s) still referenced by other SDK rules (e.g. %2$s), kept enabled</string>
+    <string name="sdk_off_restore_failed">Restore failed: %1$d item(s) could not be restored (kept disabled, retry available)</string>
+    <string name="sdk_off_restore_partial">Partially restored: %1$d succeeded, %2$d failed (kept disabled, retry available)</string>
     <string name="manage_plan_summary">Hits %1$d · actionable %2$d · skipped %3$d</string>
     <string name="bulk_scope_all">All hits (%1$d)</string>
     <string name="bulk_scope_filtered">Filtered (%1$d)</string>

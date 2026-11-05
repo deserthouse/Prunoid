@@ -57,7 +57,7 @@ object AutoReapply {
             // 批Z1：按引擎桶各自重应用——v2 账本同包可含双桶，v1 迁移后单桶走同一循环。
             // ① 保留：桶内组件仍存在于最新 manifest；分组键=类型（0.18.1 热修 C1）。
             // ② 增量：批BB RV-02 改用桶内 ruleIds（跨引擎不串用；共享集迁移/桶内空=只保留不扩展）。
-            for ((eng, ch) in listOfNotNull(
+            reapplyPkgs@ for ((eng, ch) in listOfNotNull(
                 entry.ifw?.let { "IFW" to it },
                 entry.pm?.let { "PM" to it }
             )) {
@@ -96,7 +96,27 @@ object AutoReapply {
                 if (writeByType.isEmpty()) continue
                 when (eng) {
                     "IFW" -> engine.applyIfw(pkg, writeByType).getOrThrow()
-                    "PM" -> engine.applyPm(pkg, writeComps).getOrThrow()
+                    // 批W4（M05）：PM 改逐项执行——中途失败时先前已写组件按实际成功集记账
+                    // （原整块 && 链 getOrThrow 使已写项全部丢账）；preExisting 所有权保持
+                    "PM" -> {
+                        val perItem = engine.applyPmPerItem(pkg, writeComps)
+                        val okComps = perItem.filter { it.second }.map { it.first }.toSet()
+                        if (okComps.isNotEmpty()) {
+                            store.recordMerge(
+                                pkg, eng,
+                                okComps.toList(),
+                                writeByType.entries.flatMap { (t, cs) -> cs.map { it to t } }
+                                    .filter { it.first in okComps }.toMap(),
+                                preExisting = freshPreExisting.filter { it in okComps }
+                            )
+                            wroteAny = true
+                            Log.d("SdkPruner", "auto-reapply: done $pkg [PM] (${okComps.size}/${writeComps.size} comps)")
+                        }
+                        if (okComps.size < writeComps.size) {
+                            Log.w("SdkPruner", "auto-reapply: $pkg [PM] partial ${okComps.size}/${writeComps.size}")
+                        }
+                        continue@reapplyPkgs
+                    }
                 }
                 // 批X2（审查 R06）：写入成功才记账（merge 语义，桶内合并）
                 store.recordMerge(
