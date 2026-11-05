@@ -98,8 +98,12 @@ class AppliedRulesStore {
         //（恢复依据全失）。新顺序：写 tmp → fsync → rename 直接覆盖 → 失败保留 tmp 与旧文件
         //（可诊断、可恢复）；仅当目标非空文件且 rename 因非空检查失败时才退避删除重试一次。
         val tmp = java.io.File(file.parentFile, file.name + ".tmp")
-        tmp.writeText(json.encodeToString(Store.serializer(), store))
-        java.io.FileOutputStream(tmp).use { it.fd.sync() }
+        // 批W2 补丁：写入与 fsync 同一句柄（先 writeText 再开 FileOutputStream 会默认截断，
+        // 把刚写的 JSON 清成空文件——同名空文件被 load() 当合法空账本，等于静默清账）
+        java.io.FileOutputStream(tmp).use { fos ->
+            fos.write(json.encodeToString(Store.serializer(), store).toByteArray(Charsets.UTF_8))
+            fos.fd.sync()
+        }
         var renamed = tmp.renameTo(file)
         if (!renamed && file.exists()) {
             // Android 侧 rename 覆盖存在文件正常；若底层拒绝（异常文件系统），删除旧文件后
