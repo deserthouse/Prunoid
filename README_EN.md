@@ -19,7 +19,7 @@ See every SDK embedded in your apps, and decide which components to block
 
 > ⚠️ **This project is still at a very early stage.** Make sure you have read and fully understood this document before you start using it. No promises are made about its future: it may see large-scale changes and refactors, may change direction, and may be abandoned or stop being maintained at any time.
 
-> **Prunoid** is a root-required Android tool that scans every installed app, identifies embedded ad / analytics / push SDKs, and selectively blocks their components through the system-level Intent Firewall — **without hooking the target app**. Apps can't detect it, and can't recover.
+> **Prunoid** is a root-required Android tool that scans every installed app, identifies embedded ad / analytics / push SDKs, and selectively blocks their components through the system-level Intent Firewall — **without hooking the target app**. In our tested scope, IFW-level blocking has not been detected by target apps, and blocked components stay disabled until you restore them (pm-level blocking is detectable and app-recoverable — see the engine table below).
 
 ## ✨ Features
 
@@ -90,7 +90,7 @@ A: Prunoid's cold-start ruleset merges blocker-general-rules (Apache-2.0) and Li
 
 **Q: Does it phone home?**
 
-A: Network access only when you actively subscribe/refresh a rule source. No telemetry, no crash reporting, no data upload.
+A: Network access only when you actively subscribe/refresh a rule source. No telemetry, no crash reporting, no data upload. Separately from that: Android system backup (device migration / cloud backup) may include app-private data such as the disable ledger and your preferences — that transfer is performed by the OS under your device settings, not by Prunoid connecting to any server.
 
 ## 📊 Compatibility
 

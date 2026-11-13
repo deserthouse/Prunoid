@@ -255,7 +255,8 @@
     <string name="backup_sheet_summary">%1$d restore point(s) · keeping up to %2$d</string>
     <string name="backup_store_details">Storage details (how it works · path · notes)</string>
     <string name="backup_loading">Reading restore points…</string>
-    <string name="backup_load_error">Failed to read restore points — reopen the sheet or check storage</string>
+        <string name="backup_load_error">Failed to read restore points — reopen the sheet or check storage</string>
+    <string name="retry">Retry</string>
     <string name="manage_backup_title">Manage backups</string>
     <string name="manage_backup_sub">Restore points and retention (currently %1$d)</string>
     <string name="vm_plan_stale">Rules updated since confirmation — review the plan and confirm again</string>

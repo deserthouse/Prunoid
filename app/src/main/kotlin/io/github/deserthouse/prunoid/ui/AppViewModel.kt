@@ -858,9 +858,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     // ── 备份与应急恢复 ────────────────────────────────────────────
     // 批R4（审计 P-6）：runBlocking 壳拆除改 suspend——组合期调用不再阻塞主线程
-    suspend fun listBackups(): List<String> =
-        runCatching { withContext(Dispatchers.IO) { engine.listBackups() } }
-            .getOrDefault(emptyList())
+    /** 批X2（M07）：不再吞错——错误向上传播给 UI 错误态（原 getOrDefault(emptyList())
+     *  使引擎抛出的真实失败伪装成 0 份空态，批U 三态 UI 的错误分支因此不可达）。 */
+    suspend fun listBackups(): Result<List<String>> =
+        withContext(Dispatchers.IO) { runCatching { engine.listBackups() } }
 
     fun restoreBackup(path: String, onDone: (String) -> Unit) {
         viewModelScope.launch {
@@ -871,6 +872,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             // （原注释声称"内部含共锁段"但引擎 restoreBackup 实际无锁；账本同步按实际
             // 成功范围执行，失败桶保留恢复依据）。引擎内不调 OpCoordinator，无重入风险。
             val msg = withBusy("backup", locked = false) {
+                // 批X3（M04）：整机时点恢复=系统级写——命令边界复核（UI 父分区已 ROOT-only）
+                if (!rootGate()) return@withBusy appCtx.getString(R.string.vm_need_root)
                 OpCoordinator.write {
                     engine.restoreBackup(path).fold(
                         onSuccess = { report ->
@@ -911,7 +914,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             var ok = false
             // 批BB RV-04：locked=false——clearIfwTransaction 内部持 OpCoordinator 共锁，
             // 成功才清 IFW 账本；失败原样保留恢复依据并如实报错
+            // 批X3（M04）：应急清除=系统级写——AUDIT 只读承诺在命令边界复核（入口恒可见
+            // 属批Q B03 救援例外，但例外只影响可见性，写入仍需 ROOT 模式）
             val msg = withBusy("clearifw") {
+                if (!rootGate()) return@withBusy appCtx.getString(R.string.vm_need_root)
                 if (ledgerCorrupted()) return@withBusy appCtx.getString(R.string.vm_ledger_corrupted)
                 DisableEngine.clearIfwTransaction(appCtx).fold(
                     onSuccess = { n ->
@@ -1050,6 +1056,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun restoreApp(scanned: ScannedApp, onDone: (String) -> Unit) {
         viewModelScope.launch {
             val msg = withBusy("restore", locked = true) {
+                // 批X3（M04）：恢复=写操作——命令边界复核工作模式（UI 按钮已有门控，
+                // 此处封堵直接调 VM 的旁路）
+                if (!rootGate()) return@withBusy appCtx.getString(R.string.vm_need_root)
                 if (ledgerCorrupted()) return@withBusy appCtx.getString(R.string.vm_ledger_corrupted)
                 // 按 applied 记录回滚（当时真实写入集），不用当前扫描重算——
                 // 否则规则更新/显式加选的组件会成为恢复盲区。

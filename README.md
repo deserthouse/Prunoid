@@ -90,7 +90,7 @@ IFW 引擎在这点上不同：拦截发生在系统框架层，不修改 APK、
 Prunoid 的规则冷启动合并了 blocker-general-rules（Apache-2.0）与 LibChecker-Rules 组件锚点，图标与描述资产来自 LibChecker-Rules-Bundle（Apache-2.0，见 NOTICE 署名）；IFW 规则格式与 Blocker 实测对照修正。相互独立，无隶属关系。
 
 **会联网吗？上传数据吗？**
-仅在你主动订阅/刷新规则源时访问对应 URL；无遥测、无崩溃上报、不上传任何数据。
+仅在你主动订阅/刷新规则源时访问对应 URL；无遥测、无崩溃上报、不上传任何数据。（另需区分：Android 系统备份/换机迁移可能包含应用私有数据（如禁用账本与偏好设置），该传输由系统按你的设备设置执行，与 Prunoid 主动联网无关。）
 
 ## 📊 兼容性
 

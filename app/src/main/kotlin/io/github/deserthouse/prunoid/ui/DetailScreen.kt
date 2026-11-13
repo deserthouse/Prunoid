@@ -197,7 +197,9 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                         // 失败项可持续查看、APPLY 可重试）；重试走同一 VM 提交路径（单一执行入口）
                         val ops by vm.opCenter.operations.collectAsState()
                         ops.lastOrNull { it.target == app.packageName }?.let { op ->
-                            // 批U2（C05）：声明在 let 顶层——折叠态与明细底表共用
+                            // 批U2（C05）+批X5（M19）：折叠态/明细底表声明唯一化于 let 顶层
+                            //（展开头在 Column 内、明细底表触发在 let 层——两作用域共用一份状态；
+                            //  原 Column 内重复声明遮蔽外层=底表永不触发的真重复，已删）
                             var resultOpen by remember { mutableStateOf(false) }
                             var showResultSheet by remember { mutableStateOf(false) }
                             val (label, color, icon) = when (op.outcome) {
@@ -228,8 +230,6 @@ fun AppDetailScreen(app: ScannedApp, vm: AppViewModel, onBack: () -> Unit) {
                                     // 批U2（C04/C05）：底栏高度预算——结果卡默认折叠为单行状态
                                     // （失败明细与重试收进展开区，固定区不再随失败数量无限增高）；
                                     // 逐项全量明细走共享 OpResultSheet（原 take(3) 截断）
-                                    var resultOpen by remember { mutableStateOf(false) }
-                                    var showResultSheet by remember { mutableStateOf(false) }
                                     Row(
                                         Modifier
                                             .fillMaxWidth()

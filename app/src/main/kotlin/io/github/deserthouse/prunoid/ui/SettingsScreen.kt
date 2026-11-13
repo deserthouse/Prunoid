@@ -161,15 +161,15 @@ fun BackupDialog(vm: AppViewModel, onMessage: (String) -> Unit, onDismiss: () ->
     // 列表=人可读日期主行+文件名次级，存储说明折叠进"存储详情"，恢复动作绑定所选。
     // 批R4（审计 P-6）：LaunchedEffect 异步加载（备份多时不再卡主线程）
     var backups by remember { mutableStateOf<List<String>>(emptyList()) }
-    // 批U3（C06）：加载/失败/空三态区分——加载中不再冒充"0 份空态"
+    // 批U3（C06）+批X2（M07）：三态真实贯通——VM 不再吞错，错误态可达且带重试
     var loadState by remember { mutableStateOf("loading") }  // loading/ready/error
-    LaunchedEffect(Unit) {
-        loadState = try {
-            backups = vm.listBackups()
-            "ready"
-        } catch (e: Exception) {
-            "error"
-        }
+    var loadAttempt by remember { mutableStateOf(0) }
+    LaunchedEffect(loadAttempt) {
+        loadState = "loading"
+        vm.listBackups().fold(
+            onSuccess = { backups = it; loadState = "ready" },
+            onFailure = { loadState = "error" },
+        )
     }
     // 批J#3：备份快照是全量状态，多选恢复语义不成立——改单选（最后选中者生效）
     var selected by remember { mutableStateOf<String?>(null) }
@@ -190,19 +190,26 @@ fun BackupDialog(vm: AppViewModel, onMessage: (String) -> Unit, onDismiss: () ->
         ) {
             Text(stringResource(R.string.backup_entry_title), style = MaterialTheme.typography.titleLarge)
             Spacer(Modifier.height(4.dp))
-            Text(
-                when (loadState) {
-                    "loading" -> stringResource(R.string.backup_loading)
-                    "error" -> stringResource(R.string.backup_load_error)
-                    else -> stringResource(
-                        R.string.backup_sheet_summary,
-                        backups.size, bSt.backupKeep.coerceAtLeast(1)
-                    )
-                },
-                style = MaterialTheme.typography.bodySmall,
-                color = if (loadState == "error") MaterialTheme.colorScheme.error
-                else MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    when (loadState) {
+                        "loading" -> stringResource(R.string.backup_loading)
+                        "error" -> stringResource(R.string.backup_load_error)
+                        else -> stringResource(
+                            R.string.backup_sheet_summary,
+                            backups.size, bSt.backupKeep.coerceAtLeast(1)
+                        )
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (loadState == "error") MaterialTheme.colorScheme.error
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f)
+                )
+                if (loadState == "error") {
+                    // 批X2（M07）：错误态可重试
+                    TextButton(onClick = { loadAttempt++ }) { Text(stringResource(R.string.retry)) }
+                }
+            }
             Spacer(Modifier.height(12.dp))
             // ── 保留份数（自由填写，不再滑杆）──
             var keepSaved by remember { mutableStateOf(false) }

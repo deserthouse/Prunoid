@@ -53,6 +53,8 @@ fun SdkLibraryScreen(
     // 同名实体身份精度欠账）
     pendingRuleId: String? = null,
     onConsumePendingRule: () -> Unit = {},
+    // 批X5（M19）：分类筛选提升至根路由——返回保留合同（原分支内 remember 随 Crossfade 重置）
+    libCatState: androidx.compose.runtime.MutableState<Set<String>> = androidx.compose.runtime.mutableStateOf(emptySet()),
     // 批FF-B3（AA3）：SDK 管理目的地入口（档案卡内按钮回调）
     onOpenManage: (String) -> Unit = {},
 ) {
@@ -62,8 +64,12 @@ fun SdkLibraryScreen(
     val onQueryChange: (String) -> Unit = { queryState.value = it }
     var tab = libTabState.value
     val setTab: (Int) -> Unit = { libTabState.value = it }
-    var libSortByName = sortByNameState.value
+    // 批X1（M06）：直接读提升态（组合期订阅，变化即重组）——原 var 快照+分支内 remember
+    // 双层遮蔽使按钮/菜单/列表全部消费恒初值，排序点击无任何视觉反馈
+    val libSortByName = sortByNameState.value
     val setSortByName: (Boolean) -> Unit = { sortByNameState.value = it }
+    val libCat = libCatState.value
+    val setLibCat: (Set<String>) -> Unit = { libCatState.value = it }
     var sheetRow by remember { mutableStateOf<LibRow?>(null) }
     // 批FF-B3（AA3）：批量执行与结果行已迁至 SDK 管理目的地（本屏档案卡回归纯阅读）
 
@@ -143,8 +149,8 @@ fun SdkLibraryScreen(
                 )
             }
             // 批S2：筛选/排序与列表页同构——Filter（sheet）+ Sort（menu，带当前项勾选）
-            var libCat by remember { mutableStateOf(setOf<String>()) }
-            var libSortByName by remember { mutableStateOf(false) }
+            // 批X1（M06）：删除分支内同名遮蔽状态——排序消费上方提升态；
+            // 批X5（M19）：libCat 由根路由传入（返回保留合同）
             var libFilterSheet by remember { mutableStateOf(false) }
             var libSortMenu by remember { mutableStateOf(false) }
             Row(
@@ -187,14 +193,14 @@ fun SdkLibraryScreen(
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(stringResource(R.string.filter_label), style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-                            TextButton(onClick = { libCat = emptySet() }) { Text(stringResource(R.string.filter_clear)) }
+                            TextButton(onClick = { setLibCat(emptySet()) }) { Text(stringResource(R.string.filter_clear)) }
                         }
                         SectionLabel(stringResource(R.string.filter_category))
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(vertical = 6.dp)) {
                             ALL_CATEGORIES.forEach { c ->
                                 FilterChip(
                                     selected = c in libCat,
-                                    onClick = { libCat = if (c in libCat) libCat - c else libCat + c },
+                                    onClick = { setLibCat(if (c in libCat) libCat - c else libCat + c) },
                                     label = { Text(categoryLabel(c)) }
                                 )
                             }

@@ -271,7 +271,8 @@
     <string name="backup_sheet_summary">%1$d 份恢复点 · 保留上限 %2$d 份</string>
     <string name="backup_store_details">存储详情（机制 · 路径 · 说明）</string>
     <string name="backup_loading">正在读取恢复点…</string>
-    <string name="backup_load_error">恢复点读取失败——请关闭重试或检查存储权限</string>
+        <string name="backup_load_error">恢复点读取失败——请关闭重试或检查存储权限</string>
+    <string name="retry">重试</string>
     <string name="manage_backup_title">管理备份</string>
     <string name="manage_backup_sub">恢复点列表与保留份数（当前 %1$d 份）</string>
     <string name="vm_plan_stale">规则已更新，计划已过期——请重新审阅并确认后再执行</string>

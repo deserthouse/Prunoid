@@ -336,9 +336,17 @@ class DisableEngine(
         }
     }
 
-    fun listBackups(): List<String> =
-        Shell.cmd("ls ${context.filesDir.absolutePath}/backups/backup_*.tar.gz 2>/dev/null")
-            .exec().out.toList().sortedDescending()
+    /** 批X2（M07）：备份列举区分"空目录"与"读取失败"——原 2>/dev/null 掩盖一切失败，
+     *  VM getOrDefault 再兜成空列表，UI 错误态永不可达。
+     *  目录不存在=合法空态；目录存在但列举命令失败=错误（抛出走 VM runCatching）。 */
+    fun listBackups(): List<String> {
+        val dir = "${context.filesDir.absolutePath}/backups"
+        val probe = Shell.cmd("test -d $dir").exec()
+        if (!probe.isSuccess) return emptyList()
+        val r = Shell.cmd("ls -1 $dir").exec()
+        check(r.isSuccess) { "backup listing failed: ${r.err}" }
+        return r.out.filter { it.startsWith("backup_") && it.endsWith(".tar.gz") }.sortedDescending()
+    }
 
     // ── 安全层：一键清除全部 IFW 规则（紧急恢复） ─────────────────
     suspend fun clearAllIfw(): Result<Int> = withContext(Dispatchers.IO) {

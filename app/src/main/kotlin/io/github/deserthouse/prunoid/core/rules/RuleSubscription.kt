@@ -38,17 +38,42 @@ class RuleSubscription(context: Context) {
         }
     }
 
+    /** 批X9（M10）：响应体积有界（20MB——官方快照 ~2MB，超限即拒绝）；缓存原子写
+     *  （tmp+rename，坏缓存不覆盖好快照）；失败路径不动既有缓存文件。 */
+    private val maxBodyBytes: Long = 20L * 1024 * 1024
+
     suspend fun fetchTo(id: String, url: String): Result = withContext(Dispatchers.IO) {
         runCatching {
             val body = http.newCall(Request.Builder().url(url).build()).execute().use { resp ->
                 check(resp.isSuccessful) { "HTTP ${resp.code}" }
-                resp.body?.string() ?: throw IllegalStateException("empty body")
+                val src = resp.body ?: throw IllegalStateException("empty body")
+                // 批X9（M10）：流式限长读取——超 20MB 拒绝（官方快照 ~2MB），防超大响应
+                src.byteStream().use { ins ->
+                    val buf = java.io.ByteArrayOutputStream()
+                    val chunk = ByteArray(8192)
+                    var total = 0L
+                    while (true) {
+                        val n = ins.read(chunk)
+                        if (n < 0) break
+                        total += n
+                        check(total <= maxBodyBytes) { "response too large (>20MB)" }
+                        buf.write(chunk, 0, n)
+                    }
+                    buf.toByteArray()
+                }
             }
-            val snapshot = json.decodeFromString<RuleSnapshot>(body)
+            val bodyText = String(body, Charsets.UTF_8)
+            val snapshot = json.decodeFromString<RuleSnapshot>(bodyText)
             require(snapshot.sdks.isNotEmpty()) { "rule source has no entries" }
             dir.mkdirs()
             val entry = CacheEntry(url, java.time.Instant.now().toString(), snapshot)
-            cacheFile(id).writeText(json.encodeToString(CacheEntry.serializer(), entry))
+            val f = cacheFile(id)
+            val tmp = java.io.File(f.parentFile, f.name + ".tmp")
+            tmp.writeText(json.encodeToString(CacheEntry.serializer(), entry))
+            if (!tmp.renameTo(f)) {
+                tmp.delete()
+                error("rule cache atomic replace failed")
+            }
             Result(true, entries = snapshot.sdks.size, version = snapshot.generatedAt)
         }.getOrElse { Result(false, error = it.message ?: "unknown error") }
     }

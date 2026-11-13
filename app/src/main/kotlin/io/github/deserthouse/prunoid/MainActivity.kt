@@ -123,6 +123,13 @@ fun SdkPrunerApp() {
     val listListState = androidx.compose.runtime.saveable.rememberSaveable(
         saver = androidx.compose.foundation.lazy.LazyListState.Saver
     ) { androidx.compose.foundation.lazy.LazyListState() }
+    // 批X5（M19）：库页分类筛选提升（Set 经 ArrayList 序列化进 Bundle）
+    val libCatState = androidx.compose.runtime.saveable.rememberSaveable(
+        stateSaver = androidx.compose.runtime.saveable.Saver<Set<String>, ArrayList<String>>(
+            save = { ArrayList(it) },
+            restore = { it.toSet() }
+        )
+    ) { androidx.compose.runtime.mutableStateOf(emptySet<String>()) }
     // 批M5（F04）：库页浏览上下文同款外提——查询/作用域/排序/滚动位（028→030 丢失实证）
     val libQuery = androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("") }
     val libTab = androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(0) }
@@ -200,6 +207,7 @@ fun SdkPrunerApp() {
                             )
                             1 -> SdkLibraryScreen(
                                 vm,
+                                libCatState = libCatState,
                                 queryState = libQuery,
                                 libTabState = libTab,
                                 sortByNameState = libSortByName,

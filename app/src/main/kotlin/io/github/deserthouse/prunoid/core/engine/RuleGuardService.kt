@@ -127,13 +127,20 @@ class RuleGuardService : Service() {
         } else {
             startForeground(NOTIFY_ID, buildNotification())
         }
-        val on = runBlocking(Dispatchers.IO) {
-            io.github.deserthouse.prunoid.core.rules.SettingsRepository(this@RuleGuardService).settings.first()
-                .let { it.autoReapply && it.workMode == "root" && it.reapplyMode == "realtime" }
-        }
-        if (!on) {
-            Log.d("SdkPruner", "guard: config off, self-stopping")
-            stopSelf()
+        // 批X4（M08）：配置自检移入后台协程（原 runBlocking 阻塞主线程读 DataStore）；
+        // startForeground 已同步履约，异步自停不违反 FGS 契约
+        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+            try {
+                val on = io.github.deserthouse.prunoid.core.rules.SettingsRepository(this@RuleGuardService)
+                    .settings.first()
+                    .let { it.autoReapply && it.workMode == "root" && it.reapplyMode == "realtime" }
+                if (!on) {
+                    Log.d("SdkPruner", "guard: config off, self-stopping")
+                    stopSelf()
+                }
+            } catch (e: Exception) {
+                Log.e("SdkPruner", "guard: config check failed", e)
+            }
         }
         // START_STICKY→NOT_STICKY：前台服务对 LMK 几乎免疫，重启覆盖面交给 BootReceiver/主界面兜底；
         // 而 sticky 重投递正是 N-1 神秘启动的头号嫌疑（重投递还附带 startForeground 义务，风险不对称）
