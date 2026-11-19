@@ -9,4 +9,4 @@ labels: component-report
 **组件类型**：activity / service / receiver / provider
 **SDK 名称**（如果知道）：
 
-> 贡献前请阅读 [CONTRIBUTING.md](../blob/main/CONTRIBUTING.md)。
+> 贡献前请阅读 [Prunoid-Rules 规则贡献指南](https://github.com/deserthouse/Prunoid-Rules/blob/main/CONTRIBUTING.md)。

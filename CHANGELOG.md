@@ -2,7 +2,7 @@
 
 本项目所有显著变更记录于此。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)；版本遵循 [SemVer](https://semver.org/lang/zh-CN/)。Alpha 阶段全部为 pre-release。
 
-更早版本（0.3.0–0.17.2）见 [Releases](https://github.com/deserthouse/Prunoid/releases)。
+更早的发布记录（含 v0.2.0-alpha 至 v0.17.2）见 [Releases](https://github.com/deserthouse/Prunoid/releases)。
 
 ## [Unreleased]
 
