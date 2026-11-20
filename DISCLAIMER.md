@@ -2,8 +2,8 @@
 
 ## AI 使用声明 / AI Usage Statement
 
-- 本项目不含任何人类成分，绝大多数工作都由 **AI** 完成。
-  This project contains no human contribution; the vast majority of the work was done by **AI**.
+- 本项目不含任何人类成分。本项目的大部分代码和文档由 AI 完成，维护者负责提出需求、审阅与验收。规则数据保留来源与贡献者署名。
+  This project contains no human ingredients. AI produced most of the project’s code and documentation. The maintainer sets requirements and reviews the results. Rule data retains its source and contributor credits.
 - 如发现错误内容，欢迎提 issue 指正。
   If you spot an inaccuracy, please open an issue.
 

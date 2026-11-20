@@ -2,16 +2,13 @@
 
 # Prunoid
 
-**Android SDK component auditor & blocker — pruner + paranoid + Android**
+Find embedded SDKs in Android apps and choose which components to disable on a rooted device.
 
-See every SDK embedded in your apps, and decide which components to block
+[Installation](#-getting-started) · [Screenshots](#-screenshots) · [Compatibility](#-compatibility)
 
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/Platform-Android%2012%2B-green.svg)](#-compatibility)
-[![Root](https://img.shields.io/badge/Requires-Root-orange.svg)](#-getting-started)
-[![Release](https://img.shields.io/github/v/release/deserthouse/Prunoid?include_prereleases&color=yellow&style=flat-square)](https://github.com/deserthouse/Prunoid/releases)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE) [![Platform](https://img.shields.io/badge/Platform-Android%2012%2B-green.svg)](#-compatibility) [![Root](https://img.shields.io/badge/Requires-Root-orange.svg)](#-getting-started) [![Release](https://img.shields.io/github/v/release/deserthouse/Prunoid?include_prereleases&color=yellow&style=flat-square)](https://github.com/deserthouse/Prunoid/releases)
 
-[简体中文](README.md) · [English](README_EN.md)
+[简体中文](README.md) · **English**
 
 </div>
 
@@ -141,9 +138,11 @@ Prunoid requests `QUERY_ALL_PACKAGES` solely to enumerate installed apps and sca
 
 Full bilingual statement: [DISCLAIMER.md](DISCLAIMER.md).
 
-## 🤖 AI Disclosure
+<a name="-ai-disclosure"></a>
 
-> This project contains no human contribution; the vast majority of the work was done by **AI**.
+## AI disclosure
+
+This project contains no human ingredients. AI produced most of the project’s code and documentation. The maintainer sets requirements and reviews the results. Rule data retains its source and contributor credits.
 
 ## ⚖️ License
 

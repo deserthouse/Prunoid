@@ -2,16 +2,13 @@
 
 # Prunoid
 
-**Android SDK 组件审计与禁用工具 —— pruner + paranoid + Android**
+查看 Android 应用内嵌的 SDK，在已取得 root 权限的设备上选择要禁用的组件。
 
-看清每一个 App 里藏着的 SDK，并由你决定哪些组件可以禁用
+[安装使用](#-安装使用) · [界面预览](#-界面预览) · [兼容性](#-兼容性)
 
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/Platform-Android%2012%2B-green.svg)](#-兼容性)
-[![Root](https://img.shields.io/badge/Requires-Root-orange.svg)](#-安装使用)
-[![Release](https://img.shields.io/github/v/release/deserthouse/Prunoid?include_prereleases&color=yellow&style=flat-square)](https://github.com/deserthouse/Prunoid/releases)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE) [![Platform](https://img.shields.io/badge/Platform-Android%2012%2B-green.svg)](#-兼容性) [![Root](https://img.shields.io/badge/Requires-Root-orange.svg)](#-安装使用) [![Release](https://img.shields.io/github/v/release/deserthouse/Prunoid?include_prereleases&color=yellow&style=flat-square)](https://github.com/deserthouse/Prunoid/releases)
 
-[简体中文](README.md) · [English](README_EN.md)
+**简体中文** · [English](README_EN.md)
 
 </div>
 
@@ -141,9 +138,11 @@ Prunoid 申请 `QUERY_ALL_PACKAGES`（查询全部应用）权限。**该权限�
 
 完整版见 [DISCLAIMER.md](DISCLAIMER.md)（中英双语）。
 
-## 🤖 AI 使用声明 / AI Disclosure
+<a name="-ai-使用声明--ai-disclosure"></a>
 
-> 本项目不含任何人类成分，绝大多数工作都由 **AI** 完成。
+## AI 使用声明
+
+本项目不含任何人类成分。本项目的大部分代码和文档由 AI 完成，维护者负责提出需求、审阅与验收。规则数据保留来源与贡献者署名。
 
 ## ⚖️ 开源协议
 
