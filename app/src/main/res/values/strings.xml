@@ -193,6 +193,7 @@
     <string name="vm_op_fail">操作失败——请重试（若失去 root 请先授权）</string>
     <string name="vm_no_targets">无可应用的组件目标</string>
     <string name="vm_apply_ok">%1$s 规则 %2$d 条已应用</string>
+    <string name="vm_ledger_write_failed">（账本写入失败：本次变更已在设备上生效，但未记入账本——请重试；若持续失败请检查存储空间）</string>
     <string name="vm_apply_backup_failed">（备份失败：本次未留快照）</string>
     <string name="vm_apply_backup">（已自动备份）</string>
     <string name="vm_fail_suffix"> — 失败：%1$s</string>

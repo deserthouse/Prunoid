@@ -177,6 +177,7 @@
     <string name="vm_op_fail">Operation failed — retry (grant root if lost)</string>
     <string name="vm_no_targets">No component targets to apply</string>
     <string name="vm_apply_ok">%1$s rules applied: %2$d</string>
+    <string name="vm_ledger_write_failed"> (ledger write failed: the change is already in effect on the device but was not recorded — retry; if it keeps failing, check storage space)</string>
     <string name="vm_apply_backup_failed"> (backup failed: no snapshot was taken for this operation)</string>
     <string name="vm_apply_backup">(backup created automatically)</string>
     <string name="vm_fail_suffix"> — failed: %1$s</string>

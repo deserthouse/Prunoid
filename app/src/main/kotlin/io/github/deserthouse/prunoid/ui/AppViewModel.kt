@@ -220,6 +220,13 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         else appCtx.getString(kind.res)
     }
 
+    /** 批Y7（第五轮审查 R5-19）：账本写入失败不得使应用崩溃——引擎写入可能已经生效，
+     *  调用方据此给出"变更已在设备上生效但未记入账本"的明确提示。返回 null=成功。 */
+    private fun ledgerWrite(block: () -> Unit): Throwable? = runCatching(block).exceptionOrNull()
+
+    private val ledgerFailedNote: String
+        get() = appCtx.getString(R.string.vm_ledger_write_failed)
+
     /** 批N：root 类操作统一闸门——非 ROOT 模式一律拒绝（UI 层已禁灰，此处安全兜底） */
     private fun rootGate(): Boolean =
         _state.value.workMode.id == io.github.deserthouse.prunoid.core.engine.WorkModeId.ROOT &&
@@ -299,6 +306,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 // PM 部分成功包也入账（有真实写入必须可恢复），preExisting=外部既有禁用。
                 val ownedSnapshots = plan.eligible.associate { it.packageName to
                     applied.get(it.packageName)?.pm?.components.orEmpty().toSet() }
+                var ledgerFailed = false
                 plan.eligible.zip(exec.items).forEach { (pa, res) ->
                     if (res.okComponents.isNotEmpty()) {
                         val okSet = res.okComponents.toSet()
@@ -309,14 +317,16 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                                 ownedSnapshots[pa.packageName].orEmpty(),
                             )
                         } else emptyList()
-                        applied.recordMerge(
-                            pa.packageName, exec.engine.name,
-                            res.okComponents,
-                            pa.byType.entries.flatMap { (t, cs) -> cs.map { it to t } }
-                                .filter { it.first in okSet }.toMap(),
-                            addedRuleIds = setOf(plan.ruleId),
-                            preExisting = preEx,
-                        )
+                        if (ledgerWrite {
+                                applied.recordMerge(
+                                    pa.packageName, exec.engine.name,
+                                    res.okComponents,
+                                    pa.byType.entries.flatMap { (t, cs) -> cs.map { it to t } }
+                                        .filter { it.first in okSet }.toMap(),
+                                    addedRuleIds = setOf(plan.ruleId),
+                                    preExisting = preEx,
+                                )
+                            } != null) ledgerFailed = true
                     }
                 }
                 val bulkItems = exec.items.map { OperationItem(it.pkg, it.ok, it.detail) }
@@ -326,7 +336,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     opCenter.record(
                         OperationKind.DISABLE_EVERYWHERE, plan.ruleId,
                         bulkItems,
-                        appCtx.getString(R.string.vm_sdk_everywhere_fail, rule.name, targets.size) + backupSuffix(backup),
+                        appCtx.getString(R.string.vm_sdk_everywhere_fail, rule.name, targets.size) + backupSuffix(backup) +
+                            (if (ledgerFailed) ledgerFailedNote else ""),
                         planId = plan.planId,
                     )
                     return@withBusy ""
@@ -349,7 +360,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     appCtx.getString(
                         R.string.vm_sdk_everywhere_partial, rule.name, exec.compWritten,
                         targets.sumOf { it.componentCount } - exec.compWritten, exec.touched.size
-                    )) + backupSuffix(backup)
+                    )) + backupSuffix(backup) + (if (ledgerFailed) ledgerFailedNote else "")
                 opCenter.record(
                     OperationKind.DISABLE_EVERYWHERE, plan.ruleId,
                     bulkItems,
@@ -384,12 +395,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     val r = engine.applyIfw(pkg, byType)
                     // 批HH1（S5）：on 成功也记 Operation（与 off 对称，结果卡可见）
                     if (r.isSuccess) {
-                        applied.recordMerge(
-                            pkg, Engine.IFW.name,
-                            byType.values.flatten(),
-                            byType.entries.flatMap { (t, cs) -> cs.map { it to t } }.toMap(),
-                            addedRuleIds = setOf(ruleId)
-                        )
+                        if (ledgerWrite {
+                                applied.recordMerge(
+                                    pkg, Engine.IFW.name,
+                                    byType.values.flatten(),
+                                    byType.entries.flatMap { (t, cs) -> cs.map { it to t } }.toMap(),
+                                    addedRuleIds = setOf(ruleId)
+                                )
+                            } != null) return@withBusy ledgerFailedNote
                         opCenter.record(
                             OperationKind.SET_SDK_FOR_APP, pkg,
                             byType.values.flatten().map { OperationItem(it, true, "") },
@@ -477,12 +490,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                         // 批BB RV-02：关闭 SDK 同步终止该桶内对此 SDK 的意图
                         ruleIds = b.ruleIds - ruleId
                     )?.takeIf { b2 -> b2.components.isNotEmpty() || b2.ruleIds.isNotEmpty() }
-                    applied.replaceBuckets(
-                        pkg,
-                        ifw = minus(prev?.ifw),
-                        pm = minus(prev?.pm),
-                        fallbackRuleIds = prev?.ruleIds.orEmpty() - ruleId
-                    )
+                    if (ledgerWrite {
+                            applied.replaceBuckets(
+                                pkg,
+                                ifw = minus(prev?.ifw),
+                                pm = minus(prev?.pm),
+                                fallbackRuleIds = prev?.ruleIds.orEmpty() - ruleId
+                            )
+                        } != null) return@withBusy ledgerFailedNote
                     if (failedCount > 0) {
                         // 批W1：部分恢复——失败组件保持禁用并入可重试明细
                         val failItems = perItem.filter { !it.second }.map { (c, _) ->
@@ -558,10 +573,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 val r = engine.applyIfw(pkg, eff)
                 if (r.isFailure) return@withBusy Pair(false, appCtx.getString(R.string.vm_op_fail))
                 // 批E1/X2：合并语义
-                applied.recordMerge(
-                    pkg, Engine.IFW.name, comps,
-                    eff.entries.flatMap { (t, cs) -> cs.map { it to t } }.toMap()
-                )
+                val ledgerOk = ledgerWrite {
+                    applied.recordMerge(
+                        pkg, Engine.IFW.name, comps,
+                        eff.entries.flatMap { (t, cs) -> cs.map { it to t } }.toMap()
+                    )
+                } == null
                 val liveAfter = engine.readLiveDisabled(listOf(pkg)).first
                 _state.update {
                     it.copy(
@@ -570,7 +587,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                         liveDisabled = liveAfter.let { l -> it.liveDisabled + (pkg to (l[pkg] ?: emptySet())) }
                     )
                 }
-                Pair(true, appCtx.getString(R.string.vm_apply_ok, "IFW", r.getOrDefault(0)) + backupSuffix(backup)).also { result ->
+                Pair(true, appCtx.getString(R.string.vm_apply_ok, "IFW", r.getOrDefault(0)) + backupSuffix(backup) +
+                    (if (ledgerOk) "" else ledgerFailedNote)).also { result ->
                     // 批I1（F4）：未识别禁用也入结果协议（详情结果卡可见）
                     opCenter.record(
                         OperationKind.APPLY, pkg,
@@ -901,13 +919,15 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     engine.restoreBackup(path).fold(
                         onSuccess = { report ->
                             ok = report.ifwOk
-                            if (report.ifwOk) applied.removeEngine(Engine.IFW.name)
-                            if (report.pmOk) applied.removeEngine(Engine.PM.name)
+                            var ledgerFailed = false
+                            if (report.ifwOk && ledgerWrite { applied.removeEngine(Engine.IFW.name) } != null) ledgerFailed = true
+                            if (report.pmOk && ledgerWrite { applied.removeEngine(Engine.PM.name) } != null) ledgerFailed = true
                             // 第五轮审查 R5-05：pm 段未写回时不再宣称"重启后完全生效"——已测 Android 16
                             // 设备上系统以 fs-verity 保护组件启停状态文件，写回必然失败（IFW 段不受影响，
                             // pm 账本保留=恢复依据仍在）。全成功与仅 IFW 两条文案分开
-                            if (report.pmOk) appCtx.getString(R.string.vm_restore_backup_ok)
+                            val base = if (report.pmOk) appCtx.getString(R.string.vm_restore_backup_ok)
                             else appCtx.getString(R.string.vm_restore_backup_ifw_only)
+                            if (ledgerFailed) base + ledgerFailedNote else base
                         },
                         onFailure = { appCtx.getString(R.string.vm_restore_backup_fail, failureText(it.message)) }
                     )
@@ -1042,19 +1062,23 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 // 批X2（审查 R04/R05）：合并记账（不覆盖同包其他 SDK）+ ruleIds 身份入账
                 if (r.isFailure) return@withBusy Pair(false, appCtx.getString(R.string.vm_op_fail))
                 if (engineSnapshot == Engine.IFW) {
-                    applied.recordMerge(
-                        scanned.packageName, engineSnapshot.name, effTargets,
-                        effByType.entries.flatMap { (t, cs) -> cs.map { it to t } }.toMap(),
-                        addedRuleIds = selectedRuleIds
-                    )
+                    if (ledgerWrite {
+                            applied.recordMerge(
+                                scanned.packageName, engineSnapshot.name, effTargets,
+                                effByType.entries.flatMap { (t, cs) -> cs.map { it to t } }.toMap(),
+                                addedRuleIds = selectedRuleIds
+                            )
+                        } != null) return@withBusy Pair(false, ledgerFailedNote)
                 } else {
                     // 批FF-B1①：PM 记账只记实际成功集（部分失败组件不进账本=不产生虚假管理条目）
-                    applied.recordMerge(
-                        scanned.packageName, engineSnapshot.name, pmOkTargets ?: targets,
-                        byType.entries.flatMap { (t, cs) -> cs.map { it to t } }.toMap(),
-                        addedRuleIds = selectedRuleIds,
-                        preExisting = preExistingTargets
-                    )
+                    if (ledgerWrite {
+                            applied.recordMerge(
+                                scanned.packageName, engineSnapshot.name, pmOkTargets ?: targets,
+                                byType.entries.flatMap { (t, cs) -> cs.map { it to t } }.toMap(),
+                                addedRuleIds = selectedRuleIds,
+                                preExisting = preExistingTargets
+                            )
+                        } != null) return@withBusy Pair(false, ledgerFailedNote)
                 }
                 // 批G：写入后单包重读现场（展示层以现场为准）
                 val liveAfter = if (r.isSuccess) engine.readLiveDisabled(listOf(scanned.packageName)).first else null
@@ -1112,7 +1136,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 else Result.failure<Int>(IllegalStateException("pm enable: $pmFailCount failed"))
                 // 批X2（审查 PN-07）：失败不删恢复账本——现场仍禁用时必须保留重试依据
                 val ok = r1.isSuccess && r2.isSuccess
-                if (ok && entry != null) applied.remove(scanned.packageName)
+                val ledgerFailed = ok && entry != null && ledgerWrite { applied.remove(scanned.packageName) } != null
                 _state.update { it.copy(applied = applied.all()) }
                 // 批G：恢复后单包重读现场——批Y6（第五轮审查 R5-12）：失败时也回读（pm 半边可能已恢复），
                 // 界面的"已禁用"计数不得滞留在操作前
@@ -1124,7 +1148,8 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 }
                 if (ok) {
                     appCtx.getString(R.string.vm_restore_ok) +
-                        if (skippedPre > 0) appCtx.getString(R.string.vm_restore_skip_pre, skippedPre) else ""
+                        (if (skippedPre > 0) appCtx.getString(R.string.vm_restore_skip_pre, skippedPre) else "") +
+                        (if (ledgerFailed) ledgerFailedNote else "")
                 } else appCtx.getString(R.string.vm_restore_fail, failureText(r1.exceptionOrNull()?.message ?: r2.exceptionOrNull()?.message))
             }
             onDone(msg)
