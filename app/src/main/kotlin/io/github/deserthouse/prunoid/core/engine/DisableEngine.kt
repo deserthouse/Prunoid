@@ -131,7 +131,10 @@ class DisableEngine(
         internal fun validCompName(n: String): Boolean = n.length <= COMP_NAME_MAX && COMP_NAME_RE.matches(n)
         fun requireValidTarget(pkg: String, comps: Collection<String>) {
             require(validPkgName(pkg)) { "invalid package name" }
-            require(comps.isNotEmpty() && comps.all { validCompName(it) }) { "invalid component name" }
+            // 热修 0.31.1（第五轮审查 R5-02）：空集合法——removeIfw(空集) 是"定向移除零项"的
+            // 正常调用（恢复路径可达），0.31.0 把它连同非法名一并拒绝；写入入口的空目标
+            // 由各自调用方按既有语义处理（applyIfw 原样重写/返回 0，PM 入口早退）
+            require(comps.all { validCompName(it) }) { "invalid component name" }
         }
 
         // 批X1（审查 R03）：真实包属性判定——前缀表只是附加保护，不能代替 FLAG_SYSTEM
@@ -249,10 +252,10 @@ class DisableEngine(
     // ── 安全层：操作前全量备份（IFW 规则目录 + pm 组件限制状态，单个 tar 归档） ──
     suspend fun backup(keep: Int = 10): Result<String> = withContext(Dispatchers.IO) {
         runCatching {
-            val dir = "${context.filesDir.absolutePath}/backups"
+            val dir = BackupPaths.dir(context.filesDir.absolutePath)
             Shell.cmd("mkdir -p $dir").exec()
             val ts = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date())
-            val out = "$dir/backup_$ts.tar.gz"
+            val out = BackupPaths.file(context.filesDir.absolutePath, "backup_$ts.tar.gz")
             // 单次归档两个路径（-C / 用相对路径），失败则整体报错——不能静默丢一半
             val r = Shell.cmd(
                 "tar -czf $out -C / $IFW_DIR $PKG_RESTRICTIONS"
@@ -281,13 +284,13 @@ class DisableEngine(
             // 流程：隔离目录解包 → 备份内的受管文件逐个还原 → 当前受管文件中备份没有的删除 → 校验。
             // 批BB RV-05：先探归档成员判定 PM 段；PM 恢复链去掉 || true（失败必须传播）。
             val stage = "/data/local/tmp/prunoid_restore"
-            // 批W5（M09）：备份路径白名单——仅接受本应用 backups 目录下的时点备份文件名
-            //（listBackups 同源），阻断任意路径拼接进 tar/shell 命令
-            val backupsPrefix = context.filesDir.absolutePath + "/backups/"
-            require(
-                backupPath.startsWith(backupsPrefix) &&
-                    Regex("backup_\\d{8}-\\d{6}\\.tar\\.gz$").containsMatchIn(backupPath)
-            ) { "backup path outside managed directory" }
+            // 批W5（M09）+ 热修 0.31.1（第五轮审查 R5-01/R5-04）：备份路径白名单——路径必须
+            // **恰为**本应用 backups 目录下的合法时点快照（BackupPaths 单一事实源，与 listBackups
+            // 同源）。0.31.0 上 listBackups 返回裸文件名而此处要求绝对路径→应用内恢复必败；
+            // 原 startsWith+containsMatchIn 判定还放行 backups/../x/… 穿越
+            require(BackupPaths.isManaged(context.filesDir.absolutePath, backupPath)) {
+                "backup path outside managed directory"
+            }
             val pre = Shell.cmd(
                 "rm -rf $stage && mkdir -p $stage && tar -xzf '$backupPath' -C $stage"
             ).exec()
@@ -345,7 +348,9 @@ class DisableEngine(
         if (!probe.isSuccess) return emptyList()
         val r = Shell.cmd("ls -1 $dir").exec()
         check(r.isSuccess) { "backup listing failed: ${r.err}" }
-        return r.out.filter { it.startsWith("backup_") && it.endsWith(".tar.gz") }.sortedDescending()
+        // 热修 0.31.1（第五轮审查 R5-01）：返回绝对路径——还原白名单按绝对路径判定
+        //（批X2 改成裸文件名后与批W5 白名单不同源，0.31.0 应用内恢复必败）
+        return BackupPaths.fromListing(context.filesDir.absolutePath, r.out)
     }
 
     // ── 安全层：一键清除全部 IFW 规则（紧急恢复） ─────────────────
