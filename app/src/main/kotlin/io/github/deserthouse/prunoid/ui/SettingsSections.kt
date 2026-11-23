@@ -708,6 +708,7 @@ internal fun RecoveryCards(st: AppUiState, vm: AppViewModel, onMsg: (String) -> 
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    Spacer(Modifier.height(4.dp))
                 }
                 Spacer(Modifier.height(6.dp))
                 // 批P2#23：卸载前清规则提示（root 工具经典翻车点）

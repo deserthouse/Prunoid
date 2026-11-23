@@ -459,11 +459,13 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     // 账本替换语义保持：双桶全空自动删除（修 R04-b 复活问题）
                     val pmOkSet = perItem.filter { it.second }.map { it.first }.toSet()
                     val ifwOk = r2.isSuccess
-                    val restoredOk = buildSet {
-                        if (ifwOk) addAll(removedEffective.filter { it !in pmTargets })
-                        addAll(pmOkSet)
-                    }
-                    val restoredOwned = restoredOk.count { it in ownedTargets }
+                    // 批Y4：按桶记账——IFW 桶只在其文件改写成功时才减组件，PM 桶按逐项回执减；
+                    // 同一组件被两桶共同负责时，两边都成功才算恢复（此前只要 pm 回执成功就把组件
+                    // 从两个桶里一起减掉——IFW 规则其实还留在盘上，成了没有恢复记录的孤儿规则）
+                    val ifwRestored: Set<String> = if (ifwOk) removedEffective.toSet() else emptySet()
+                    fun isRestored(c: String): Boolean =
+                        (c !in ifwOwned || ifwOk) && (c !in pmTargets || c in pmOkSet)
+                    val restoredOwned = ownedTargets.count { isRestored(it) }
                     val failedCount = ownedTargets.size - restoredOwned
                     if (failedCount > 0 && restoredOwned == 0) {
                         // 真全失败：账本原样保留（恢复依据不丢），终态 Operation 如实呈现
@@ -483,18 +485,18 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                         }
                         return@withBusy appCtx.getString(R.string.sdk_off_restore_failed, ownedTargets.size)
                     }
-                    fun minus(b: AppliedRulesStore.EngineChange?) = b?.copy(
-                        components = b.components.filter { it !in restoredOk },
-                        types = b.types.filterKeys { it !in restoredOk },
-                        preExisting = b.preExisting.filter { it !in restoredOk },
+                    fun minus(b: AppliedRulesStore.EngineChange?, restored: Set<String>) = b?.copy(
+                        components = b.components.filter { it !in restored },
+                        types = b.types.filterKeys { it !in restored },
+                        preExisting = b.preExisting.filter { it !in restored },
                         // 批BB RV-02：关闭 SDK 同步终止该桶内对此 SDK 的意图
                         ruleIds = b.ruleIds - ruleId
                     )?.takeIf { b2 -> b2.components.isNotEmpty() || b2.ruleIds.isNotEmpty() }
                     if (ledgerWrite {
                             applied.replaceBuckets(
                                 pkg,
-                                ifw = minus(prev?.ifw),
-                                pm = minus(prev?.pm),
+                                ifw = minus(prev?.ifw, ifwRestored),
+                                pm = minus(prev?.pm, pmOkSet),
                                 fallbackRuleIds = prev?.ruleIds.orEmpty() - ruleId
                             )
                         } != null) return@withBusy ledgerFailedNote
@@ -1068,7 +1070,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                                 effByType.entries.flatMap { (t, cs) -> cs.map { it to t } }.toMap(),
                                 addedRuleIds = selectedRuleIds
                             )
-                        } != null) return@withBusy Pair(false, ledgerFailedNote)
+                        } != null) return@withBusy Pair(false, appCtx.getString(R.string.vm_apply_ok, engineSnapshot.name, r.getOrDefault(0)) + ledgerFailedNote)
                 } else {
                     // 批FF-B1①：PM 记账只记实际成功集（部分失败组件不进账本=不产生虚假管理条目）
                     if (ledgerWrite {
@@ -1078,7 +1080,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                                 addedRuleIds = selectedRuleIds,
                                 preExisting = preExistingTargets
                             )
-                        } != null) return@withBusy Pair(false, ledgerFailedNote)
+                        } != null) return@withBusy Pair(false, appCtx.getString(R.string.vm_apply_ok, engineSnapshot.name, r.getOrDefault(0)) + ledgerFailedNote)
                 }
                 // 批G：写入后单包重读现场（展示层以现场为准）
                 val liveAfter = if (r.isSuccess) engine.readLiveDisabled(listOf(scanned.packageName)).first else null
