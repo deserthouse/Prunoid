@@ -36,7 +36,7 @@ Find embedded SDKs in Android apps and choose which components to disable on a r
 
 - Per-SDK checkboxes, category filters (ads/analytics/push…), select-all-filtered one-tap block
 - **Auto reapply** after app install/update (foreground guard service; toggleable)
-- **Safety layer (non-removable)**: optional auto-backup (off by default); per-app restore / backup restore / clear-all / adb emergency broadcast (requires the app’s Realtime guard to be alive — Android 16 does not dispatch the static broadcast); hard whitelist block on framework packages (no bootloop observed in tested scope)
+- **Safety layer (non-removable)**: optional auto-backup (off by default); per-app restore / backup restore (IFW rules only on tested Android 16 devices) / clear-all / adb emergency broadcast (requires the app’s Realtime guard to be alive — Android 16 does not dispatch the static broadcast); hard whitelist block on framework packages (no bootloop observed in tested scope)
 
 ### Rules ecosystem
 
@@ -65,13 +65,13 @@ Requirements: Android 12+ (API 31), rooted (Magisk or similar).
 2. Grant root access
 3. Open any app → review matched SDKs (archive sheet shows description / side effects / contributors)
 4. Check the SDKs to block (nothing pre-checked — review each SDK yourself) → Apply
-5. Something broke? Restore from the in-app emergency dialog, or clear all IFW rules over adb
+5. Something broke? Restore the app from its detail page (most common), or restore a snapshot if auto-backup is on (IFW rules only on tested Android 16 devices), or clear all IFW rules over adb
 
 ## ❓ FAQ
 
 **Q: Will blocking crash apps?**
 
-A: Possibly. Rules carry 4-level grading and side-effect notes; risky ones require explicit opt-in. Every operation is preceded by an automatic backup and can be reverted.
+A: Possibly. Rules carry 4-level grading and side-effect notes; risky ones require explicit opt-in. Every operation can be reverted from the app\'s detail page; the optional auto-backup (off by default) adds point-in-time snapshots.
 
 **Q: Can apps detect the blocking?**
 

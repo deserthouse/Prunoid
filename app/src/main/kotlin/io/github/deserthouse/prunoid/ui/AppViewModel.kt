@@ -866,7 +866,6 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun restoreBackup(path: String, onDone: (String) -> Unit) {
         viewModelScope.launch {
             var ok = false
-            var partialNote = ""
             // 批BB RV-05 + 批W3（M03）：恢复事务（引擎写回 + 账本同步）整体纳入
             // OpCoordinator 共锁——与手动 apply/自动重应用/clearIfw 串行，不再交错
             // （原注释声称"内部含共锁段"但引擎 restoreBackup 实际无锁；账本同步按实际
@@ -880,11 +879,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                             ok = report.ifwOk
                             if (report.ifwOk) applied.removeEngine(Engine.IFW.name)
                             if (report.pmOk) applied.removeEngine(Engine.PM.name)
-                            // 失败桶如实告知（PM 恢复失败→pm 账本保留=恢复依据仍在）
-                            if (!report.pmOk && report.pmInArchive) {
-                                partialNote = appCtx.getString(R.string.vm_restore_backup_pm_fail)
-                            }
-                            appCtx.getString(R.string.vm_restore_backup_ok)
+                            // 第五轮审查 R5-05：pm 段未写回时不再宣称"重启后完全生效"——已测 Android 16
+                            // 设备上系统以 fs-verity 保护组件启停状态文件，写回必然失败（IFW 段不受影响，
+                            // pm 账本保留=恢复依据仍在）。全成功与仅 IFW 两条文案分开
+                            if (report.pmOk) appCtx.getString(R.string.vm_restore_backup_ok)
+                            else appCtx.getString(R.string.vm_restore_backup_ifw_only)
                         },
                         onFailure = { appCtx.getString(R.string.vm_restore_backup_fail, it.message ?: "") }
                     )
@@ -892,7 +891,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             }
             _state.update { it.copy(applied = withContext(Dispatchers.IO) { applied.all() }, ledgerCorrupted = applied.corrupted) }
             if (ok) rescan()  // 批P2#30：恢复后现场与记录可能漂移，重扫校准
-            onDone(if (partialNote.isEmpty()) msg else msg + partialNote)
+            onDone(msg)
         }
     }
 

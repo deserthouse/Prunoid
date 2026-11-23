@@ -5,6 +5,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Assume.assumeTrue
 import org.junit.Assert.fail
 import org.junit.Rule
 import org.junit.Test
@@ -55,7 +57,42 @@ class LedgerFaultProbeTest {
         assertEquals("失败的那次不得落盘", setOf("pkg.a"), AppliedRulesStore(f).all().keys)
     }
 
-    /** 现状刻画（非期望行为，审查 R5-10）：空主文件被当作合法空账本而不是损坏。
+    /** 现状刻画（仅 Windows 可确定性注入；第五轮审查 R5-08）：0.30.1 的回退分支——
+     *  "首次改名失败 → 删旧文件成功 → 第二次改名再失败"——旧账本被删、新内容只剩 .tmp、
+     *  主文件缺失=下次启动读到空账本；而代码注释与 0.30.1 发布说明都称"任何一步失败旧账本完整保留"。
+     *  注入手法：目标 File 子类在 delete() 里先放开对旧账本的占用（首次 rename 因占用失败、delete 得以成功），
+     *  再用句柄占住 .tmp（Windows 不允许改名被占用的文件），使第二次 rename 失败。修复后本测试应翻转。 */
+    @Test
+    fun `characterization - fallback path loses the old ledger when the second rename fails`() {
+        assumeTrue(System.getProperty("os.name").lowercase().startsWith("windows"))
+        val dir = tmp.newFolder("fallback")
+        val real = File(dir, "led.json")
+        merge(AppliedRulesStore(real), "pkg.a", "p/A")
+        var target: java.io.FileInputStream? = java.io.FileInputStream(real)
+        var heldTmp: java.io.FileInputStream? = null
+        val hooked = object : File(dir, "led.json") {
+            override fun delete(): Boolean {
+                target!!.close()
+                val ok = super.delete()
+                heldTmp = java.io.FileInputStream(File(dir, "led.json.tmp"))
+                return ok
+            }
+        }
+        try {
+            merge(AppliedRulesStore(hooked), "pkg.b", "p/B")
+            fail("expected the save to fail")
+        } catch (e: Exception) {
+            // 回退分支走完仍失败 → error()
+        } finally {
+            heldTmp?.close()
+            target?.close()
+        }
+        assertFalse("old ledger survives only if the published claim held", real.exists())
+        assertEquals("next launch reads an empty ledger", 0, AppliedRulesStore(real).all().size)
+        assertTrue("new content survives only in tmp", File(dir, "led.json.tmp").exists())
+    }
+
+    /** 现状刻画（非期望行为，审查 R5-09）：空主文件被当作合法空账本而不是损坏。
      *  批W2 事故正是"空文件=空账本"把静默清账洗成合法态；原子改名后主文件不可能合法为空，
      *  若将来改为按损坏处理，更新本测试。 */
     @Test
