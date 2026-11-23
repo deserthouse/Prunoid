@@ -71,8 +71,23 @@ class AppliedRulesStore {
     private data class Store(val entries: MutableMap<String, AppliedEntry> = mutableMapOf())
 
     private fun load(): Store {
-        if (!file.exists()) return Store()
-        val text = file.readText()
+        // 批Y1（第五轮审查 R5-08）：主文件缺失而 .old 在位（回退分支回滚失败或中途被杀）——
+        // 旧账本其实还在 .old 里，认领回来，不能把它读成空账本
+        if (!file.exists()) {
+            val old = oldFile()
+            if (!old.exists()) return Store()
+            if (old.renameTo(file)) {
+                runCatching { android.util.Log.w("SdkPruner", "ledger: main file missing, adopted ${old.name}") }
+            } else {
+                return decode(old.readText(), old)
+            }
+        }
+        return decode(file.readText(), file)
+    }
+
+    private fun oldFile() = java.io.File(file.parentFile, file.name + ".old")
+
+    private fun decode(text: String, src: java.io.File): Store {
         // 空文件 = 合法空账本（首次写前中断等），不得判损坏锁死账本
         if (text.isBlank()) return Store()
         return try {
@@ -81,8 +96,8 @@ class AppliedRulesStore {
             // 批BB RV-09：损坏 ≠ 空——原文件改名保留恢复依据，置位拒绝写入
             val ts = System.currentTimeMillis()
             runCatching {
-                val f = java.io.File(file.parentFile, file.name + ".corrupt-$ts")
-                file.renameTo(f) || runCatching { file.copyTo(f, overwrite = true); file.delete() }.isSuccess
+                val f = java.io.File(src.parentFile, file.name + ".corrupt-$ts")
+                src.renameTo(f) || runCatching { src.copyTo(f, overwrite = true); src.delete() }.isSuccess
             }
             corruptedFlag = true
             Store()
@@ -96,7 +111,7 @@ class AppliedRulesStore {
         // 批W2（M02/P1）：真原子替换——Linux/Android rename 覆盖已存在目标是原子操作，
         // 旧代码"先 delete 再 rename"在两步间进程退出/被杀会留下无主 tmp + 主文件丢失
         //（恢复依据全失）。新顺序：写 tmp → fsync → rename 直接覆盖 → 失败保留 tmp 与旧文件
-        //（可诊断、可恢复）；仅当目标非空文件且 rename 因非空检查失败时才退避删除重试一次。
+        //（可诊断、可恢复）。
         val tmp = java.io.File(file.parentFile, file.name + ".tmp")
         // 批W2 补丁：写入与 fsync 同一句柄（先 writeText 再开 FileOutputStream 会默认截断，
         // 把刚写的 JSON 清成空文件——同名空文件被 load() 当合法空账本，等于静默清账）
@@ -106,9 +121,16 @@ class AppliedRulesStore {
         }
         var renamed = tmp.renameTo(file)
         if (!renamed && file.exists()) {
-            // Android 侧 rename 覆盖存在文件正常；若底层拒绝（异常文件系统），删除旧文件后
-            // 重试一次——此时旧内容已在 tmp 中完整保留，任何一步失败旧文件仍在
-            if (file.delete()) renamed = tmp.renameTo(file)
+            // Android 侧 rename 覆盖存在文件正常；若底层拒绝，走回退：**先把旧账本挪到 .old**
+            //（旧内容自始至终有一份在盘上），再把 tmp 放到位；成功才删 .old，失败把 .old 挪回。
+            // 批Y1（第五轮审查 R5-08）：原实现"先删旧文件再改名"——注意 tmp 里是**新**内容，
+            // 删除成功而改名再失败时旧账本就没了（下次启动读到空账本；JVM 已实证）。
+            val old = oldFile()
+            old.delete()
+            if (file.renameTo(old)) {
+                renamed = tmp.renameTo(file)
+                if (renamed) old.delete() else old.renameTo(file)
+            }
         }
         if (!renamed) {
             // 批W2：失败保留 tmp（完整新内容）与旧账本，不静默吞——调用方按错误处理，

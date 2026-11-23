@@ -689,10 +689,26 @@ internal fun RecoveryCards(st: AppUiState, vm: AppViewModel, onMsg: (String) -> 
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(Modifier.height(4.dp))
+                // 批Y3（第五轮审查 R5-06）：审计模式只读——入口保持可见（批Q B03 救援例外）但不可进入
+                // 破坏性确认框；原实现可点、可确认，确认后才回一句拒绝
+                val auditMode = st.workMode.id == io.github.deserthouse.prunoid.core.engine.WorkModeId.AUDIT
                 TextButton(
                     onClick = { confirmClearIfw = true },
-                    enabled = !st.busy
-                ) { Text(stringResource(R.string.clear_ifw), color = MaterialTheme.colorScheme.error) }
+                    enabled = !st.busy && !auditMode
+                ) {
+                    Text(
+                        stringResource(R.string.clear_ifw),
+                        color = if (auditMode) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+                        else MaterialTheme.colorScheme.error
+                    )
+                }
+                if (auditMode) {
+                    Text(
+                        stringResource(R.string.recovery_clear_audit_hint),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
                 Spacer(Modifier.height(6.dp))
                 // 批P2#23：卸载前清规则提示（root 工具经典翻车点）
                 Text(

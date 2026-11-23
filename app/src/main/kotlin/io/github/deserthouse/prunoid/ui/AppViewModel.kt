@@ -201,6 +201,25 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             _state.update { it.copy(busyOp = null) }
         }
 
+    /** 批Y2（第五轮审查 R5-15）：备份开启时的快照结果——null=未开启；true/false=成功/失败。
+     *  失败不再 getOrNull 吞掉（原实现快照创建失败时应用照常执行且无任何提示）。 */
+    private suspend fun snapshotIfEnabled(): Boolean? =
+        if (_state.value.backupEnabled) engine.backup(_state.value.backupKeep).isSuccess else null
+
+    private fun backupSuffix(taken: Boolean?): String = when (taken) {
+        null -> ""
+        true -> appCtx.getString(R.string.vm_apply_backup)
+        false -> appCtx.getString(R.string.vm_apply_backup_failed)
+    }
+
+    /** 批Y5（第五轮审查 R5-11）：失败原因本地化——原始串仍在结果明细里供排障 */
+    private fun failureText(raw: String?): String {
+        val kind = io.github.deserthouse.prunoid.core.engine.EngineErrorKind.classify(raw)
+        return if (kind == io.github.deserthouse.prunoid.core.engine.EngineErrorKind.HTTP)
+            appCtx.getString(R.string.err_http, io.github.deserthouse.prunoid.core.engine.EngineErrorKind.httpCode(raw) ?: "?")
+        else appCtx.getString(kind.res)
+    }
+
     /** 批N：root 类操作统一闸门——非 ROOT 模式一律拒绝（UI 层已禁灰，此处安全兜底） */
     private fun rootGate(): Boolean =
         _state.value.workMode.id == io.github.deserthouse.prunoid.core.engine.WorkModeId.ROOT &&
@@ -264,7 +283,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 }
                 val targets = plan.eligible
                 if (targets.isEmpty()) return@withBusy appCtx.getString(R.string.vm_no_targets)
-                if (_state.value.backupEnabled) engine.backup(_state.value.backupKeep).getOrNull() else null
+                val backup = snapshotIfEnabled()
                 // 批T1（C01）：PM 写前现场读（写锁内一致）——外部已禁用组件入账本 preExisting，
                 // 恢复不误启用（对齐详情路径批Z3/RV-01；原批量 PM 路径完全缺失此步）。
                 val pmBefore = if (plan.engine == Engine.PM) {
@@ -307,7 +326,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     opCenter.record(
                         OperationKind.DISABLE_EVERYWHERE, plan.ruleId,
                         bulkItems,
-                        appCtx.getString(R.string.vm_sdk_everywhere_fail, rule.name, targets.size),
+                        appCtx.getString(R.string.vm_sdk_everywhere_fail, rule.name, targets.size) + backupSuffix(backup),
                         planId = plan.planId,
                     )
                     return@withBusy ""
@@ -322,7 +341,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     )
                 }
                 // 批HH1（S2）：批量结果记入 Operation——逐 app 条目（协议贯通，管理页结果行消费）
-                val doneMsg = if (exec.ok == targets.size)
+                val doneMsg = (if (exec.ok == targets.size)
                     appCtx.getString(
                         R.string.vm_sdk_everywhere_ok, rule.name, exec.ok, targets.size, exec.compWritten
                     )
@@ -330,7 +349,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     appCtx.getString(
                         R.string.vm_sdk_everywhere_partial, rule.name, exec.compWritten,
                         targets.sumOf { it.componentCount } - exec.compWritten, exec.touched.size
-                    )
+                    )) + backupSuffix(backup)
                 opCenter.record(
                     OperationKind.DISABLE_EVERYWHERE, plan.ruleId,
                     bulkItems,
@@ -406,6 +425,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     val pmTargets = removedEffective.filter { c ->
                         pmBucket?.components?.contains(c) == true && c !in pmBucket.preExisting.toSet()
                     }
+                    // 批Y4（第五轮审查 R5-10）：失败/部分恢复按"本工具实际负责的组件"计数（与成功文案
+                    // 同口径）——原按命中组件计，把从未写入的 provider/native 也算进去（43 记成 51）
+                    val ifwOwned = prev?.ifw?.components?.toSet().orEmpty()
+                    val ownedTargets = removedEffective.filter { it in ifwOwned || it in pmTargets }.toSet()
                     // 批FF-B1①：pm enable 逐项执行（失败明细进 Operation）；账本语义保持原子——
                     // 任一失败=整体失败不删账本（保留重试依据，批X2 RV 语义）
                     val perItem = engine.enablePmPerItem(pkg, pmTargets)
@@ -427,24 +450,25 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                         if (ifwOk) addAll(removedEffective.filter { it !in pmTargets })
                         addAll(pmOkSet)
                     }
-                    val failedCount = removedEffective.size - restoredOk.size
-                    if (restoredOk.isEmpty()) {
+                    val restoredOwned = restoredOk.count { it in ownedTargets }
+                    val failedCount = ownedTargets.size - restoredOwned
+                    if (failedCount > 0 && restoredOwned == 0) {
                         // 真全失败：账本原样保留（恢复依据不丢），终态 Operation 如实呈现
                         if (perItem.isNotEmpty()) {
                             opCenter.record(
                                 OperationKind.SET_SDK_FOR_APP, pkg,
                                 perItem.map { (c, ok) -> OperationItem(c, ok, if (ok) "" else "pm enable failed") } +
                                     OperationItem("ifw", r2.isSuccess, if (r2.isSuccess) "" else "ifw remove failed"),
-                                appCtx.getString(R.string.sdk_off_restore_failed, removedEffective.size),
+                                appCtx.getString(R.string.sdk_off_restore_failed, ownedTargets.size),
                             )
                         } else if (!r2.isSuccess) {
                             opCenter.record(
                                 OperationKind.SET_SDK_FOR_APP, pkg,
                                 listOf(OperationItem("ifw", false, "ifw remove failed")),
-                                appCtx.getString(R.string.sdk_off_restore_failed, removedEffective.size),
+                                appCtx.getString(R.string.sdk_off_restore_failed, ownedTargets.size),
                             )
                         }
-                        return@withBusy appCtx.getString(R.string.sdk_off_restore_failed, removedEffective.size)
+                        return@withBusy appCtx.getString(R.string.sdk_off_restore_failed, ownedTargets.size)
                     }
                     fun minus(b: AppliedRulesStore.EngineChange?) = b?.copy(
                         components = b.components.filter { it !in restoredOk },
@@ -470,11 +494,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                             opCenter.record(
                                 OperationKind.SET_SDK_FOR_APP, pkg,
                                 failItems,
-                                appCtx.getString(R.string.sdk_off_restore_partial, restoredOk.size, failedCount),
+                                appCtx.getString(R.string.sdk_off_restore_partial, restoredOwned, failedCount),
                             )
                         }
                         return@withBusy appCtx.getString(
-                            R.string.sdk_off_restore_partial, restoredOk.size, failedCount
+                            R.string.sdk_off_restore_partial, restoredOwned, failedCount
                         )
                     }
                 }
@@ -530,7 +554,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 val eff = byType.filterKeys { it != "provider" }
                 val comps = eff.values.flatten()
                 if (comps.isEmpty()) return@withBusy Pair(false, appCtx.getString(R.string.vm_no_targets))
-                if (_state.value.backupEnabled) engine.backup(_state.value.backupKeep).getOrNull() else null
+                val backup = snapshotIfEnabled()
                 val r = engine.applyIfw(pkg, eff)
                 if (r.isFailure) return@withBusy Pair(false, appCtx.getString(R.string.vm_op_fail))
                 // 批E1/X2：合并语义
@@ -546,7 +570,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                         liveDisabled = liveAfter.let { l -> it.liveDisabled + (pkg to (l[pkg] ?: emptySet())) }
                     )
                 }
-                Pair(true, appCtx.getString(R.string.vm_apply_ok, "IFW", r.getOrDefault(0))).also { result ->
+                Pair(true, appCtx.getString(R.string.vm_apply_ok, "IFW", r.getOrDefault(0)) + backupSuffix(backup)).also { result ->
                     // 批I1（F4）：未识别禁用也入结果协议（详情结果卡可见）
                     opCenter.record(
                         OperationKind.APPLY, pkg,
@@ -840,7 +864,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         if (result.ok) appCtx.getString(
             R.string.vm_sub_ok, result.entries,
             result.version.ifEmpty { appCtx.getString(R.string.unknown) }
-        ) else appCtx.getString(R.string.vm_sub_fail, result.error)
+        ) else appCtx.getString(R.string.vm_sub_fail, failureText(result.error))
 
     fun removeSource(source: SettingsRepository.SubSource, onDone: (Boolean, String) -> Unit) {
         viewModelScope.launch {
@@ -885,7 +909,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                             if (report.pmOk) appCtx.getString(R.string.vm_restore_backup_ok)
                             else appCtx.getString(R.string.vm_restore_backup_ifw_only)
                         },
-                        onFailure = { appCtx.getString(R.string.vm_restore_backup_fail, it.message ?: "") }
+                        onFailure = { appCtx.getString(R.string.vm_restore_backup_fail, failureText(it.message)) }
                     )
                 }
             }
@@ -923,7 +947,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                         ok = true
                         appCtx.getString(R.string.vm_ifw_cleared, n)
                     },
-                    onFailure = { appCtx.getString(R.string.vm_clear_fail, it.message ?: "") }
+                    onFailure = { appCtx.getString(R.string.vm_clear_fail, failureText(it.message)) }
                 )
             }
             _state.update { it.copy(applied = withContext(Dispatchers.IO) { applied.all() }, ledgerCorrupted = applied.corrupted) }
@@ -962,7 +986,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 // 批EE1（六审 B01）：共享组件去重——与 byTypeForVM 同口径
                 val targets = selected.flatMap { it.matchedComponents }.distinct()
                 if (targets.isEmpty()) return@withBusy Pair(false, appCtx.getString(R.string.vm_no_targets))
-                val backup = if (_state.value.backupEnabled) engine.backup(_state.value.backupKeep).getOrNull() else null
+                val backup = snapshotIfEnabled()
                 val byType = byTypeForVM(scanned, selectedRuleIds)
                 // 批X2（审查 PN-03）：入口捕获引擎快照——执行/记账/结果引用同一份，消灭重读漂移
                 val engineSnapshot = _state.value.engine
@@ -986,7 +1010,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                                 if (r.isSuccess) OperationItem("ifw-file", true, "")
                                 else OperationItem("ifw-file", false, r.exceptionOrNull()?.message?.take(120) ?: "ifw write failed")
                             ),
-                            appCtx.getString(R.string.vm_apply_ok, "IFW", r.getOrDefault(0)),
+                            appCtx.getString(R.string.vm_apply_ok, "IFW", r.getOrDefault(0)) + backupSuffix(backup),
                             retryRuleIds = selectedRuleIds,
                         )
                     }
@@ -1003,7 +1027,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                         opCenter.record(
                             OperationKind.APPLY, scanned.packageName,
                             perItem.map { (c, ok) -> OperationItem(c, ok, if (ok) "" else "pm disable failed") },
-                            appCtx.getString(R.string.vm_apply_ok, "PM", okComps.size),
+                            appCtx.getString(R.string.vm_apply_ok, "PM", okComps.size) + backupSuffix(backup),
                             retryRuleIds = selectedRuleIds,
                         )
                         pmOkTargets = okComps
@@ -1043,7 +1067,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 }
                 buildString {
                     append(appCtx.getString(R.string.vm_apply_ok, engineSnapshot.name, r.getOrDefault(0)))
-                    if (backup != null) append(appCtx.getString(R.string.vm_apply_backup))
+                    append(backupSuffix(backup))
                     r.exceptionOrNull()?.let { append(appCtx.getString(R.string.vm_fail_suffix, it.message ?: "")) }
                 }.let { m -> Pair(r.isSuccess, m) }
             }
@@ -1081,15 +1105,18 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                         "",
                     )
                 }
-                val pmFailCount = perItem.count { !it.second }
+                // 批Y6（R5-17）：回执缺失按失败计——per-item 入口在校验异常时返回空表，
+                // 原逻辑把"零回执"当"零失败"，会在组件仍停用时删掉账本
+                val pmFailCount = pmTargets.size - perItem.count { it.second }
                 val r2 = if (pmFailCount == 0) Result.success(pmTargets.size)
                 else Result.failure<Int>(IllegalStateException("pm enable: $pmFailCount failed"))
                 // 批X2（审查 PN-07）：失败不删恢复账本——现场仍禁用时必须保留重试依据
                 val ok = r1.isSuccess && r2.isSuccess
                 if (ok && entry != null) applied.remove(scanned.packageName)
                 _state.update { it.copy(applied = applied.all()) }
-                // 批G：恢复后单包重读现场
-                val liveAfterR = if (ok) engine.readLiveDisabled(listOf(scanned.packageName)).first else null
+                // 批G：恢复后单包重读现场——批Y6（第五轮审查 R5-12）：失败时也回读（pm 半边可能已恢复），
+                // 界面的"已禁用"计数不得滞留在操作前
+                val liveAfterR = engine.readLiveDisabled(listOf(scanned.packageName)).first
                 _state.update {
                     it.copy(
                         liveDisabled = liveAfterR?.let { l -> it.liveDisabled + (scanned.packageName to (l[scanned.packageName] ?: emptySet())) } ?: it.liveDisabled
@@ -1098,7 +1125,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 if (ok) {
                     appCtx.getString(R.string.vm_restore_ok) +
                         if (skippedPre > 0) appCtx.getString(R.string.vm_restore_skip_pre, skippedPre) else ""
-                } else appCtx.getString(R.string.vm_restore_fail, r1.exceptionOrNull()?.message ?: r2.exceptionOrNull()?.message ?: "")
+                } else appCtx.getString(R.string.vm_restore_fail, failureText(r1.exceptionOrNull()?.message ?: r2.exceptionOrNull()?.message))
             }
             onDone(msg)
         }

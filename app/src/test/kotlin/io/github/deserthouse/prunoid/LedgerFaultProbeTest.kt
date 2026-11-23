@@ -6,19 +6,23 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.Assume.assumeTrue
 import org.junit.Assert.fail
+import org.junit.Assume.assumeTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
+import java.io.FileInputStream
 
 /** 第五轮审查 P2：账本故障与边界探针（真实生产类 AppliedRulesStore）。
- *  设备级注入（锁文件/断电）见审查记录；此处只放跨平台可确定性注入的点。 */
+ *  设备级注入（锁文件/断电）见审查记录；此处只放跨平台可确定性注入的点，
+ *  以及仅 Windows 可注入的点（Java 的文件句柄不带 share-delete，可让 rename 确定性失败）。 */
 class LedgerFaultProbeTest {
 
     @get:Rule
     val tmp = TemporaryFolder()
+
+    private val windows = System.getProperty("os.name").lowercase().startsWith("windows")
 
     private fun merge(s: AppliedRulesStore, pkg: String, comp: String) =
         s.recordMerge(pkg, "IFW", listOf(comp), mapOf(comp to "activity"))
@@ -57,44 +61,84 @@ class LedgerFaultProbeTest {
         assertEquals("失败的那次不得落盘", setOf("pkg.a"), AppliedRulesStore(f).all().keys)
     }
 
-    /** 现状刻画（仅 Windows 可确定性注入；第五轮审查 R5-08）：0.30.1 的回退分支——
-     *  "首次改名失败 → 删旧文件成功 → 第二次改名再失败"——旧账本被删、新内容只剩 .tmp、
-     *  主文件缺失=下次启动读到空账本；而代码注释与 0.30.1 发布说明都称"任何一步失败旧账本完整保留"。
-     *  注入手法：目标 File 子类在 delete() 里先放开对旧账本的占用（首次 rename 因占用失败、delete 得以成功），
-     *  再用句柄占住 .tmp（Windows 不允许改名被占用的文件），使第二次 rename 失败。修复后本测试应翻转。 */
+    /** 批Y1（R5-08）：覆盖改名被拒、旧文件也挪不动 → 整体失败，但旧账本原封不动。
+     *  0.30.1～0.31.1 的实现在这条路上会先删掉旧账本（第五轮审查 JVM 实证）。 */
     @Test
-    fun `characterization - fallback path loses the old ledger when the second rename fails`() {
-        assumeTrue(System.getProperty("os.name").lowercase().startsWith("windows"))
+    fun `fallback keeps the old ledger when both rename and move-away are refused`() {
+        assumeTrue(windows)
         val dir = tmp.newFolder("fallback")
         val real = File(dir, "led.json")
         merge(AppliedRulesStore(real), "pkg.a", "p/A")
-        var target: java.io.FileInputStream? = java.io.FileInputStream(real)
-        var heldTmp: java.io.FileInputStream? = null
+        val before = real.readText()
+        FileInputStream(real).use {
+            try {
+                merge(AppliedRulesStore(real), "pkg.b", "p/B")
+                fail("expected the save to fail")
+            } catch (e: Exception) {
+                // 回退分支走完仍失败 → error()
+            }
+        }
+        assertEquals("old ledger must be untouched", before, real.readText())
+        assertEquals(setOf("pkg.a"), AppliedRulesStore(real).all().keys)
+        assertFalse("no .old may be left behind", File(dir, "led.json.old").exists())
+    }
+
+    /** 批Y1（R5-08）：覆盖改名被拒、但旧文件能挪走 → 旧文件先进 .old，新文件就位后才删 .old。 */
+    @Test
+    fun `fallback moves the old ledger aside and only drops it after the new one lands`() {
+        assumeTrue(windows)
+        val dir = tmp.newFolder("fallback-ok")
+        val real = File(dir, "led.json")
+        merge(AppliedRulesStore(real), "pkg.a", "p/A")
+        val held = FileInputStream(real)
+        var calls = 0
+        // recordMerge 内 load() 先调一次 exists()；save() 里改名失败后的那一次才是放行点
         val hooked = object : File(dir, "led.json") {
-            override fun delete(): Boolean {
-                target!!.close()
-                val ok = super.delete()
-                heldTmp = java.io.FileInputStream(File(dir, "led.json.tmp"))
-                return ok
+            override fun exists(): Boolean {
+                calls++
+                if (calls == 2) held.close()
+                return super.exists()
             }
         }
         try {
             merge(AppliedRulesStore(hooked), "pkg.b", "p/B")
-            fail("expected the save to fail")
-        } catch (e: Exception) {
-            // 回退分支走完仍失败 → error()
         } finally {
-            heldTmp?.close()
-            target?.close()
+            held.close()
         }
-        assertFalse("old ledger survives only if the published claim held", real.exists())
-        assertEquals("next launch reads an empty ledger", 0, AppliedRulesStore(real).all().size)
-        assertTrue("new content survives only in tmp", File(dir, "led.json.tmp").exists())
+        assertEquals(setOf("pkg.a", "pkg.b"), AppliedRulesStore(real).all().keys)
+        assertFalse("new ledger landed, .old must be gone", File(dir, "led.json.old").exists())
+    }
+
+    /** 批Y1（R5-08）：主文件缺失而 .old 在位（回滚失败/中途被杀）→ 认领 .old，不得读成空账本。 */
+    @Test
+    fun `missing main file with a leftover old copy is adopted`() {
+        val dir = tmp.newFolder("adopt")
+        val real = File(dir, "led.json")
+        merge(AppliedRulesStore(real), "pkg.old", "p/O")
+        File(dir, "led.json.old").writeText(real.readText())
+        real.delete()
+        assertEquals(setOf("pkg.old"), AppliedRulesStore(real).all().keys)
+        assertTrue("old copy moved back to the main name", real.exists())
+        assertFalse(File(dir, "led.json.old").exists())
+    }
+
+    /** 同上，但 .old 挪不回主文件名（被占用）——仍按 .old 的内容读，不丢恢复依据。 */
+    @Test
+    fun `adoption reads the old copy even when it cannot be moved back`() {
+        assumeTrue(windows)
+        val dir = tmp.newFolder("adopt-held")
+        val real = File(dir, "led.json")
+        merge(AppliedRulesStore(real), "pkg.old", "p/O")
+        val old = File(dir, "led.json.old")
+        old.writeText(real.readText())
+        real.delete()
+        FileInputStream(old).use {
+            assertEquals(setOf("pkg.old"), AppliedRulesStore(real).all().keys)
+        }
     }
 
     /** 现状刻画（非期望行为，审查 R5-09）：空主文件被当作合法空账本而不是损坏。
-     *  批W2 事故正是"空文件=空账本"把静默清账洗成合法态；原子改名后主文件不可能合法为空，
-     *  若将来改为按损坏处理，更新本测试。 */
+     *  批W2 事故正是"空文件=空账本"把静默清账洗成合法态；原子改名后主文件不可能合法为空。 */
     @Test
     fun `characterization - a blank ledger file is read as a legit empty ledger`() {
         val f = tmp.newFile("blank.json")
