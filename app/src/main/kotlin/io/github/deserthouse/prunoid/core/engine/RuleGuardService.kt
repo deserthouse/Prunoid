@@ -21,10 +21,14 @@ import kotlinx.coroutines.runBlocking
 class RuleGuardService : Service() {
 
     private lateinit var engine: DisableEngine
+    private val packageEventGate = PackageEventGate()
 
     private val packageReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             val pkg = intent.data?.schemeSpecificPart ?: return
+            // 批Z5（第五轮审查 R5-16）：同一包的包事件会在数百毫秒内重复投递（实测同一事件连到两次），
+            // 重应用虽幂等，但每次都要扫描+取锁+写盘——短窗口内只处理一次
+            if (!packageEventGate.admit(pkg, android.os.SystemClock.elapsedRealtime())) return
             if (AutoReapply.shouldHandle(context, pkg)) {
                 Log.d("SdkPruner", "guard: package event $pkg")
                 // 批X4（审查 R12）：goAsync + 后台线程——root 工作不再阻塞主线程（原 runBlocking 在主线程等待）

@@ -19,7 +19,7 @@ class BulkPmOwnershipTest {
 
     @Test
     fun `external pre-disabled component survives restore after bulk pm apply`() {
-        val store = AppliedRulesStore(tmp.newFile("applied_rules.json"))
+        val store = AppliedRulesStore(java.io.File(tmp.root, "applied_rules.json"))  // 首次写入前主文件不存在（空文件自批Z4 起按损坏处理）
         val targets = listOf("sdk.Service", "sdk.Activity")
         val beforeDisabled = setOf("sdk.Service")   // 外部/用户先在禁用
         val owned = emptySet<String>()              // 本工具 PM 桶尚无
@@ -47,7 +47,7 @@ class BulkPmOwnershipTest {
 
     @Test
     fun `owned components are not polluted into preExisting on repeated apply`() {
-        val store = AppliedRulesStore(tmp.newFile("applied_rules.json"))
+        val store = AppliedRulesStore(java.io.File(tmp.root, "applied_rules.json"))  // 首次写入前主文件不存在（空文件自批Z4 起按损坏处理）
         // 本工具已拥有 sdk.Service（首次 apply 记账后）；重复 apply 不得把自有禁用记为外部既有
         store.recordMerge(
             "pkg.a", "PM", listOf("sdk.Service"),

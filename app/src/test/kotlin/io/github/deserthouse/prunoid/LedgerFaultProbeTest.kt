@@ -137,12 +137,23 @@ class LedgerFaultProbeTest {
         }
     }
 
-    /** 现状刻画（非期望行为，审查 R5-09）：空主文件被当作合法空账本而不是损坏。
-     *  批W2 事故正是"空文件=空账本"把静默清账洗成合法态；原子改名后主文件不可能合法为空。 */
+    /** 批Z4（第五轮审查 R5-09）：空主文件按损坏处理——改名留证、暂停写入、重置后恢复。
+     *  账本只会经"写 tmp → fsync → 改名"落盘，主文件不可能合法为空；批W2 的 fsync 截断事故正是靠
+     *  "空文件=空账本"把静默清账洗成合法态。 */
     @Test
-    fun `characterization - a blank ledger file is read as a legit empty ledger`() {
+    fun `a blank ledger file is treated as corrupted with evidence kept`() {
         val f = tmp.newFile("blank.json")
-        assertEquals(0, AppliedRulesStore(f).all().size)
-        assertEquals(false, AppliedRulesStore(f).corrupted)
+        val s = AppliedRulesStore(f)
+        assertEquals(0, s.all().size)
+        assertTrue("blank must not read as a healthy empty ledger", s.corrupted)
+        val evidence = f.parentFile.listFiles()!!.filter { it.name.startsWith("blank.json.corrupt-") }
+        assertEquals("blank file kept as evidence", 1, evidence.size)
+        assertFalse(f.exists())
+        try {
+            merge(s, "pkg.a", "p/A")
+            fail("writes must be refused while corrupted")
+        } catch (e: IllegalStateException) {
+            // check(!corrupted)
+        }
     }
 }

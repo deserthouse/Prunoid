@@ -924,11 +924,13 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                             var ledgerFailed = false
                             if (report.ifwOk && ledgerWrite { applied.removeEngine(Engine.IFW.name) } != null) ledgerFailed = true
                             if (report.pmOk && ledgerWrite { applied.removeEngine(Engine.PM.name) } != null) ledgerFailed = true
-                            // 第五轮审查 R5-05：pm 段未写回时不再宣称"重启后完全生效"——已测 Android 16
-                            // 设备上系统以 fs-verity 保护组件启停状态文件，写回必然失败（IFW 段不受影响，
-                            // pm 账本保留=恢复依据仍在）。全成功与仅 IFW 两条文案分开
-                            val base = if (report.pmOk) appCtx.getString(R.string.vm_restore_backup_ok)
-                            else appCtx.getString(R.string.vm_restore_backup_ifw_only)
+                            // 批Z1（第五轮审查 R5-05）：pm 状态经侧表回放，三态如实——全部还原 /
+                            // 部分未能还原（带计数，pm 账本保留）/ 归档不含 pm 状态记录（0.31.2 及更早的快照）
+                            val base = when {
+                                report.pmOk -> appCtx.getString(R.string.vm_restore_backup_ok)
+                                report.pmInArchive -> appCtx.getString(R.string.vm_restore_backup_pm_partial, report.pmFailed)
+                                else -> appCtx.getString(R.string.vm_restore_backup_ifw_only)
+                            }
                             if (ledgerFailed) base + ledgerFailedNote else base
                         },
                         onFailure = { appCtx.getString(R.string.vm_restore_backup_fail, failureText(it.message)) }

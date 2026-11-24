@@ -55,6 +55,8 @@ fun SdkLibraryScreen(
     onConsumePendingRule: () -> Unit = {},
     // 批X5（M19）：分类筛选提升至根路由——返回保留合同（原分支内 remember 随 Crossfade 重置）
     libCatState: androidx.compose.runtime.MutableState<Set<String>> = androidx.compose.runtime.mutableStateOf(emptySet()),
+    // 批Z2（第五轮审查 R5-07）：上次生效的筛选键（外提保存，管理页/详情往返不变→滚动位保留）
+    libFilterKeyState: androidx.compose.runtime.MutableState<String> = androidx.compose.runtime.mutableStateOf(""),
     // 批FF-B3（AA3）：SDK 管理目的地入口（档案卡内按钮回调）
     onOpenManage: (String) -> Unit = {},
 ) {
@@ -70,6 +72,15 @@ fun SdkLibraryScreen(
     val setSortByName: (Boolean) -> Unit = { sortByNameState.value = it }
     val libCat = libCatState.value
     val setLibCat: (Set<String>) -> Unit = { libCatState.value = it }
+    // 批Z2（第五轮审查 R5-07）：筛选/作用域/排序/查询变化时回顶。滚动位是按索引持久化的提升态，
+    // 内容变了还停在旧索引——短列表直接贴底，筛选结果看起来"只剩几条"。键不变（往返）则不动
+    androidx.compose.runtime.LaunchedEffect(tab, query, libCat, libSortByName) {
+        val key = "$tab\u0001$query\u0001${libCat.sorted().joinToString(",")}\u0001$libSortByName"
+        if (libFilterKeyState.value != key) {
+            libFilterKeyState.value = key
+            listState.scrollToItem(0)
+        }
+    }
     var sheetRow by remember { mutableStateOf<LibRow?>(null) }
     // 批FF-B3（AA3）：批量执行与结果行已迁至 SDK 管理目的地（本屏档案卡回归纯阅读）
 
@@ -225,6 +236,15 @@ fun SdkLibraryScreen(
                         if (libSortByName) l.sortedBy { it.rule.name.lowercase() }
                         else l.sortedWith(compareByDescending<LibRow> { it.hitApps }.thenBy { it.rule.name })
                     }
+            }
+            if (libCat.isNotEmpty() || query.isNotBlank()) {
+                // 批Z5（第五轮审查 R5-18）：筛选/查询生效时给出结果条数（标题里的"在机检出 N"不随筛选变）
+                Text(
+                    stringResource(R.string.lib_filtered_count, rows.size),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp)
+                )
             }
             if (rows.isEmpty()) {
                 // 批FF4（七审 U02）：Found 作用域搜不到时给作用域引导——切换不清查询词

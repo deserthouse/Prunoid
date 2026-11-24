@@ -88,8 +88,9 @@ class AppliedRulesStore {
     private fun oldFile() = java.io.File(file.parentFile, file.name + ".old")
 
     private fun decode(text: String, src: java.io.File): Store {
-        // 空文件 = 合法空账本（首次写前中断等），不得判损坏锁死账本
-        if (text.isBlank()) return Store()
+        // 批Z4（第五轮审查 R5-09）：空文件不再当作合法空账本——账本只会经"写 tmp → fsync → 改名"落盘，
+        // 主文件不可能合法为空；批W2 的 fsync 截断事故正是靠"空文件=空账本"把静默清账洗成合法态。
+        // 现与解码失败同样处理：改名留证、暂停写入、由用户在设置里显式重置
         return try {
             json.decodeFromString<Store>(text)
         } catch (e: Exception) {

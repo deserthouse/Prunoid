@@ -130,6 +130,10 @@ fun SdkPrunerApp() {
             restore = { it.toSet() }
         )
     ) { androidx.compose.runtime.mutableStateOf(emptySet<String>()) }
+    // 批Z2（第五轮审查 R5-07）：库页筛选键外提——变化时回顶，导航往返不回顶
+    val libFilterKey = androidx.compose.runtime.saveable.rememberSaveable {
+        androidx.compose.runtime.mutableStateOf("")
+    }
     // 批M5（F04）：库页浏览上下文同款外提——查询/作用域/排序/滚动位（028→030 丢失实证）
     val libQuery = androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf("") }
     val libTab = androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(0) }
@@ -208,6 +212,7 @@ fun SdkPrunerApp() {
                             1 -> SdkLibraryScreen(
                                 vm,
                                 libCatState = libCatState,
+                                libFilterKeyState = libFilterKey,
                                 queryState = libQuery,
                                 libTabState = libTab,
                                 sortByNameState = libSortByName,

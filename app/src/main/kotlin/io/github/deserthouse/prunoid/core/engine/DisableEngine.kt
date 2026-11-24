@@ -262,21 +262,98 @@ class DisableEngine(
             ).exec()
             val has = Shell.cmd("test -s $out").exec().isSuccess
             check(has) { "backup not created (tar rc=${r.code}, root ok?): ${r.err}" }
+            // 批Z1（第五轮审查 R5-05）：pm 状态侧表——系统的状态文件在 Android 16 上由 fs-verity 保护、
+            // root 也写不进，"替换文件"式还原不可能生效；备份时读出各组件启停状态另存为 JSON
+            //（与归档同名的 .pm.json），还原时比对现状逐项执行 pm 命令。侧表写不出去=快照不完整
+            val sideOk = runCatching {
+                writeSidecar(PmStateSnapshot.sidecarPath(out), PmStateSnapshot.encode(collectPmStates()))
+            }.getOrDefault(false)
+            check(sideOk) { "pm state sidecar not written" }
             pruneBackups(dir, keep)
             out
         }
     }
 
-    /** 备份保留策略：按文件名时间戳降序，只留最近 keep 份（用户可在设置中调） */
+    /** 备份保留策略：按文件名时间戳降序，只留最近 keep 份（用户可在设置中调）；侧表随归档一起清理 */
     private fun pruneBackups(dir: String, keep: Int) {
         val files = Shell.cmd("ls -1 $dir/backup_*.tar.gz 2>/dev/null").exec().out.toList().sortedDescending()
         // 批X4（审查 PN-15）：UI 允许 1~99999，引擎不再静默夹断到 3~30
-        files.drop(keep.coerceAtLeast(1)).forEach { Shell.cmd("rm -f $it").exec() }
+        files.drop(keep.coerceAtLeast(1)).forEach {
+            Shell.cmd("rm -f $it; rm -f ${PmStateSnapshot.sidecarPath(it)}").exec()
+        }
+    }
+
+    // ── 批Z1：pm 状态侧表的采集与读写 ─────────────────────────────
+    private val pmInfoFlags: Int = PackageManager.GET_ACTIVITIES or PackageManager.GET_SERVICES or
+        PackageManager.GET_RECEIVERS or PackageManager.GET_PROVIDERS or PackageManager.MATCH_DISABLED_COMPONENTS
+
+    private fun stateName(st: Int): String = when (st) {
+        PackageManager.COMPONENT_ENABLED_STATE_ENABLED -> "ENABLED"
+        PackageManager.COMPONENT_ENABLED_STATE_DISABLED -> "DISABLED"
+        PackageManager.COMPONENT_ENABLED_STATE_DISABLED_USER -> "DISABLED_USER"
+        4 -> "DISABLED_UNTIL_USED"   // COMPONENT_ENABLED_STATE_DISABLE_UNTIL_USED（API 33 起废弃）
+        else -> PmStateSnapshot.DEFAULT
+    }
+
+    /** 某个包全部组件的当前启停状态（含 DEFAULT）；包已卸载返回 null */
+    private fun readPmStatesOf(pkg: String): Map<String, String>? = runCatching {
+        val pm = context.packageManager
+        val info = pm.getPackageInfo(pkg, pmInfoFlags) ?: return null
+        val comps = buildList {
+            info.activities?.forEach { add(it.name to it) }
+            info.services?.forEach { add(it.name to it) }
+            info.receivers?.forEach { add(it.name to it) }
+            info.providers?.forEach { add(it.name to it) }
+        }
+        comps.associate { (name, ci) ->
+            name to stateName(pm.getComponentEnabledSetting(android.content.ComponentName(ci.packageName, name)))
+        }
+    }.getOrNull()
+
+    /** 快照：全部第三方应用中非 DEFAULT 的组件状态（系统应用本工具不碰，不采集） */
+    fun collectPmStates(): PmStateSnapshot.Sidecar {
+        val t0 = android.os.SystemClock.elapsedRealtime()
+        var checked = 0
+        val states = LinkedHashMap<String, Map<String, String>>()
+        for (pi in context.packageManager.getInstalledPackages(pmInfoFlags)) {
+            val app = pi.applicationInfo ?: continue
+            if (app.flags and android.content.pm.ApplicationInfo.FLAG_SYSTEM != 0) continue
+            val all = readPmStatesOf(pi.packageName) ?: continue
+            checked += all.size
+            val nonDefault = all.filterValues { it != PmStateSnapshot.DEFAULT }
+            if (nonDefault.isNotEmpty()) states[pi.packageName] = nonDefault
+        }
+        android.util.Log.d("SdkPruner", "pm snapshot: ${states.size} packages with non-default state, $checked components checked in ${android.os.SystemClock.elapsedRealtime() - t0} ms")
+        return PmStateSnapshot.Sidecar(takenAt = System.currentTimeMillis(), states = states)
+    }
+
+    /** 侧表经 root shell 以 base64 写入（backups 目录可能由 root 建立、应用自身无写权限）；先写 .tmp 再改名 */
+    private fun writeSidecar(path: String, text: String): Boolean {
+        val b64 = java.util.Base64.getEncoder().encodeToString(text.toByteArray(Charsets.UTF_8))
+        val lines = b64.chunked(76).joinToString("\n")
+        val tmp = "$path.tmp"
+        return Shell.cmd(
+            "base64 -d > $tmp <<'PRUNOID_B64'\n$lines\nPRUNOID_B64\nchmod 644 $tmp && mv -f $tmp $path"
+        ).exec().isSuccess
+    }
+
+    /** 读回侧表（同样经 root shell，避免直接读 root 建立的文件被 SELinux 拒）；不存在或解不出返回 null */
+    private fun readSidecar(path: String): PmStateSnapshot.Sidecar? {
+        val r = Shell.cmd("test -f $path && base64 $path").exec()
+        if (!r.isSuccess) return null
+        val text = runCatching {
+            String(java.util.Base64.getDecoder().decode(r.out.joinToString("")), Charsets.UTF_8)
+        }.getOrNull() ?: return null
+        return runCatching { PmStateSnapshot.decode(text) }.getOrNull()
     }
 
     // ── 安全层：恢复备份（tar 解包回原路径 + 归属/上下文修复） ─────
-    /** 批BB RV-05：结构化还原报告——账本同步按实际成功范围执行（RV-05：失败不得清桶） */
-    data class RestoreReport(val ifwOk: Boolean, val pmOk: Boolean, val pmInArchive: Boolean)
+    /** 批BB RV-05：结构化还原报告——账本同步按实际成功范围执行（RV-05：失败不得清桶）。
+     *  批Z1：pmInArchive=归档带 pm 状态侧表；pmApplied/pmFailed=侧表回放的逐项结果 */
+    data class RestoreReport(
+        val ifwOk: Boolean, val pmOk: Boolean, val pmInArchive: Boolean,
+        val pmApplied: Int = 0, val pmFailed: Int = 0,
+    )
 
     suspend fun restoreBackup(backupPath: String): Result<RestoreReport> = withContext(Dispatchers.IO) {
         runCatching {
@@ -295,8 +372,6 @@ class DisableEngine(
                 "rm -rf $stage && mkdir -p $stage && tar -xzf '$backupPath' -C $stage"
             ).exec()
             check(pre.isSuccess) { "restore unpack failed: ${pre.err}" }
-            val pmInArchive = Shell.cmd("tar -tzf $backupPath 2>/dev/null | grep -c package-restrictions")
-                .exec().out.firstOrNull()?.trim()?.toIntOrNull()?.let { it > 0 } ?: false
             var ifwOk = true
             var pmOk = false
             // 批W5（M11）：stage 清理收进 finally——check/异常分支不再残留半成品
@@ -320,19 +395,31 @@ class DisableEngine(
             val fin = Shell.cmd(restore.toString()).exec()
             ifwOk = fin.isSuccess
             check(ifwOk) { "restore apply failed: ${fin.err}" }
-            if (pmInArchive) {
-                val pm = Shell.cmd(
-                    "test -f $stage$PKG_RESTRICTIONS && cp $stage$PKG_RESTRICTIONS $PKG_RESTRICTIONS && chown system:system $PKG_RESTRICTIONS"
-                ).exec()
-                // 批BB RV-05：PM 恢复失败不再被 || true 掩盖——报告为失败（账本保留）
-                pmOk = pm.isSuccess
-                if (!pmOk) {
-                    Shell.cmd("rm -rf $stage").exec()
-                    return@runCatching RestoreReport(ifwOk = true, pmOk = false, pmInArchive = true)
-                }
-            }
             Shell.cmd("rm -rf $stage").exec()
-            RestoreReport(ifwOk = true, pmOk = pmOk, pmInArchive = pmInArchive)
+            // 批Z1（第五轮审查 R5-05）：pm 状态经侧表回放——不再把归档里的 package-restrictions.xml
+            // 拷回去（Android 16 上该文件由系统以 fs-verity 保护，root 也写不进；即便拷得进去，
+            // 系统内存里的状态也会在下次落盘时把它覆盖回来）。归档里没有侧表（0.31.2 及更早的备份）
+            // = pm 状态不还原，如实报告。回放失败的项不吞：pmOk=false，调用方保留 pm 账本
+            var pmInArchive = false
+            var pmApplied = 0
+            var pmFailed = 0
+            val sidecar = readSidecar(PmStateSnapshot.sidecarPath(backupPath))
+            if (sidecar != null) {
+                pmInArchive = true
+                val now = sidecar.states.keys.mapNotNull { pkg -> readPmStatesOf(pkg)?.let { pkg to it } }.toMap()
+                val commands = PmStateSnapshot.diff(sidecar, now)
+                    // 侧表内容进 shell 命令前过引擎白名单（文件可能被改动）
+                    .filter { validPkgName(it.pkg) && validCompName(it.comp) }
+                    .map { PmStateSnapshot.command(it) }
+                val receipts = OperationCenter.chunkedPerItem(commands) { block ->
+                    Shell.cmd(block.joinToString(" && ")).exec().isSuccess
+                }
+                pmApplied = receipts.count { it.second }
+                pmFailed = receipts.size - pmApplied
+                pmOk = pmFailed == 0
+                android.util.Log.d("SdkPruner", "pm replay: applied=$pmApplied failed=$pmFailed")
+            }
+            RestoreReport(ifwOk = true, pmOk = pmOk, pmInArchive = pmInArchive, pmApplied = pmApplied, pmFailed = pmFailed)
             } finally {
                 Shell.cmd("rm -rf $stage").exec()
             }

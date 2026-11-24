@@ -168,7 +168,7 @@
     <string name="vm_scan_failed">Scan failed: %1$s</string>
     <string name="vm_source_builtin">The official source cannot be removed</string>
     <string name="vm_source_removed">Removed source “%1$s”</string>
-    <string name="vm_restore_backup_ok">Backup restored (IFW applies immediately; pm state fully applies after reboot)</string>
+    <string name="vm_restore_backup_ok">Backup restored (IFW rules and pm component states both restored)</string>
     <string name="vm_restore_backup_fail">Restore failed: %1$s</string>
     <string name="vm_ifw_cleared">Cleared %1$d IFW rule files</string>
     <string name="vm_clear_fail">Clear failed: %1$s</string>
@@ -222,12 +222,12 @@
     <string name="about_disclaimer_body">Provided AS-IS without warranty; use root operations at your own risk; not affiliated with any trademark holder</string>
     <string name="backup_entry_title">Backup &amp; restore</string>
     <string name="backup_entry_sub">Auto backup · keeping %1$d (tap row to toggle)</string>
-    <string name="backup_howto">A point-in-time snapshot (IFW rule dir + pm component-disabled state, one tar.gz) is created automatically before each apply. Restoring unpacks the IFW rules in the archive back to the original paths and fixes ownership; whether the pm component-disabled state can be written back depends on the OS (not possible on tested Android 16 devices).</string>
+    <string name="backup_howto">A point-in-time snapshot (IFW rule dir + pm component enabled states, one tar.gz) is created automatically before each apply. Restoring unpacks the IFW rules in the archive back to the original paths, fixes ownership, and restores pm component enabled states to what they were at snapshot time; snapshots created by 0.31.2 or earlier carry no pm state record and can only restore IFW rules.</string>
     <string name="backup_path_label">Backup path (app-private; wiped on uninstall — adb pull first if you want to keep them):</string>
     <string name="backup_path_note">Optional feature: even without backups you can roll back via per-app restore / clear-all-IFW / the adb emergency command.</string>
     <string name="backup_points_title">Restore points (new → old)</string>
     <string name="backup_keep_note">Any count is fine; older backups beyond the limit are pruned automatically. Disk usage is a natural consequence — your call.</string>
-    <string name="backup_restore_confirm">The IFW rules in the selected archive will be unpacked back to the original paths with ownership fixed, and the pm component-disabled state will be restored where the system allows it (on failure the pm ledger is kept). Note: restore is a global point-in-time operation — IFW rules written after the snapshot (including rules from other tools) will be revoked, and this app\'s IFW records are cleared afterwards, so existing rules must be re-applied before they can be restored from here again. Continue?</string>
+    <string name="backup_restore_confirm">The IFW rules in the selected archive will be unpacked back to the original paths with ownership fixed, and pm component enabled states will be restored to what they were at snapshot time. Note: restore is a global point-in-time operation — IFW rules written after the snapshot (including rules from other tools) will be revoked, and this app\'s IFW records are cleared afterwards, so existing rules must be re-applied before they can be restored from here again. Continue?</string>
     <string name="recovery_cmd_title">Emergency command (tap to copy)</string>
     <string name="recovery_cmd_sub">If the UI cannot be reached, run this on a computer to clear all IFW rules (requires the app’s Realtime guard to be alive)</string>
     <string name="recovery_clear_audit_hint">Audit mode is read-only — switch to Root work mode to clear all IFW rules</string>
@@ -252,7 +252,8 @@
     <string name="err_empty_source">The rule source has no entries</string>
     <string name="err_cache_write">Failed to write the rule cache (existing rules kept)</string>
     <string name="err_unknown">Unknown error (see the result details)</string>
-    <string name="vm_restore_backup_ifw_only">Backup restored: IFW rules only (pm state could not be written back; the pm ledger is kept — use per-app restore to revert pm)</string>
+    <string name="vm_restore_backup_pm_partial">Backup restored: IFW rules are back; %1$d pm component state(s) could not be restored (the pm ledger is kept — use per-app restore)</string>
+    <string name="vm_restore_backup_ifw_only">Backup restored: IFW rules only (this archive has no pm state record, so pm state was not restored)</string>
     <string name="vm_ledger_corrupted">Ledger corrupted (evidence kept) — reset it in Settings → Recovery, then retry</string>
     <string name="live_line">On-device state (incl. non-Prunoid sources): %1$d disabled</string>
     <string name="disabled_count">%1$d disabled</string>
@@ -277,6 +278,8 @@
     <string name="backup_loading">Reading restore points…</string>
         <string name="backup_load_error">Failed to read restore points — reopen the sheet or check storage</string>
     <string name="retry">Retry</string>
+    <string name="addsource_http_warning">Plain HTTP: rule contents can be read or tampered with in transit — add trusted sources only</string>
+    <string name="lib_filtered_count">Filtered results: %1$d SDKs</string>
     <string name="manage_backup_title">Manage backups</string>
     <string name="manage_backup_sub">Restore points and retention (currently %1$d)</string>
     <string name="vm_plan_stale">Rules updated since confirmation — review the plan and confirm again</string>

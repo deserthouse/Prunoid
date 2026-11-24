@@ -426,6 +426,15 @@ fun AddSourceDialog(onDismiss: () -> Unit, onConfirm: (String, String) -> Unit, 
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                if (url.trim().startsWith("http://", ignoreCase = true)) {
+                    Spacer(Modifier.height(6.dp))
+                    // 批Z3（第五轮审查 R5-13）：明文 HTTP 风险可见（批X9 裁决未完成的一半）
+                    Text(
+                        stringResource(R.string.addsource_http_warning),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
                 if (error != null) {
                     Spacer(Modifier.height(6.dp))
                     Text(

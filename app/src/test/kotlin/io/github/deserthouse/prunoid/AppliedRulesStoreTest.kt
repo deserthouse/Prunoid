@@ -14,7 +14,7 @@ class AppliedRulesStoreTest {
     @get:Rule
     val tmp = TemporaryFolder()
 
-    private fun newStore(): AppliedRulesStore = AppliedRulesStore(tmp.newFile("applied_rules.json"))
+    private fun newStore(): AppliedRulesStore = AppliedRulesStore(java.io.File(tmp.root, "applied_rules.json"))  // 首次写入前主文件不存在（空文件自批Z4 起按损坏处理）
 
     @Test
     fun `recordMerge fills engine bucket and v1 compat fields`() {

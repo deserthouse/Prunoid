@@ -184,7 +184,7 @@
     <string name="vm_scan_failed">扫描失败: %1$s</string>
     <string name="vm_source_builtin">官方源不可删除</string>
     <string name="vm_source_removed">已移除源「%1$s」</string>
-    <string name="vm_restore_backup_ok">已恢复备份（IFW 即时生效；pm 状态重启后完全生效）</string>
+    <string name="vm_restore_backup_ok">已恢复备份（IFW 规则与 pm 组件状态均已还原）</string>
     <string name="vm_restore_backup_fail">恢复失败：%1$s</string>
     <string name="vm_ifw_cleared">已清除 %1$d 个 IFW 规则文件</string>
     <string name="vm_clear_fail">清除失败：%1$s</string>
@@ -238,12 +238,12 @@
     <string name="about_disclaimer_body">按“现状”提供，不附带任何担保；root 操作风险自担；与任何商标持有方无关联</string>
     <string name="backup_entry_title">备份与恢复</string>
     <string name="backup_entry_sub">自动备份 · 当前保留 %1$d 份（整行点按切换）</string>
-    <string name="backup_howto">每次应用规则前自动创建时点快照（IFW 规则目录 + pm 组件停用状态，单个 tar.gz 归档）。恢复会把归档中的 IFW 规则解回原路径并修复归属；pm 组件停用状态能否写回取决于系统版本（已测 Android 16 设备上不可）。</string>
+    <string name="backup_howto">每次应用规则前自动创建时点快照（IFW 规则目录 + pm 组件启停状态，单个 tar.gz 归档）。恢复会把归档中的 IFW 规则解回原路径并修复归属，并把 pm 组件启停状态还原到快照时的状态；0.31.2 及更早版本创建的快照不含 pm 状态记录，只能还原 IFW 规则。</string>
     <string name="backup_path_label">备份存放路径（应用私有目录，卸载即随数据清除；如需留存请先 adb pull）：</string>
     <string name="backup_path_note">此为可选功能：不使用本工具的备份也可通过单 app 恢复 / 清除全部 IFW / adb 应急命令回滚。</string>
     <string name="backup_points_title">恢复点（新 → 旧）</string>
     <string name="backup_keep_note">份数自由填写；超出的旧备份自动清理。磁盘占用为天然后果，请按需取舍。</string>
-    <string name="backup_restore_confirm">将把所选归档中的 IFW 规则解回原路径并修复归属，并尝试还原 pm 组件停用状态（能否写回取决于系统版本，失败时保留 pm 账本）。注意：还原按全局时点进行，快照之后写入的 IFW 规则（含其他工具）将被撤销；还原后本工具的 IFW 已应用记录会清空，存量规则需重新应用后才能再由本工具恢复。继续？</string>
+    <string name="backup_restore_confirm">将把所选归档中的 IFW 规则解回原路径并修复归属，并把 pm 组件启停状态还原到快照时的状态。注意：还原按全局时点进行，快照之后写入的 IFW 规则（含其他工具）将被撤销；还原后本工具的 IFW 已应用记录会清空，存量规则需重新应用后才能再由本工具恢复。继续？</string>
     <string name="recovery_cmd_title">应急命令（点击复制）</string>
     <string name="recovery_cmd_sub">UI 无法进入时，在电脑上执行以下命令清除全部 IFW 规则（需应用的 Realtime 守护存活）</string>
     <string name="recovery_clear_audit_hint">审计模式为只读——清除全部 IFW 需切换到 Root 工作模式</string>
@@ -268,7 +268,8 @@
     <string name="err_empty_source">规则源没有任何条目</string>
     <string name="err_cache_write">规则缓存写入失败（既有规则已保留）</string>
     <string name="err_unknown">未知错误（详情见结果明细）</string>
-    <string name="vm_restore_backup_ifw_only">已恢复备份：仅 IFW 规则生效（pm 状态未能写回，已保留 pm 账本；需要回退 pm 请用单应用恢复）</string>
+    <string name="vm_restore_backup_pm_partial">已恢复备份：IFW 规则已还原；pm 组件状态有 %1$d 项未能还原（已保留 pm 账本，可用单应用恢复）</string>
+    <string name="vm_restore_backup_ifw_only">已恢复备份：仅 IFW 规则生效（此归档不含 pm 组件状态记录，pm 状态未还原）</string>
     <string name="vm_ledger_corrupted">账本文件损坏（已保留证据文件）——请在设置 → 恢复区重置账本后重试</string>
     <string name="live_line">设备现状（含本工具外来源）已禁用 %1$d 组件</string>
     <string name="disabled_count">已禁用 %1$d</string>
@@ -293,6 +294,8 @@
     <string name="backup_loading">正在读取恢复点…</string>
         <string name="backup_load_error">恢复点读取失败——请关闭重试或检查存储权限</string>
     <string name="retry">重试</string>
+    <string name="addsource_http_warning">明文 HTTP：规则内容在传输途中可被查看或篡改，请只添加可信来源</string>
+    <string name="lib_filtered_count">筛选结果：%1$d 个 SDK</string>
     <string name="manage_backup_title">管理备份</string>
     <string name="manage_backup_sub">恢复点列表与保留份数（当前 %1$d 份）</string>
     <string name="vm_plan_stale">规则已更新，计划已过期——请重新审阅并确认后再执行</string>
