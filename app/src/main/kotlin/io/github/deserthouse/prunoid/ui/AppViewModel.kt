@@ -15,6 +15,7 @@ import io.github.deserthouse.prunoid.ui.operations.SelectionDraft
 import io.github.deserthouse.prunoid.core.engine.Engine
 import io.github.deserthouse.prunoid.core.engine.OpCoordinator
 import io.github.deserthouse.prunoid.core.engine.RuleActionPlan
+import io.github.deserthouse.prunoid.core.engine.RestoreAccounting
 import io.github.deserthouse.prunoid.core.rules.RuleRepository
 import io.github.deserthouse.prunoid.core.rules.RuleSubscription
 import io.github.deserthouse.prunoid.core.rules.Safety
@@ -212,9 +213,15 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         false -> appCtx.getString(R.string.vm_apply_backup_failed)
     }
 
-    /** 批Y5（第五轮审查 R5-11）：失败原因本地化——原始串仍在结果明细里供排障 */
+    /** 批Y5（第五轮审查 R5-11）：失败原因本地化——原始串仍在结果明细里供排障。
+     *  0.32.1（第六轮审查 R6-03）：整应用恢复/备份恢复失败不产生结果明细——未分类的原始原因
+     *  写日志并附在文案后（此前只显示"未知错误（详情见结果明细）"，明细并不存在） */
     private fun failureText(raw: String?): String {
         val kind = io.github.deserthouse.prunoid.core.engine.EngineErrorKind.classify(raw)
+        if (kind == io.github.deserthouse.prunoid.core.engine.EngineErrorKind.UNKNOWN) {
+            Log.w("SdkPruner", "unclassified failure: $raw")
+            if (!raw.isNullOrBlank()) return appCtx.getString(R.string.err_unknown_with_detail, raw.take(200))
+        }
         return if (kind == io.github.deserthouse.prunoid.core.engine.EngineErrorKind.HTTP)
             appCtx.getString(R.string.err_http, io.github.deserthouse.prunoid.core.engine.EngineErrorKind.httpCode(raw) ?: "?")
         else appCtx.getString(kind.res)
@@ -226,6 +233,12 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     private val ledgerFailedNote: String
         get() = appCtx.getString(R.string.vm_ledger_write_failed)
+
+    /** 0.32.1：操作结果统一落一条日志——发版冒烟门禁按它断言界面提示的实际文本
+     *  （Snackbar 文本不进无障碍树，截图判读不可自动化；日志是同一字符串的确定性出口） */
+    private fun report(op: String, msg: String) {
+        Log.i("SdkPruner", "op-result: $op | $msg")
+    }
 
     /** 批N：root 类操作统一闸门——非 ROOT 模式一律拒绝（UI 层已禁灰，此处安全兜底） */
     private fun rootGate(): Boolean =
@@ -361,6 +374,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                         R.string.vm_sdk_everywhere_partial, rule.name, exec.compWritten,
                         targets.sumOf { it.componentCount } - exec.compWritten, exec.touched.size
                     )) + backupSuffix(backup) + (if (ledgerFailed) ledgerFailedNote else "")
+                report("sdk-everywhere", doneMsg)
                 opCenter.record(
                     OperationKind.DISABLE_EVERYWHERE, plan.ruleId,
                     bulkItems,
@@ -441,7 +455,6 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     // 批Y4（第五轮审查 R5-10）：失败/部分恢复按"本工具实际负责的组件"计数（与成功文案
                     // 同口径）——原按命中组件计，把从未写入的 provider/native 也算进去（43 记成 51）
                     val ifwOwned = prev?.ifw?.components?.toSet().orEmpty()
-                    val ownedTargets = removedEffective.filter { it in ifwOwned || it in pmTargets }.toSet()
                     // 批FF-B1①：pm enable 逐项执行（失败明细进 Operation）；账本语义保持原子——
                     // 任一失败=整体失败不删账本（保留重试依据，批X2 RV 语义）
                     val perItem = engine.enablePmPerItem(pkg, pmTargets)
@@ -452,22 +465,20 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                             "",
                         )
                     }
-                    val pmFailCount = perItem.count { !it.second }
                     val r2 = engine.removeIfw(pkg, removeComponents = removedEffective)
                     // 批W1（M01/P1）：恢复失败不再 check 崩溃（withBusy 仅 finally，check 异常
                     // 直接炸出 launch）——按实际成功集撤账，失败组件保持禁用并保留恢复依据（可重试）。
-                    // 账本替换语义保持：双桶全空自动删除（修 R04-b 复活问题）
-                    val pmOkSet = perItem.filter { it.second }.map { it.first }.toSet()
+                    // 账本替换语义保持：双桶全空自动删除（修 R04-b 复活问题）。
+                    // 0.32.1（第六轮审查 R6-02）：记账算术（批Y4 分桶记账/批Y4b 双桶重叠/批Y4 计数
+                    // 口径）移入 RestoreAccounting.sdkOff（纯函数，表驱动单测）
                     val ifwOk = r2.isSuccess
-                    // 批Y4：按桶记账——IFW 桶只在其文件改写成功时才减组件，PM 桶按逐项回执减；
-                    // 同一组件被两桶共同负责时，两边都成功才算恢复（此前只要 pm 回执成功就把组件
-                    // 从两个桶里一起减掉——IFW 规则其实还留在盘上，成了没有恢复记录的孤儿规则）
-                    val ifwRestored: Set<String> = if (ifwOk) removedEffective.toSet() else emptySet()
-                    fun isRestored(c: String): Boolean =
-                        (c !in ifwOwned || ifwOk) && (c !in pmTargets || c in pmOkSet)
-                    val restoredOwned = ownedTargets.count { isRestored(it) }
-                    val failedCount = ownedTargets.size - restoredOwned
-                    if (failedCount > 0 && restoredOwned == 0) {
+                    val acct = RestoreAccounting.sdkOff(
+                        RestoreAccounting.SdkOffInput(removedEffective, ifwOwned, pmTargets, perItem, ifwOk)
+                    )
+                    val ownedTargets = acct.ownedTargets
+                    val restoredOwned = acct.restoredOwned
+                    val failedCount = acct.failedCount
+                    if (acct.allFailed) {
                         // 真全失败：账本原样保留（恢复依据不丢），终态 Operation 如实呈现
                         if (perItem.isNotEmpty()) {
                             opCenter.record(
@@ -485,18 +496,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                         }
                         return@withBusy appCtx.getString(R.string.sdk_off_restore_failed, ownedTargets.size)
                     }
-                    fun minus(b: AppliedRulesStore.EngineChange?, restored: Set<String>) = b?.copy(
-                        components = b.components.filter { it !in restored },
-                        types = b.types.filterKeys { it !in restored },
-                        preExisting = b.preExisting.filter { it !in restored },
-                        // 批BB RV-02：关闭 SDK 同步终止该桶内对此 SDK 的意图
-                        ruleIds = b.ruleIds - ruleId
-                    )?.takeIf { b2 -> b2.components.isNotEmpty() || b2.ruleIds.isNotEmpty() }
                     if (ledgerWrite {
                             applied.replaceBuckets(
                                 pkg,
-                                ifw = minus(prev?.ifw, ifwRestored),
-                                pm = minus(prev?.pm, pmOkSet),
+                                ifw = RestoreAccounting.minusBucket(prev?.ifw, acct.ifwRestored, ruleId),
+                                pm = RestoreAccounting.minusBucket(prev?.pm, acct.pmRestored, ruleId),
                                 fallbackRuleIds = prev?.ruleIds.orEmpty() - ruleId
                             )
                         } != null) return@withBusy ledgerFailedNote
@@ -547,7 +551,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 }
                 ""
             }
-            if (msg.isNotBlank()) onDone(msg)
+            if (msg.isNotBlank()) { report("sdk-off", msg); onDone(msg) }
         }
     }
 
@@ -599,6 +603,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     )
                 }
             }
+            report("unmatched", "$ok | $msg")
             onDone(ok, msg)
         }
     }
@@ -856,7 +861,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 settings.updateSourceFetched(source.id, java.time.Instant.now().toString())
                 rescan()
             }
-            onDone(result.ok, subResultMessage(result))
+            val m = subResultMessage(result)
+            report("source", "${result.ok} | $m")
+            onDone(result.ok, m)
         }
     }
 
@@ -876,7 +883,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 // 与 refreshSource 内部的 rebuild 竞争曾致 ANR）
                 rescan()
             }
-            onDone(result.ok, subResultMessage(result))
+            val m = subResultMessage(result)
+            report("source", "${result.ok} | $m")
+            onDone(result.ok, m)
         }
     }
 
@@ -939,6 +948,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             }
             _state.update { it.copy(applied = withContext(Dispatchers.IO) { applied.all() }, ledgerCorrupted = applied.corrupted) }
             if (ok) rescan()  // 批P2#30：恢复后现场与记录可能漂移，重扫校准
+            report("restore-backup", msg)
             onDone(msg)
         }
     }
@@ -984,6 +994,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 }
                 _state.update { it.copy(liveDisabled = it.liveDisabled + live, ifwTotal = total) }
             }
+            report("clear-ifw", msg)
             onDone(msg)
         }
     }
@@ -1100,6 +1111,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 }.let { m -> Pair(r.isSuccess, m) }
             }
             // 批X2（审查 PN-06）：结构化结果——成功才由 UI 清空选择
+            report("apply", "${withBusyResult.first} | ${withBusyResult.second}")
             onDone(withBusyResult.first, withBusyResult.second)
         }
     }
@@ -1134,12 +1146,16 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     )
                 }
                 // 批Y6（R5-17）：回执缺失按失败计——per-item 入口在校验异常时返回空表，
-                // 原逻辑把"零回执"当"零失败"，会在组件仍停用时删掉账本
-                val pmFailCount = pmTargets.size - perItem.count { it.second }
+                // 原逻辑把"零回执"当"零失败"，会在组件仍停用时删掉账本。
+                // 0.32.1（第六轮审查 R6-02）：算术移入 RestoreAccounting.appRestore（纯函数，表驱动单测）
+                val acct = RestoreAccounting.appRestore(
+                    RestoreAccounting.AppRestoreInput(pmTargets, perItem, r1.isSuccess)
+                )
+                val pmFailCount = acct.pmFailCount
                 val r2 = if (pmFailCount == 0) Result.success(pmTargets.size)
                 else Result.failure<Int>(IllegalStateException("pm enable: $pmFailCount failed"))
                 // 批X2（审查 PN-07）：失败不删恢复账本——现场仍禁用时必须保留重试依据
-                val ok = r1.isSuccess && r2.isSuccess
+                val ok = acct.ok
                 val ledgerFailed = ok && entry != null && ledgerWrite { applied.remove(scanned.packageName) } != null
                 _state.update { it.copy(applied = applied.all()) }
                 // 批G：恢复后单包重读现场——批Y6（第五轮审查 R5-12）：失败时也回读（pm 半边可能已恢复），
@@ -1156,6 +1172,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                         (if (ledgerFailed) ledgerFailedNote else "")
                 } else appCtx.getString(R.string.vm_restore_fail, failureText(r1.exceptionOrNull()?.message ?: r2.exceptionOrNull()?.message))
             }
+            report("restore-app", msg)
             onDone(msg)
         }
     }

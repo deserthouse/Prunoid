@@ -32,6 +32,9 @@ class EngineErrorsTest {
         assertEquals(IFW_REMOVE, classify("ifw remove failed"))
         assertEquals(PM_COMMAND, classify("pm disable: all 5 components failed"))
         assertEquals(PM_COMMAND, classify("pm enable failed"))
+        // 0.32.1：整应用恢复的 pm 失败串——此前落到 UNKNOWN，界面只显示"未知错误"
+        assertEquals(PM_COMMAND, classify("pm enable: 3 failed"))
+        assertEquals(PM_COMMAND, classify("pm disable: all 5 components failed".replace("components failed", "still off")))
         assertEquals(BACKUP_PATH, classify("backup path outside managed directory"))
         assertEquals(BACKUP_UNPACK, classify("restore unpack failed: tar: x"))
         assertEquals(EngineErrorKind.BACKUP_APPLY, classify("restore apply failed: y"))

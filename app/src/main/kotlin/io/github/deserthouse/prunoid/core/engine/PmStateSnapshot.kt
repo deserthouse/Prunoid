@@ -62,4 +62,35 @@ object PmStateSnapshot {
         }
         return out
     }
+
+    // ── 0.32.1（第六轮审查 R6-01/R6-04）：回放计划与结果统计 ──────────────
+
+    /** 回放计划。[read] 读某应用组件的现状：已卸载返回 null（无从设置，跳过）；
+     *  其他失败抛异常——计入 [readFailed]，不当成已卸载。[allow] 是命令进 shell 前的白名单。 */
+    data class ReplayPlan(val actions: List<Action>, val readFailed: Int)
+
+    fun planReplay(
+        sidecar: Sidecar,
+        allow: (Action) -> Boolean,
+        read: (String) -> Map<String, String>?,
+    ): ReplayPlan {
+        val now = LinkedHashMap<String, Map<String, String>>()
+        var readFailed = 0
+        for (pkg in sidecar.states.keys) {
+            try {
+                read(pkg)?.let { now[pkg] = it }
+            } catch (e: Exception) {
+                readFailed++
+            }
+        }
+        return ReplayPlan(diff(sidecar, now).filter(allow), readFailed)
+    }
+
+    /** 回放结果：failed = 命令失败数 + 读取现状失败的应用数；一项都没失败才算还原 */
+    data class ReplayOutcome(val applied: Int, val failed: Int) {
+        val ok: Boolean get() = failed == 0
+    }
+
+    fun replayOutcome(succeeded: Int, attempted: Int, readFailed: Int): ReplayOutcome =
+        ReplayOutcome(succeeded, (attempted - succeeded).coerceAtLeast(0) + readFailed)
 }

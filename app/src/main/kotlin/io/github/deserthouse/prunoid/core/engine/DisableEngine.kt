@@ -295,20 +295,26 @@ class DisableEngine(
         else -> PmStateSnapshot.DEFAULT
     }
 
-    /** 某个包全部组件的当前启停状态（含 DEFAULT）；包已卸载返回 null */
-    private fun readPmStatesOf(pkg: String): Map<String, String>? = runCatching {
+    /** 某个包全部组件的当前启停状态（含 DEFAULT）。包已卸载返回 null；其他读取失败向外抛。
+     *  0.32.1（第六轮审查 R6-01）：此前任何异常都折成 null——回放时被当成"已卸载"静默跳过且
+     *  不计失败，界面显示"均已还原"而该应用实际没还原、pm 记录还被清掉 */
+    private fun readPmStatesOf(pkg: String): Map<String, String>? {
         val pm = context.packageManager
-        val info = pm.getPackageInfo(pkg, pmInfoFlags) ?: return null
+        val info = try {
+            pm.getPackageInfo(pkg, pmInfoFlags)
+        } catch (e: PackageManager.NameNotFoundException) {
+            return null
+        } ?: return null
         val comps = buildList {
             info.activities?.forEach { add(it.name to it) }
             info.services?.forEach { add(it.name to it) }
             info.receivers?.forEach { add(it.name to it) }
             info.providers?.forEach { add(it.name to it) }
         }
-        comps.associate { (name, ci) ->
+        return comps.associate { (name, ci) ->
             name to stateName(pm.getComponentEnabledSetting(android.content.ComponentName(ci.packageName, name)))
         }
-    }.getOrNull()
+    }
 
     /** 快照：全部第三方应用中非 DEFAULT 的组件状态（系统应用本工具不碰，不采集） */
     fun collectPmStates(): PmStateSnapshot.Sidecar {
@@ -318,6 +324,7 @@ class DisableEngine(
         for (pi in context.packageManager.getInstalledPackages(pmInfoFlags)) {
             val app = pi.applicationInfo ?: continue
             if (app.flags and android.content.pm.ApplicationInfo.FLAG_SYSTEM != 0) continue
+            // 读取失败不跳过：缺了任何应用的状态，快照都会"看起来完整"——让备份如实失败
             val all = readPmStatesOf(pi.packageName) ?: continue
             checked += all.size
             val nonDefault = all.filterValues { it != PmStateSnapshot.DEFAULT }
@@ -406,18 +413,32 @@ class DisableEngine(
             val sidecar = readSidecar(PmStateSnapshot.sidecarPath(backupPath))
             if (sidecar != null) {
                 pmInArchive = true
-                val now = sidecar.states.keys.mapNotNull { pkg -> readPmStatesOf(pkg)?.let { pkg to it } }.toMap()
-                val commands = PmStateSnapshot.diff(sidecar, now)
-                    // 侧表内容进 shell 命令前过引擎白名单（文件可能被改动）
-                    .filter { validPkgName(it.pkg) && validCompName(it.comp) }
-                    .map { PmStateSnapshot.command(it) }
-                val receipts = OperationCenter.chunkedPerItem(commands) { block ->
-                    Shell.cmd(block.joinToString(" && ")).exec().isSuccess
+                // 0.32.1（第六轮审查 R6-04）：回放段单独兜底——IFW 规则此时已经替换到设备上，
+                // 回放抛未预期异常时降级为 pmOk=false（pm 账本保留），不能让整个恢复报失败
+                // 而账本没跟上已变的 IFW 现场
+                runCatching {
+                    val plan = PmStateSnapshot.planReplay(
+                        sidecar,
+                        // 侧表内容进 shell 命令前过引擎白名单（文件可能被改动）
+                        allow = { validPkgName(it.pkg) && validCompName(it.comp) },
+                        read = { readPmStatesOf(it) },
+                    )
+                    // R6-01：读取现状失败 ≠ 已卸载——该应用记为回放失败，不当成"无从设置"跳过
+                    if (plan.readFailed > 0) {
+                        android.util.Log.w("SdkPruner", "pm replay: current state unreadable for ${plan.readFailed} package(s)")
+                    }
+                    val receipts = OperationCenter.chunkedPerItem(plan.actions) { block ->
+                        Shell.cmd(block.joinToString(" && ") { PmStateSnapshot.command(it) }).exec().isSuccess
+                    }
+                    val outcome = PmStateSnapshot.replayOutcome(receipts.count { it.second }, receipts.size, plan.readFailed)
+                    pmApplied = outcome.applied
+                    pmFailed = outcome.failed
+                    android.util.Log.d("SdkPruner", "pm replay: commands=${plan.actions.size} applied=$pmApplied failed=$pmFailed")
+                }.onFailure {
+                    pmFailed = maxOf(pmFailed, 1)
+                    android.util.Log.e("SdkPruner", "pm replay: aborted, pm state not restored", it)
                 }
-                pmApplied = receipts.count { it.second }
-                pmFailed = receipts.size - pmApplied
                 pmOk = pmFailed == 0
-                android.util.Log.d("SdkPruner", "pm replay: applied=$pmApplied failed=$pmFailed")
             }
             RestoreReport(ifwOk = true, pmOk = pmOk, pmInArchive = pmInArchive, pmApplied = pmApplied, pmFailed = pmFailed)
             } finally {

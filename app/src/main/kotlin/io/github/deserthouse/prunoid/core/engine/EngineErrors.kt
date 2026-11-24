@@ -35,7 +35,7 @@ enum class EngineErrorKind(val res: Int) {
                 has("blocked by whitelist") -> SYSTEM_BLOCKED
                 has("ifw write failed", "ifw rewrite failed") -> IFW_WRITE
                 has("ifw remove failed") -> IFW_REMOVE
-                has("pm disable failed", "pm enable failed", "components failed") -> PM_COMMAND
+                has("pm disable failed", "pm disable:", "pm enable failed", "pm enable:", "components failed") -> PM_COMMAND
                 has("backup path outside") -> BACKUP_PATH
                 has("restore unpack failed") -> BACKUP_UNPACK
                 has("restore apply failed") -> BACKUP_APPLY
