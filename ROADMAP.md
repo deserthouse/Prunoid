@@ -83,8 +83,10 @@ M1 最小可用 ──→ M2 规则生态 ──→ M3 自动化与共建
 - ✅ v0.26.2–v0.28.0 (2026-10-28 review consumed): contract fixes (frozen bulk plan incl. scope/engine pass-through, all-fail terminal result, recovery card always visible) followed by UI task-structure rework (detail workspace, manage plan card, settings grouping, archive/stats/backup presentation)
 - ✅ v0.28.1–v0.29.0 (2026-10-29 source review consumed): bulk PM ownership/preExisting, per-item receipts, result identity & full-detail sheet, bottom-bar height budget, backup sheet states, shared text tracks
 - ✅ v0.30.0 (2026-10-30 M3E reviews consumed): consistency batch — risk-dot light/dark parity, stats top bar & empty state, list scroll preservation, unified failure indicators, settings secondary page
-- Scheduled next (2026-11-05 seven-model synthesis): recovery & integrity patch (restore crash, atomic ledger, restore transaction lock, auto-reapply per-item accounting, shell input hardening), then interaction-state & docs batch (sort shadow, backup error states, audit-mode gating, receivers async, EN README wording, about screenshot re-capture)
-- Rules repo: v14 = 2,079 entities (blocker@55ae4b9 synced; subscription endpoints main/vN both live)
+- ✅ v0.30.1–v0.32.0 (2026-11-05..24, four review rounds consumed): ledger atomic replace and failure handling, restore transaction lock, per-item auto-reapply accounting, shell boundaries, sort/filter propagation, backup three-state flow, archive/library consistency; backup restore now replays pm component states through the system API (first time it actually works)
+- ✅ v0.32.1 (2026-11-25): pm replay treats "state unreadable" as a failure instead of "app uninstalled"; applying rules auto-rolls-back when the ledger cannot be written; pm commands quote component names containing `$` (inner classes / activity-aliases); bundled rules v15; one-command device smoke gate (15 write-path flows) added to the release gate
+- ✅ v0.33.0 (2026-11-25): the experimental "global SDK declaration" toggle and the bundled Xposed module entry are removed from stable builds (unverified since introduction; would return as a separate product)
+- Rules repo: v15 = 2,079 entities (category-regex fixes, 450 authored descriptions; subscription endpoints main/vN both live)
 - Pending user scope: TalkBack / large-font accessibility matrix. Distribution: GitHub Releases only (user decision 2026-10-24, no other channels)
 
 > 本地维护文档，进度事实源另见 project_status.md 与持久记忆（本文件由仓库同步，Status 段对外可读）。

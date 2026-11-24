@@ -6,5 +6,3 @@
 # kotlinx-serialization 插件与库自带 R8 规则覆盖现命名空间。
 -keepattributes *Annotation*, InnerClasses
 -dontnote kotlinx.serialization.AnnotationsKt
-# Xposed hook entry (referenced only by assets/xposed_init at runtime — R8 cannot see it)
--keep class io.github.deserthouse.prunoid.hook.PrunoidHook { *; }

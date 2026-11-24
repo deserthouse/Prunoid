@@ -307,7 +307,7 @@
     <string name="sheet_data_title">Details &amp; components</string>
     <string name="sec_general">Preferences</string>
     <string name="sec_exec">Run &amp; automation</string>
-    <string name="sec_recovery_exp">Recovery &amp; experiments</string>
+    <string name="sec_recovery_exp">Recovery</string>
     <string name="lang_section">Language</string>
     <string name="lang_system">System</string>
     <string name="sheet_matched_line">%1$d matched · %2$d in Prunoid ledger</string>
@@ -341,14 +341,6 @@
     <string name="share_report">Share component report (for the rules repo)</string>
     <string name="about_share_title">Component report sharing</string>
     <string name="about_share_body">Reports contain only package and class names (objective facts), no personal data; nothing is uploaded automatically — you send it via the system share sheet.</string>
-    <string name="sec_declarative">Declarative blocking (experimental)</string>
-    <string name="decl_title">Global SDK declarations</string>
-    <string name="decl_status">%1$d prefixes declared</string>
-    <string name="decl_note">Requires LSPosed with this module enabled (scope: system_server). Draw circles from SDK archive sheets.</string>
-    <string name="decl_warning">Experimental: system_server-level hooking, on-device verification pending; enable at your own risk.</string>
-    <string name="decl_toggle">Global declaration (experimental)</string>
-    <string name="decl_need_root">Root not granted — declarations unavailable (needs root + LSPosed)</string>
-    <string name="decl_write_fail">Declaration write failed (retry or check root grant)</string>
     <plurals name="badge_apps"><item quantity="one">1 app</item><item quantity="other">%d apps</item></plurals>
     <plurals name="badge_sdks"><item quantity="one">1 SDK</item><item quantity="other">%d SDKs</item></plurals>
     <string name="search_prefix_hint">Search component prefix</string>

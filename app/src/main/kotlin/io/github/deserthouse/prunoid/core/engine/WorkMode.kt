@@ -10,7 +10,6 @@ enum class WorkModeId { ROOT, AUDIT }   // HOOK 预留（P 批）
 data class WorkModeCapabilities(
     val identify: Boolean = true,        // 扫描/识别/统计（两种模式都可用）
     val disablePerApp: Boolean = false,  // 逐应用禁用/恢复（root）
-    val declareGlobal: Boolean = false   // 声明式全局画圈（hook，P 批）
 )
 
 data class WorkModeInfo(

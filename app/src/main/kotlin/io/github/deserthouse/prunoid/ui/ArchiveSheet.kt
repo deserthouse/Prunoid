@@ -172,47 +172,6 @@ fun SdkArchiveSheet(
                     Text(stringResource(R.string.manage_open, userApps.size))
                 }
             }
-            // 批U4（C09）：管理入口先于实验声明——主要下一步优先
-            // 批P：全局声明开关（所有档案卡可见；写 declarations.json）
-            val vmDecl = vm.state.collectAsState().value
-            var declFail by remember { mutableStateOf(false) }
-            Column(Modifier.fillMaxWidth().padding(top = 4.dp)) {
-                Row(
-                    Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(stringResource(R.string.decl_toggle), style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f))
-                    Spacer(Modifier.width(8.dp))
-                    val ruleDecls = remember(hit.ruleId) {
-                        vm.ruleInfo(hit.ruleId)?.packPrefixes?.map { it.trimEnd('.') }?.toSet() ?: emptySet()
-                    }
-                    // 批R4（审计 P-7）：改读 UiState——原 remember(vm.declared) 的 key 是静态存储读数，永不触发重组，开关不回显
-                    val declOn = ruleDecls.isNotEmpty() && ruleDecls.any { it in vmDecl.declared }
-                    // 批S2（审计 N-2）：无 root 禁用+原因行（原可切但写失败静默零反馈）；
-                    // 有 root 失败也内嵌提示（Snackbar 被 sheet 遮挡，批M3 教训）
-                    Switch(
-                        checked = declOn,
-                        enabled = vmDecl.rootGranted && vmDecl.workMode.id.name == "ROOT",
-                        onCheckedChange = { on ->
-                            declFail = false
-                            vm.toggleDeclaration(hit.ruleId, on) { err -> if (err.isNotBlank()) declFail = true }
-                        }
-                    )
-                }
-                if (!vmDecl.rootGranted) {
-                    Text(
-                        stringResource(R.string.decl_need_root),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.error
-                    )
-                } else if (declFail) {
-                    Text(
-                        stringResource(R.string.decl_write_fail),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
-            }
             Spacer(Modifier.height(12.dp))
             // ── 资料区折叠（批N3/F11）：来源/维护者/组件清单进二级 ──
             Row(

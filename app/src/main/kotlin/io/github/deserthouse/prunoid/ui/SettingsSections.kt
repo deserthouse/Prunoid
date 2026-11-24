@@ -49,7 +49,7 @@ import androidx.compose.ui.unit.dp
 import io.github.deserthouse.prunoid.core.engine.Engine
 
 // 设置页分区函数（批G2a 自 SettingsScreen.kt 拆出）：
-// Language/NotifPerm/WorkMode/Declarative/Engines/AutomationBackup/Subscriptions/
+// Language/NotifPerm/WorkMode/Engines/AutomationBackup/Subscriptions/
 // Recovery/About/Credits/Compliance 十一分区 + 共享辅件（SectionTitle/SettingsCard/
 // SettingRow/CreditEntry/fmtFetched）。键值事实源仍在 SettingsRepository（DataStore）。
 
@@ -285,48 +285,6 @@ internal fun WorkModeCard(st: AppUiState, vm: AppViewModel) {
                     style = MaterialTheme.typography.bodySmall,
                     color = if (rootMissing) MaterialTheme.colorScheme.error
                             else MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-
-}
-@Composable
-internal fun DeclarativeCard(st: AppUiState, vm: AppViewModel, onMsg: (String) -> Unit) {
-    // ── 声明式（批P：LSPosed 模式，默认关闭） ──
-        SettingsCard {
-            Column(Modifier.padding(vertical = 4.dp)) {
-                SettingRow(
-                    icon = Icons.Outlined.Extension,
-                    title = stringResource(R.string.decl_title),
-                    // 批R4（审计 P-7）：声明状态改读 UiState（原 vm.declared 静态读数不触发重组）
-                    subtitle = stringResource(R.string.decl_status, st.declared.size)
-                ) {
-                    // 批S2（审计 N-2）：无 root 禁用（原开关可切但写失败静默零反馈）
-                    Switch(
-                        checked = st.declarationsEnabled,
-                        enabled = st.rootGranted && st.workMode.id.name == "ROOT",
-                        onCheckedChange = { vm.setDeclarationsEnabled(it) { err -> if (err.isNotBlank()) onMsg(err) } }
-                    )
-                }
-                if (!st.rootGranted) {
-                    Text(
-                        stringResource(R.string.decl_need_root),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-                    )
-                }
-                Text(
-                    stringResource(R.string.decl_note),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-                )
-                Text(
-                    stringResource(R.string.decl_warning),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
                 )
             }
         }

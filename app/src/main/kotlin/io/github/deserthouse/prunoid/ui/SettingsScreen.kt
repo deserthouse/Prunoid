@@ -107,7 +107,6 @@ fun SettingsScreen(vm: AppViewModel, onBack: () -> Unit) {
 
             SettingsSection(stringResource(R.string.sec_recovery_exp)) {
                 RecoveryCards(st, vm, onMsg = { show(it) })
-                DeclarativeCard(st, vm, onMsg = { show(it) })
             }
 
             LanguageSection()

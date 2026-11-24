@@ -79,10 +79,7 @@ data class AppUiState(
     // 批G2c：列表筛选族（批T8 会话态 + hitsOnly/showSystem 收拢）
     val filters: ListFilters = ListFilters(),
     // 批T2：内置快照可溯源（"2026-09-21 · 2003"）
-    val snapshotMeta: String = "",
-    // 批R4（审计 P-7）：声明式画圈状态入 UiState——原 VM 静态存储 getter 不触发重组，档案卡开关切换后不回显
-    val declared: Set<String> = emptySet(),
-    val declarationsEnabled: Boolean = false
+    val snapshotMeta: String = ""
 ) {
     // 批H：busy 由 busyOp 派生（UI 读法不变）
     val busy: Boolean get() = busyOp != null
@@ -660,87 +657,6 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         return obj.toString()
     }
 
-
-    // ── 批P：声明式（hook 模式）——SDK 画圈写 declarations.json ──
-    // 批R4（审计 P-7）：declared/declarationsEnabled 已入 AppUiState（组合读 state，写后 _state.update 回显）
-
-    init {
-        viewModelScope.launch(Dispatchers.IO) {
-            io.github.deserthouse.prunoid.core.engine.DeclarationsStore.read()
-            _state.update {
-                it.copy(
-                    declared = io.github.deserthouse.prunoid.core.engine.DeclarationsStore.declaredPrefixes,
-                    declarationsEnabled = io.github.deserthouse.prunoid.core.engine.DeclarationsStore.enabled
-                )
-            }
-        }
-    }
-
-    /** 画圈/取消一个 SDK（ruleId → 其全部 packPrefixes 展开写声明文件） */
-    fun toggleDeclaration(ruleId: String, on: Boolean, onDone: (String) -> Unit = {}) {
-        viewModelScope.launch {
-            // 批S2 诊断探针：区分 rule 查找失败早退 / shell 写失败
-            // 批X3（审查 PN-01）：声明写入受工作方式门控——audit 承诺"只读"，不得写声明文件
-            if (!rootGate()) {
-                onDone(appCtx.getString(R.string.vm_need_root))
-                return@launch
-            }
-            val rule = rules.rule(ruleId)
-            android.util.Log.d("SdkPruner", "decl.toggle: id=$ruleId found=${rule != null} prefixes=${rule?.packPrefixes?.size}")
-            if (rule == null) return@launch
-            // 批X1（审查 R01）：订阅前缀是外部输入，进白名单前先拒并反馈
-            val badPrefix = rule.packPrefixes.firstOrNull { !it.matches(Regex("^[A-Za-z0-9_.\\$-]+$")) }
-            if (badPrefix != null) {
-                Log.d("SdkPruner", "decl.toggle: illegal prefix $badPrefix")
-                onDone(appCtx.getString(R.string.decl_write_fail))
-                return@launch
-            }
-            val cur = io.github.deserthouse.prunoid.core.engine.DeclarationsStore.declaredPrefixes
-            val next = if (on) cur + rule.packPrefixes.map { it.trimEnd('.') }
-                       else cur - rule.packPrefixes.map { it.trimEnd('.') }.toSet()
-            if (applied.corrupted) { onDone(appCtx.getString(R.string.vm_ledger_corrupted)); return@launch }
-            // 批Z2：声明写入与其他 root 写入口共锁
-            val r = OpCoordinator.write {
-                io.github.deserthouse.prunoid.core.engine.DeclarationsStore.write(
-                    getApplication<Application>().filesDir,
-                    io.github.deserthouse.prunoid.core.engine.DeclarationsStore.Decl(
-                        enabled = next.isNotEmpty(),
-                        prefixes = next.sorted()
-                    )
-                )
-            }
-            if (r.isSuccess) {
-                _state.update {
-                    it.copy(declared = next.sorted().toSet(), declarationsEnabled = next.isNotEmpty())
-                }
-            }
-            onDone(if (r.isSuccess) "" else (r.exceptionOrNull()?.message ?: "write failed"))
-        }
-    }
-
-    fun setDeclarationsEnabled(on: Boolean, onDone: (String) -> Unit = {}) {
-        viewModelScope.launch {
-            // 批X3（审查 PN-01）：同上，audit 模式下声明总开关写入一并拒绝
-            if (!rootGate()) {
-                onDone(appCtx.getString(R.string.vm_need_root))
-                return@launch
-            }
-            if (applied.corrupted) { onDone(appCtx.getString(R.string.vm_ledger_corrupted)); return@launch }
-            // 批Z2：声明写入与其他 root 写入口共锁
-            val r = OpCoordinator.write {
-                io.github.deserthouse.prunoid.core.engine.DeclarationsStore.write(
-                    getApplication<Application>().filesDir,
-                    io.github.deserthouse.prunoid.core.engine.DeclarationsStore.Decl(
-                        enabled = on,
-                        prefixes = io.github.deserthouse.prunoid.core.engine.DeclarationsStore.declaredPrefixes.sorted()
-                    )
-                )
-            }
-            // 批S2（审计 N-2）：失败不再谎报回显；错误文本资源化（设置页 Snackbar 直接展示）
-            if (r.isSuccess) _state.update { it.copy(declarationsEnabled = on) }
-            onDone(if (r.isSuccess) "" else appCtx.getString(R.string.decl_write_fail))
-        }
-    }
 
     // 批BB RV-07：扫描任务序号——同代次反序完成时仅最新轮发布（含 icons/live 子任务）
     private var scanSeq = 0
