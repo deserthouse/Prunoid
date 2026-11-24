@@ -129,6 +129,11 @@ class DisableEngine(
         private const val COMP_NAME_MAX = 500
         internal fun validPkgName(n: String): Boolean = n.length <= 255 && PKG_NAME_RE.matches(n)
         internal fun validCompName(n: String): Boolean = n.length <= COMP_NAME_MAX && COMP_NAME_RE.matches(n)
+
+        /** pm 命令的目标参数，带单引号。组件名里的 `$` 很常见（内部类 `Outer$Inner`、activity-alias
+         *  `Stub$Activity_Portrait`）——不加引号时 `$Inner` 被 shell 当成空变量展开，命令落到外层类上：
+         *  外层类不是组件就失败，是组件就**停错组件**。白名单保证名字里没有单引号。 */
+        internal fun pmTarget(pkg: String, comp: String): String = "'$pkg/$comp'"
         fun requireValidTarget(pkg: String, comps: Collection<String>) {
             require(validPkgName(pkg)) { "invalid package name" }
             // 热修 0.31.1（第五轮审查 R5-02）：空集合法——removeIfw(空集) 是"定向移除零项"的
@@ -583,7 +588,7 @@ class DisableEngine(
                 if (componentNames.isNotEmpty()) requireValidTarget(pkg, componentNames)
                 require(!isBlockedTarget(context, pkg)) { "system app blocked by whitelist: $pkg" }
                 if (componentNames.isEmpty()) return@runCatching 0
-                val cmds = componentNames.joinToString(" && ") { "pm disable $pkg/$it" }
+                val cmds = componentNames.joinToString(" && ") { "pm disable ${pmTarget(pkg, it)}" }
                 val r = Shell.cmd(cmds).exec()
                 check(r.isSuccess) { "pm disable failed: ${r.err}" }
                 componentNames.size
@@ -595,7 +600,7 @@ class DisableEngine(
             runCatching {
                 if (componentNames.isNotEmpty()) requireValidTarget(pkg, componentNames)
                 if (componentNames.isEmpty()) return@runCatching 0
-                val cmds = componentNames.joinToString(" && ") { "pm enable $pkg/$it" }
+                val cmds = componentNames.joinToString(" && ") { "pm enable ${pmTarget(pkg, it)}" }
                 val r = Shell.cmd(cmds).exec()
                 check(r.isSuccess) { "pm enable failed: ${r.err}" }
                 componentNames.size
@@ -610,7 +615,7 @@ class DisableEngine(
                 if (componentNames.isNotEmpty()) requireValidTarget(pkg, componentNames)
                 require(!isBlockedTarget(context, pkg)) { "system app blocked by whitelist: $pkg" }
                 OperationCenter.chunkedPerItem(componentNames) { block ->
-                    val cmds = block.joinToString(" && ") { "pm disable $pkg/$it" }
+                    val cmds = block.joinToString(" && ") { "pm disable ${pmTarget(pkg, it)}" }
                     Shell.cmd(cmds).exec().isSuccess
                 }
             }.getOrDefault(emptyList())
@@ -622,7 +627,7 @@ class DisableEngine(
                 if (componentNames.isNotEmpty()) requireValidTarget(pkg, componentNames)
                 if (componentNames.isEmpty()) return@runCatching emptyList()
                 OperationCenter.chunkedPerItem(componentNames) { block ->
-                    val cmds = block.joinToString(" && ") { "pm enable $pkg/$it" }
+                    val cmds = block.joinToString(" && ") { "pm enable ${pmTarget(pkg, it)}" }
                     Shell.cmd(cmds).exec().isSuccess
                 }
             }.getOrDefault(emptyList())

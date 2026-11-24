@@ -42,7 +42,8 @@ object PmStateSnapshot {
         else -> Cmd.DEFAULT
     }
 
-    fun command(a: Action): String = "pm ${a.cmd.arg} ${a.pkg}/${a.comp}"
+    /** 目标带单引号：组件名里的 `$` 不加引号会被 shell 当变量展开（见 DisableEngine.pmTarget） */
+    fun command(a: Action): String = "pm ${a.cmd.arg} '${a.pkg}/${a.comp}'"
 
     /** 让现状回到侧表记录的状态。
      *  - 只处理侧表里出现过的应用（快照之后才安装的应用不动）；

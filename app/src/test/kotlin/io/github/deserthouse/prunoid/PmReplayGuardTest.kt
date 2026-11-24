@@ -4,6 +4,7 @@ import io.github.deserthouse.prunoid.core.engine.PmStateSnapshot
 import io.github.deserthouse.prunoid.core.engine.PmStateSnapshot.Cmd
 import io.github.deserthouse.prunoid.core.engine.PmStateSnapshot.Action
 import io.github.deserthouse.prunoid.core.engine.PmStateSnapshot.ReplayPlan
+import org.junit.Assert.assertEquals
 import io.github.deserthouse.prunoid.core.engine.PmStateSnapshot.Sidecar
 import io.github.deserthouse.prunoid.core.engine.PmStateSnapshot.planReplay
 import io.github.deserthouse.prunoid.core.engine.PmStateSnapshot.replayOutcome
@@ -63,6 +64,20 @@ class PmReplayGuardTest {
             "pm ledger removal must be gated on report.pmOk",
             Regex("""report\.pmOk && ledgerWrite \{ applied\.removeEngine\(Engine\.PM\.name\) \} != null""").containsMatchIn(vm),
         )
+    }
+
+    @Test
+    fun `pm commands quote the component target so dollar signs survive the shell`() {
+        // activity-alias / 内部类名：$Inner 不加引号会被 shell 展开成空，命令落到外层类上
+        val a = Action("cn.kaiheila", "com.x.StubActivity\$Activity_Portrait", Cmd.DISABLE)
+        assertEquals("pm disable 'cn.kaiheila/com.x.StubActivity\$Activity_Portrait'", PmStateSnapshot.command(a))
+        // 引擎里每一条进 shell 的 pm enable/disable 目标都必须经 pmTarget 加单引号；IFW 规则里的组件名写进 XML 文件，不经 shell 插值
+        val text = engineText()
+        val quoted = Regex(""""pm (?:enable|disable) +[$][{]pmTarget[(]""")
+        val bare = Regex("""pm (?:enable|disable) +[^'"]*[$]pkg""")
+        assertEquals(4, quoted.findAll(text).count())
+        assertEquals("unquoted pm target in DisableEngine: " + bare.findAll(text).map { it.value }.toList(),
+            0, bare.findAll(text).count())
     }
 
     // ── 纯函数探针 ──────────────────────────────────────────────

@@ -58,8 +58,8 @@ class PmStateSnapshotTest {
         assertEquals(Cmd.DISABLE_USER, cmdFor("DISABLED_USER"))
         assertEquals(Cmd.DISABLE_UNTIL_USED, cmdFor("DISABLED_UNTIL_USED"))
         assertEquals(Cmd.DEFAULT, cmdFor("something else"))
-        assertEquals("pm disable-user pkg.a/p/X", command(Action("pkg.a", "p/X", Cmd.DISABLE_USER)))
-        assertEquals("pm default-state pkg.a/p/X", command(Action("pkg.a", "p/X", Cmd.DEFAULT)))
+        assertEquals("pm disable-user 'pkg.a/p/X'", command(Action("pkg.a", "p/X", Cmd.DISABLE_USER)))
+        assertEquals("pm default-state 'pkg.a/p/X'", command(Action("pkg.a", "p/X", Cmd.DEFAULT)))
     }
 
     @Test
