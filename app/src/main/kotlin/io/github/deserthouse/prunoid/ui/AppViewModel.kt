@@ -234,6 +234,30 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private val ledgerFailedNote: String
         get() = appCtx.getString(R.string.vm_ledger_write_failed)
 
+    /** 0.32.1：应用路径的账本写失败——撤销本次刚写入的变更（设备与账本保持一致）并如实报告。
+     *  此前提示"变更已生效但未记账，请重试"；pm 引擎下重试会把上一次未记账的禁用当成
+     *  "原本已禁用"（写入前现场读分不清来源），之后整应用恢复会跳过它并声称非本工具设置。 */
+    private suspend fun ledgerFailedAndUndone(
+        pkg: String, eng: Engine, ifwBefore: String, pmNewlyDisabled: List<String>,
+        ruleIds: Set<String>, okText: String,
+    ): String {
+        val undone = when (eng) {
+            Engine.IFW -> engine.rollbackIfw(pkg, ifwBefore)
+            Engine.PM -> pmNewlyDisabled.isEmpty() || engine.enablePmPerItem(pkg, pmNewlyDisabled)
+                .let { rc -> rc.size == pmNewlyDisabled.size && rc.all { it.second } }
+        }
+        val note = if (undone) appCtx.getString(R.string.vm_ledger_write_rolled_back)
+        else appCtx.getString(R.string.vm_ledger_rollback_incomplete)
+        Log.w("SdkPruner", "apply: ledger write failed, rollback ${if (undone) "done" else "INCOMPLETE"} engine=$eng")
+        // 结果卡同步改判为失败（上面记的是引擎写入成功）
+        opCenter.record(
+            OperationKind.APPLY, pkg,
+            listOf(OperationItem("ledger", false, if (undone) "ledger write failed, change rolled back" else "ledger write failed, rollback incomplete")),
+            okText + note, retryRuleIds = ruleIds,
+        )
+        return okText + note
+    }
+
     /** 0.32.1：操作结果统一落一条日志——发版冒烟门禁按它断言界面提示的实际文本
      *  （Snackbar 文本不进无障碍树，截图判读不可自动化；日志是同一字符串的确定性出口） */
     private fun report(op: String, msg: String) {
@@ -1033,6 +1057,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     return@withBusy Pair(false, appCtx.getString(R.string.vm_no_targets))
                 }
                 var preExistingTargets: List<String> = emptyList()
+                // 0.32.1：账本写失败时撤销本次变更所需的两份"写前现场"
+                val ifwBefore = if (engineSnapshot == Engine.IFW) engine.readIfwFile(scanned.packageName) else ""
+                var pmDisabledBefore: Set<String> = emptySet()
                 // 批FF-B1①（AA7）：PM 逐项执行的实际成功集——下游记账只记真实写入的组件
                 var pmOkTargets: List<String>? = null
                 val r = when (engineSnapshot) {
@@ -1054,6 +1081,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     // 重复 apply 不得把自有禁用污染成"外部既有状态"
                     Engine.PM -> {
                         val pre = engine.readPmDisabled(scanned.packageName)
+                        pmDisabledBefore = pre
                         val owned = applied.get(scanned.packageName)?.pm?.components.orEmpty().toSet()
                         preExistingTargets = targets.filter { it in pre && it !in owned }
                         // 批FF-B1①（AA7/方案B S1）：PM 逐项执行——只记成功集，失败项进 Operation
@@ -1076,6 +1104,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 }
                 // 批X2（审查 R04/R05）：合并记账（不覆盖同包其他 SDK）+ ruleIds 身份入账
                 if (r.isFailure) return@withBusy Pair(false, appCtx.getString(R.string.vm_op_fail))
+                val okText = appCtx.getString(R.string.vm_apply_ok, engineSnapshot.name, r.getOrDefault(0))
                 if (engineSnapshot == Engine.IFW) {
                     if (ledgerWrite {
                             applied.recordMerge(
@@ -1083,7 +1112,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                                 effByType.entries.flatMap { (t, cs) -> cs.map { it to t } }.toMap(),
                                 addedRuleIds = selectedRuleIds
                             )
-                        } != null) return@withBusy Pair(false, appCtx.getString(R.string.vm_apply_ok, engineSnapshot.name, r.getOrDefault(0)) + ledgerFailedNote)
+                        } != null) {
+                        // 0.32.1：撤销本次写入，不留"设备已改、账本无记录"的孤儿规则
+                        return@withBusy Pair(false, ledgerFailedAndUndone(scanned.packageName, Engine.IFW, ifwBefore, emptyList(), selectedRuleIds, okText))
+                    }
                 } else {
                     // 批FF-B1①：PM 记账只记实际成功集（部分失败组件不进账本=不产生虚假管理条目）
                     if (ledgerWrite {
@@ -1093,7 +1125,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                                 addedRuleIds = selectedRuleIds,
                                 preExisting = preExistingTargets
                             )
-                        } != null) return@withBusy Pair(false, appCtx.getString(R.string.vm_apply_ok, engineSnapshot.name, r.getOrDefault(0)) + ledgerFailedNote)
+                        } != null) {
+                        // 0.32.1：只撤销本次新造成的禁用（写前已停用的外部状态不动）
+                        val newly = RestoreAccounting.newlyDisabled(pmOkTargets ?: targets, pmDisabledBefore)
+                        return@withBusy Pair(false, ledgerFailedAndUndone(scanned.packageName, Engine.PM, "", newly, selectedRuleIds, okText))
+                    }
                 }
                 // 批G：写入后单包重读现场（展示层以现场为准）
                 val liveAfter = if (r.isSuccess) engine.readLiveDisabled(listOf(scanned.packageName)).first else null

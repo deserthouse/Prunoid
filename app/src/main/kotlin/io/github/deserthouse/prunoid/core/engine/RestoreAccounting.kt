@@ -52,6 +52,10 @@ internal object RestoreAccounting {
         return SdkOffResult(owned, restoredOwned, owned.size - restoredOwned, ifwRestored, pmRestored)
     }
 
+    /** 本次操作新造成的禁用 = 执行成功集里、写前现场并未停用的组件（账本写失败时据此撤销） */
+    fun newlyDisabled(okComps: Collection<String>, disabledBefore: Set<String>): List<String> =
+        okComps.filter { it !in disabledBefore }.distinct()
+
     data class AppRestoreInput(
         val pmTargets: Collection<String>,
         val pmReceipts: List<Pair<String, Boolean>>,

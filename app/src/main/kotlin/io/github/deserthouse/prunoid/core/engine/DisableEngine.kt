@@ -550,6 +550,32 @@ class DisableEngine(
         Shell.cmd("test -f ${ifwPath(pkg)}").exec().isSuccess
     }
 
+    /** 0.32.1：账本写失败时的撤销支持——读出规则文件原文（不存在=空串），[rollbackIfw] 原样写回 */
+    suspend fun readIfwFile(pkg: String): String = withContext(Dispatchers.IO) {
+        Shell.cmd("cat ${ifwPath(pkg)} 2>/dev/null").exec().out.joinToString("\n")
+    }
+
+    /** 把规则文件恢复到 [before]（空串=恢复为"无此文件"）。只用于同一次操作内的撤销 */
+    suspend fun rollbackIfw(pkg: String, before: String): Boolean = withContext(Dispatchers.IO) {
+        require(validPkgName(pkg))
+        if (before.isBlank()) return@withContext Shell.cmd("rm -f ${ifwPath(pkg)}").exec().isSuccess
+        val tmp = "${context.cacheDir.absolutePath}/ifw_$pkg.rb.${System.nanoTime()}"
+        runCatching {
+            java.io.File(tmp).writeText(before)
+            val stage = "${ifwPath(pkg)}.tmp.${System.nanoTime()}"
+            try {
+                Shell.cmd(
+                    "mkdir -p $IFW_DIR && cp $tmp $stage && " +
+                        "chmod 644 $stage && (restorecon $stage 2>/dev/null || true) && " +
+                        "mv $stage ${ifwPath(pkg)}"
+                ).exec().isSuccess
+            } finally {
+                java.io.File(tmp).delete()
+                Shell.cmd("rm -f $stage").exec()
+            }
+        }.getOrDefault(false)
+    }
+
     // ── pm disable 辅引擎（app 可运行时自恢复；跨更新保留）────────
     suspend fun applyPm(pkg: String, componentNames: List<String>): Result<Int> =
         withContext(Dispatchers.IO) {

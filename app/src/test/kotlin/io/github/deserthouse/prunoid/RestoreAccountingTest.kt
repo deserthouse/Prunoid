@@ -4,6 +4,7 @@ import io.github.deserthouse.prunoid.core.engine.AppliedRulesStore
 import io.github.deserthouse.prunoid.core.engine.RestoreAccounting
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /** 0.32.1（第六轮审查 R6-02）：恢复记账算术的表驱动测试——此前这段逻辑只在 ViewModel 里，
@@ -114,6 +115,17 @@ class RestoreAccountingTest {
         assertEquals(RestoreAccounting.AppRestoreResult(2, false), appRestore(listOf("c1", "c2"), emptyList()))
         // IFW 移除失败时 pm 全成功也算整体失败
         assertEquals(RestoreAccounting.AppRestoreResult(0, false), appRestore(listOf("c1"), ok("c1"), ifwOk = false))
+    }
+
+    @Test
+    fun `rollback only re-enables what this apply newly disabled`() {
+        // 写前已停用的（外部或本工具早先的记录）不在撤销集里；共享组件去重
+        val newly = RestoreAccounting.newlyDisabled(
+            okComps = listOf("c1", "c2", "c3", "c3"),
+            disabledBefore = setOf("c2", "c9"),
+        )
+        assertEquals(listOf("c1", "c3"), newly)
+        assertTrue(RestoreAccounting.newlyDisabled(okComps = listOf("c2"), disabledBefore = setOf("c2")).isEmpty())
     }
 
     private fun bucket(comps: List<String>, rules: Set<String> = setOf("sdk.a")) =

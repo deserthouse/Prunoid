@@ -194,6 +194,8 @@
     <string name="vm_no_targets">无可应用的组件目标</string>
     <string name="vm_apply_ok">%1$s 规则 %2$d 条已应用</string>
     <string name="vm_ledger_write_failed">（账本写入失败：本次变更已在设备上生效，但未记入账本——请重试；若持续失败请检查存储空间）</string>
+    <string name="vm_ledger_write_rolled_back">（账本写入失败：本次变更已自动撤销，设备未改动——请重试；若持续失败请检查存储空间）</string>
+    <string name="vm_ledger_rollback_incomplete">（账本写入失败，且自动撤销未完成：部分禁用可能仍留在设备上且未记入账本——请重试，或用“恢复”/“清除全部 IFW”回滚）</string>
     <string name="vm_apply_backup_failed">（备份失败：本次未留快照）</string>
     <string name="vm_apply_backup">（已自动备份）</string>
     <string name="vm_fail_suffix"> — 失败：%1$s</string>
