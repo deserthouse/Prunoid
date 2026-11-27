@@ -73,7 +73,8 @@ fun OpResultSheet(op: Operation, onDismiss: () -> Unit) {
                             )
                         }
                     } else {
-                        FailureItemRow(item)
+                        // 0.33.1：明细底表放开行数——批量结果的应用条目在原因后列出失败组件，单行会被省略号截断
+                        FailureItemRow(item, detailMaxLines = 16)
                     }
                 }
             }

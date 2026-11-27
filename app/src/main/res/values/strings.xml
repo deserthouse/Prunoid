@@ -195,11 +195,14 @@
     <string name="vm_apply_ok">%1$s 规则 %2$d 条已应用</string>
     <string name="vm_ledger_write_failed">（账本写入失败：本次变更已在设备上生效，但未记入账本——请重试；若持续失败请检查存储空间）</string>
     <string name="vm_ledger_write_rolled_back">（账本写入失败：本次变更已自动撤销，设备未改动——请重试；若持续失败请检查存储空间）</string>
+    <string name="vm_bulk_rolled_back">未完成：账本写入失败，本次变更已自动撤销（%1$d 个应用），设备未改动——请重试；若持续失败请检查存储空间</string>
+    <string name="vm_bulk_rolled_back_partial">部分完成：已记账 %2$d 个应用；账本写入失败的另外 %1$d 个应用，本次变更已自动撤销，设备与账本一致——请重试</string>
+    <string name="vm_bulk_rollback_incomplete">失败：账本写入失败，且自动撤销未完成——%1$d 个应用仍有未记账的变更（%2$s）；已自动撤销 %3$d 个——请重试，或逐个应用用“恢复”/“清除全部 IFW”回滚</string>
     <string name="vm_ledger_rollback_incomplete">（账本写入失败，且自动撤销未完成：部分禁用可能仍留在设备上且未记入账本——请重试，或用“恢复”/“清除全部 IFW”回滚）</string>
     <string name="vm_apply_backup_failed">（备份失败：本次未留快照）</string>
     <string name="vm_apply_backup">（已自动备份）</string>
     <string name="vm_fail_suffix"> — 失败：%1$s</string>
-    <string name="vm_restore_ok">已恢复（IFW 规则移除 + pm 组件重启用）</string>
+    <string name="vm_restore_ok">已恢复（IFW 规则移除 + pm 组件已还原）</string>
     <string name="vm_restore_skip_pre">；跳过 %1$d 项原本已禁用（非本工具设置）</string>
     <string name="vm_restore_fail">失败：%1$s</string>
     <string name="vm_sub_ok">订阅成功：%1$d 条规则（版本 %2$s）</string>
@@ -248,6 +251,7 @@
     <string name="backup_restore_confirm">将把所选归档中的 IFW 规则解回原路径并修复归属，并把 pm 组件启停状态还原到快照时的状态。注意：还原按全局时点进行，快照之后写入的 IFW 规则（含其他工具）将被撤销；还原后本工具的 IFW 已应用记录会清空，存量规则需重新应用后才能再由本工具恢复。继续？</string>
     <string name="recovery_cmd_title">应急命令（点击复制）</string>
     <string name="recovery_cmd_sub">UI 无法进入时，在电脑上执行以下命令清除全部 IFW 规则（需应用的 Realtime 守护存活）</string>
+    <string name="recovery_clear_root_hint">未获得 root 授权——在 Magisk → 超级用户 授权 Prunoid 后重进</string>
     <string name="recovery_clear_audit_hint">审计模式为只读——清除全部 IFW 需切换到 Root 工作模式</string>
     <string name="recovery_clear_title">清除全部 IFW 规则</string>
     <string name="recovery_clear_desc">将无差别清除本应用与其他工具写入的全部 IFW 规则；pm 停用状态不受影响。</string>

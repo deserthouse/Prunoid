@@ -24,13 +24,18 @@ import io.github.deserthouse.prunoid.R
 import io.github.deserthouse.prunoid.ui.operations.OperationItem
 
 /** 批V2（ME-03）：失败项行共享构件——统一矢量图标+语义描述（原三处两制：
- *  详情 ErrorOutline 图标 vs ResultSheet/管理页 "✗" 文本字符，TalkBack 播报不稳定）。 */
+ *  详情 ErrorOutline 图标 vs ResultSheet/管理页 "✗" 文本字符，TalkBack 播报不稳定）。
+ *  0.33.1：[detailMaxLines]——批量结果的应用条目在原因后逐行列出失败组件，明细底表需要多行；
+ *  默认 1 行（详情页/管理页结果卡保持紧凑）。多行时图标顶对齐。 */
 @Composable
-fun FailureItemRow(item: OperationItem, modifier: Modifier = Modifier) {
+fun FailureItemRow(item: OperationItem, modifier: Modifier = Modifier, detailMaxLines: Int = 1) {
     val desc = item.target +
         (item.detail.takeIf { it.isNotBlank() }?.let { d -> " — $d" } ?: "") +
         "，" + stringResource(R.string.result_item_failed)
-    Row(modifier.semantics { contentDescription = desc }, verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        modifier.semantics { contentDescription = desc },
+        verticalAlignment = if (detailMaxLines > 1) Alignment.Top else Alignment.CenterVertically,
+    ) {
         Icon(
             Icons.Outlined.ErrorOutline,
             contentDescription = null,
@@ -52,7 +57,7 @@ fun FailureItemRow(item: OperationItem, modifier: Modifier = Modifier) {
                     item.detail,
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.error,
-                    maxLines = 1,
+                    maxLines = detailMaxLines,
                     overflow = TextOverflow.Ellipsis
                 )
             }

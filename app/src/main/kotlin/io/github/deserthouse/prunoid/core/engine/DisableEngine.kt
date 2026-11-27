@@ -595,17 +595,22 @@ class DisableEngine(
             }
         }
 
-    suspend fun enablePm(pkg: String, componentNames: List<String>): Result<Int> =
+    /** 0.33.1：按给定状态逐项还原（启用 / 回默认态）——整应用恢复、关闭 SDK、账本写失败撤销共用。
+     *  回执：组件 → 成败；校验失败返回空表（调用方把缺失的回执按失败计）。 */
+    suspend fun restorePmPerItem(pkg: String, actions: List<PmStateSnapshot.Action>): List<Pair<String, Boolean>> =
         withContext(Dispatchers.IO) {
             runCatching {
-                if (componentNames.isNotEmpty()) requireValidTarget(pkg, componentNames)
-                if (componentNames.isEmpty()) return@runCatching 0
-                val cmds = componentNames.joinToString(" && ") { "pm enable ${pmTarget(pkg, it)}" }
-                val r = Shell.cmd(cmds).exec()
-                check(r.isSuccess) { "pm enable failed: ${r.err}" }
-                componentNames.size
-            }
+                if (actions.isEmpty()) return@runCatching emptyList<Pair<String, Boolean>>()
+                requireValidTarget(pkg, actions.map { it.comp })
+                require(actions.all { it.pkg == pkg && it.cmd in RESTORE_CMDS }) { "unsupported restore action" }
+                OperationCenter.chunkedPerItem(actions) { block ->
+                    val cmds = block.joinToString(" && ") { PmStateSnapshot.command(it) }
+                    Shell.cmd(cmds).exec().isSuccess
+                }.map { it.first.comp to it.second }
+            }.getOrDefault(emptyList())
         }
+
+    private val RESTORE_CMDS = setOf(PmStateSnapshot.Cmd.ENABLE, PmStateSnapshot.Cmd.DEFAULT)
 
     // ── 批FF-B1①（七审 AA7 / 方案B S1）：PM 逐项执行——快路径块级判定，
     //    失败块内逐条定位；部分失败不再被整体退出码吞掉 ────────
@@ -621,17 +626,12 @@ class DisableEngine(
             }.getOrDefault(emptyList())
         }
 
-    suspend fun enablePmPerItem(pkg: String, componentNames: List<String>): List<Pair<String, Boolean>> =
-        withContext(Dispatchers.IO) {
-            runCatching {
-                if (componentNames.isNotEmpty()) requireValidTarget(pkg, componentNames)
-                if (componentNames.isEmpty()) return@runCatching emptyList()
-                OperationCenter.chunkedPerItem(componentNames) { block ->
-                    val cmds = block.joinToString(" && ") { "pm enable ${pmTarget(pkg, it)}" }
-                    Shell.cmd(cmds).exec().isSuccess
-                }
-            }.getOrDefault(emptyList())
-        }
+    /** 0.33.1：某包全部组件的当前启停状态（组件全类名 → DEFAULT/ENABLED/DISABLED/…）。
+     *  [readPmDisabled] 只回答"哪些已禁用"，分不清默认态与显式启用；恢复回原状需要完整状态。
+     *  包已卸载或其他读取失败返回 null——调用方按"写入前状态未知"处理。 */
+    suspend fun readPmStates(pkg: String): Map<String, String>? = withContext(Dispatchers.IO) {
+        runCatching { readPmStatesOf(pkg) }.getOrNull()
+    }
 
     suspend fun rootAvailable(): Boolean = withContext(Dispatchers.IO) {
         // 主动建立 root shell——首次调用会触发 Magisk su 授权请求

@@ -16,6 +16,7 @@ import io.github.deserthouse.prunoid.core.engine.Engine
 import io.github.deserthouse.prunoid.core.engine.OpCoordinator
 import io.github.deserthouse.prunoid.core.engine.RuleActionPlan
 import io.github.deserthouse.prunoid.core.engine.RestoreAccounting
+import io.github.deserthouse.prunoid.core.engine.PmStateSnapshot
 import io.github.deserthouse.prunoid.core.rules.RuleRepository
 import io.github.deserthouse.prunoid.core.rules.RuleSubscription
 import io.github.deserthouse.prunoid.core.rules.Safety
@@ -233,15 +234,17 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     /** 0.32.1：应用路径的账本写失败——撤销本次刚写入的变更（设备与账本保持一致）并如实报告。
      *  此前提示"变更已生效但未记账，请重试"；pm 引擎下重试会把上一次未记账的禁用当成
-     *  "原本已禁用"（写入前现场读分不清来源），之后整应用恢复会跳过它并声称非本工具设置。 */
+     *  "原本已禁用"（写入前现场读分不清来源），之后整应用恢复会跳过它并声称非本工具设置。
+     *  0.33.1：PM 撤销按写入前状态逐项还原（[pmUndo]）；写入前状态未知（null）时不动 pm——
+     *  分不清哪些是外部既有禁用，宁可报告"撤销未完成"也不贸然启用。 */
     private suspend fun ledgerFailedAndUndone(
-        pkg: String, eng: Engine, ifwBefore: String, pmNewlyDisabled: List<String>,
+        pkg: String, eng: Engine, ifwBefore: String, pmUndo: List<PmStateSnapshot.Action>?,
         ruleIds: Set<String>, okText: String,
     ): String {
         val undone = when (eng) {
             Engine.IFW -> engine.rollbackIfw(pkg, ifwBefore)
-            Engine.PM -> pmNewlyDisabled.isEmpty() || engine.enablePmPerItem(pkg, pmNewlyDisabled)
-                .let { rc -> rc.size == pmNewlyDisabled.size && rc.all { it.second } }
+            Engine.PM -> pmUndo != null && (pmUndo.isEmpty() ||
+                engine.restorePmPerItem(pkg, pmUndo).let { rc -> rc.size == pmUndo.size && rc.all { it.second } })
         }
         val note = if (undone) appCtx.getString(R.string.vm_ledger_write_rolled_back)
         else appCtx.getString(R.string.vm_ledger_rollback_incomplete)
@@ -325,11 +328,15 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 val targets = plan.eligible
                 if (targets.isEmpty()) return@withBusy appCtx.getString(R.string.vm_no_targets)
                 val backup = snapshotIfEnabled()
-                // 批T1（C01）：PM 写前现场读（写锁内一致）——外部已禁用组件入账本 preExisting，
-                // 恢复不误启用（对齐详情路径批Z3/RV-01；原批量 PM 路径完全缺失此步）。
-                val pmBefore = if (plan.engine == Engine.PM) {
-                    plan.eligible.associate { it.packageName to engine.readPmDisabled(it.packageName) }
-                } else emptyMap<String, Set<String>>()
+                val isPm = plan.engine == Engine.PM
+                // 批T1（C01）+0.33.1：写前现场（写锁内一致）。PM=各包组件的完整启停状态——外部已禁用的
+                // 入账本 preExisting（恢复不误启用，对齐详情路径批Z3/RV-01），其余记下写入前状态（恢复回原状）；
+                // IFW=规则文件原文。两份现场同时是账本写失败时撤销本次变更的依据（0.33.1，对齐单应用路径）。
+                val pmBefore = if (isPm) {
+                    plan.eligible.associate { it.packageName to engine.readPmStates(it.packageName) }
+                } else emptyMap<String, Map<String, String>?>()
+                val ifwBefore = if (isPm) emptyMap()
+                else plan.eligible.associate { it.packageName to engine.readIfwFile(it.packageName) }
                 val exec = BulkPlanExecutor.execute(
                     plan,
                     applyIfw = { pkg, byType -> engine.applyIfw(pkg, byType) },
@@ -338,53 +345,78 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 )
                 // 批X2（R04）+批Q1+批T1/T2：按实际 engine 记账；只记实际成功组件集；
                 // PM 部分成功包也入账（有真实写入必须可恢复），preExisting=外部既有禁用。
-                val ownedSnapshots = plan.eligible.associate { it.packageName to
-                    applied.get(it.packageName)?.pm?.components.orEmpty().toSet() }
-                var ledgerFailed = false
+                val ownedBuckets = plan.eligible.associate { it.packageName to applied.get(it.packageName)?.pm }
+                // 0.33.1：逐包记账；写失败的包记入 unrecorded，随后撤销它们的设备变更
+                val unrecorded = mutableListOf<BulkPlanExecutor.TargetResult>()
                 plan.eligible.zip(exec.items).forEach { (pa, res) ->
                     if (res.okComponents.isNotEmpty()) {
                         val okSet = res.okComponents.toSet()
-                        val preEx = if (plan.engine == Engine.PM) {
-                            BulkPlanExecutor.pmPreExisting(
+                        val own = if (isPm) RestoreAccounting.pmOwnership(
+                            res.okComponents,
+                            pmBefore[pa.packageName],
+                            ownedBuckets[pa.packageName]?.components.orEmpty().toSet(),
+                        ) else null
+                        val err = ledgerWrite {
+                            applied.recordMerge(
+                                pa.packageName, exec.engine.name,
                                 res.okComponents,
-                                pmBefore[pa.packageName].orEmpty(),
-                                ownedSnapshots[pa.packageName].orEmpty(),
+                                pa.byType.entries.flatMap { (t, cs) -> cs.map { it to t } }
+                                    .filter { it.first in okSet }.toMap(),
+                                addedRuleIds = setOf(plan.ruleId),
+                                preExisting = own?.preExisting.orEmpty(),
+                                prevState = own?.prevState,
                             )
-                        } else emptyList()
-                        if (ledgerWrite {
-                                applied.recordMerge(
-                                    pa.packageName, exec.engine.name,
-                                    res.okComponents,
-                                    pa.byType.entries.flatMap { (t, cs) -> cs.map { it to t } }
-                                        .filter { it.first in okSet }.toMap(),
-                                    addedRuleIds = setOf(plan.ruleId),
-                                    preExisting = preEx,
-                                )
-                            } != null) ledgerFailed = true
+                        }
+                        if (err != null) {
+                            Log.w("SdkPruner", "bulk: ledger write failed for ${pa.packageName}: $err")
+                            unrecorded += res
+                        }
                     }
                 }
-                val bulkItems = exec.items.map { OperationItem(it.pkg, it.ok, it.detail) }
+                val bulkItems = exec.items.map { BulkPlanExecutor.resultItem(it) }
+                val recorded = exec.items.count { it.okComponents.isNotEmpty() } - unrecorded.size
+                if (unrecorded.isNotEmpty()) {
+                    // 0.33.1：未记账的包撤销本次变更，不留"设备已改、账本无记录"的孤儿规则——重试时
+                    // 写前现场读分不清来源，会把它们记成"原本已禁用"，之后恢复会跳过并声称非本工具设置。
+                    // 已记账的包保留（设备与账本一致）；撤销没成功的包如实列出
+                    val undo = BulkPlanExecutor.undoUnrecorded(
+                        exec.engine, unrecorded, ifwBefore, pmBefore,
+                        rollbackIfw = { pkg, before -> engine.rollbackIfw(pkg, before) },
+                        restorePm = { pkg, acts -> engine.restorePmPerItem(pkg, acts) },
+                    )
+                    Log.w("SdkPruner", "bulk: ledger write failed, rolled back ${undo.undone} of ${unrecorded.size} unrecorded package(s), engine=${exec.engine}")
+                    val msg = (if (undo.leftover.isEmpty()) {
+                        if (recorded == 0) appCtx.getString(R.string.vm_bulk_rolled_back, undo.undone)
+                        else appCtx.getString(R.string.vm_bulk_rolled_back_partial, undo.undone, recorded)
+                    } else appCtx.getString(
+                        R.string.vm_bulk_rollback_incomplete, undo.leftover.size, undo.leftover.joinToString(", "), undo.undone
+                    )) + backupSuffix(backup)
+                    publishAfterBulk(undo.leftover)
+                    report("sdk-everywhere", msg)
+                    opCenter.record(
+                        OperationKind.DISABLE_EVERYWHERE, plan.ruleId,
+                        exec.items.map { res ->
+                            undo.detail[res.pkg]?.let { OperationItem(res.pkg, false, it) }
+                                ?: BulkPlanExecutor.resultItem(res)
+                        },
+                        msg,
+                        planId = plan.planId,
+                    )
+                    return@withBusy ""
+                }
                 // 批Q4（B04）+批T2 收尾：真全失败=零成功包且零写入；有部分成功包（compWritten>0）
                 // 不再误报"全部写入失败"（AVD 实证 46/51 曾被误分类）——照常记账+回读，消息用部分文案
                 if (exec.ok == 0 && exec.compWritten == 0) {
                     opCenter.record(
                         OperationKind.DISABLE_EVERYWHERE, plan.ruleId,
                         bulkItems,
-                        appCtx.getString(R.string.vm_sdk_everywhere_fail, rule.name, targets.size) + backupSuffix(backup) +
-                            (if (ledgerFailed) ledgerFailedNote else ""),
+                        appCtx.getString(R.string.vm_sdk_everywhere_fail, rule.name, targets.size) + backupSuffix(backup),
                         planId = plan.planId,
                     )
                     return@withBusy ""
                 }
                 // 批G：批量写入后统一重读现场
-                val live = engine.readLiveDisabled(exec.touched).first
-                _state.update {
-                    it.copy(
-                        applied = applied.all(),
-                            ledgerCorrupted = applied.corrupted,
-                        liveDisabled = it.liveDisabled + live.mapValues { e -> e.value.toSet() }
-                    )
-                }
+                publishAfterBulk(exec.touched)
                 // 批HH1（S2）：批量结果记入 Operation——逐 app 条目（协议贯通，管理页结果行消费）
                 val doneMsg = (if (exec.ok == targets.size)
                     appCtx.getString(
@@ -394,7 +426,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     appCtx.getString(
                         R.string.vm_sdk_everywhere_partial, rule.name, exec.compWritten,
                         targets.sumOf { it.componentCount } - exec.compWritten, exec.touched.size
-                    )) + backupSuffix(backup) + (if (ledgerFailed) ledgerFailedNote else "")
+                    )) + backupSuffix(backup)
                 report("sdk-everywhere", doneMsg)
                 opCenter.record(
                     OperationKind.DISABLE_EVERYWHERE, plan.ruleId,
@@ -405,6 +437,18 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 ""
             }
             onDone(msg)
+        }
+    }
+
+    /** 批G：批量写入后重读这些包的现场，并发布账本快照（统计/详情立即一致） */
+    private suspend fun publishAfterBulk(touched: List<String>) {
+        val live = if (touched.isEmpty()) emptyMap() else engine.readLiveDisabled(touched).first
+        _state.update {
+            it.copy(
+                applied = applied.all(),
+                ledgerCorrupted = applied.corrupted,
+                liveDisabled = it.liveDisabled + live.mapValues { e -> e.value.toSet() }
+            )
         }
     }
 
@@ -478,11 +522,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     val ifwOwned = prev?.ifw?.components?.toSet().orEmpty()
                     // 批FF-B1①：pm enable 逐项执行（失败明细进 Operation）；账本语义保持原子——
                     // 任一失败=整体失败不删账本（保留重试依据，批X2 RV 语义）
-                    val perItem = engine.enablePmPerItem(pkg, pmTargets)
+                    // 0.33.1：按写入前状态还原（默认态回默认态、显式启用回启用；旧账本无记录=启用）
+                    val perItem = engine.restorePmPerItem(
+                        pkg, RestoreAccounting.restoreActions(pkg, pmBucket?.prevState, pmTargets)
+                    )
                     if (perItem.isNotEmpty()) {
                         opCenter.record(
                             OperationKind.SET_SDK_FOR_APP, pkg,
-                            perItem.map { (c, ok) -> OperationItem(c, ok, if (ok) "" else "pm enable failed") },
+                            perItem.map { (c, ok) -> OperationItem(c, ok, if (ok) "" else "pm restore failed") },
                             "",
                         )
                     }
@@ -504,7 +551,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                         if (perItem.isNotEmpty()) {
                             opCenter.record(
                                 OperationKind.SET_SDK_FOR_APP, pkg,
-                                perItem.map { (c, ok) -> OperationItem(c, ok, if (ok) "" else "pm enable failed") } +
+                                perItem.map { (c, ok) -> OperationItem(c, ok, if (ok) "" else "pm restore failed") } +
                                     OperationItem("ifw", r2.isSuccess, if (r2.isSuccess) "" else "ifw remove failed"),
                                 appCtx.getString(R.string.sdk_off_restore_failed, ownedTargets.size),
                             )
@@ -528,7 +575,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     if (failedCount > 0) {
                         // 批W1：部分恢复——失败组件保持禁用并入可重试明细
                         val failItems = perItem.filter { !it.second }.map { (c, _) ->
-                            OperationItem(c, false, "pm enable failed")
+                            OperationItem(c, false, "pm restore failed")
                         } + listOfNotNull(
                             if (!ifwOk) OperationItem("ifw", false, "ifw remove failed") else null
                         )
@@ -973,9 +1020,11 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     return@withBusy Pair(false, appCtx.getString(R.string.vm_no_targets))
                 }
                 var preExistingTargets: List<String> = emptyList()
+                // 0.33.1：写入前的归属与完整状态（null=状态读不出来，按未知记账）
+                var pmOwn: RestoreAccounting.PmOwnership? = null
+                var pmStatesBefore: Map<String, String>? = null
                 // 0.32.1：账本写失败时撤销本次变更所需的两份"写前现场"
                 val ifwBefore = if (engineSnapshot == Engine.IFW) engine.readIfwFile(scanned.packageName) else ""
-                var pmDisabledBefore: Set<String> = emptySet()
                 // 批FF-B1①（AA7）：PM 逐项执行的实际成功集——下游记账只记真实写入的组件
                 var pmOkTargets: List<String>? = null
                 val r = when (engineSnapshot) {
@@ -996,10 +1045,13 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     // 批BB RV-01：本 PM 桶已负责的组件排除在外——它们是本工具自己的写入，
                     // 重复 apply 不得把自有禁用污染成"外部既有状态"
                     Engine.PM -> {
-                        val pre = engine.readPmDisabled(scanned.packageName)
-                        pmDisabledBefore = pre
+                        // 0.33.1：读完整启停状态（原 readPmDisabled 只给"已禁用集"）——写入前已禁用的记
+                        // preExisting；其余组件的写入前状态（默认态/显式启用）入账本，恢复时回到原状，
+                        // 不再一律留一条显式"已启用"记录
+                        pmStatesBefore = engine.readPmStates(scanned.packageName)
                         val owned = applied.get(scanned.packageName)?.pm?.components.orEmpty().toSet()
-                        preExistingTargets = targets.filter { it in pre && it !in owned }
+                        pmOwn = RestoreAccounting.pmOwnership(targets, pmStatesBefore, owned)
+                        preExistingTargets = pmOwn?.preExisting.orEmpty()
                         // 批FF-B1①（AA7/方案B S1）：PM 逐项执行——只记成功集，失败项进 Operation
                         val perItem = engine.applyPmPerItem(scanned.packageName, targets)
                         val okComps = perItem.filter { it.second }.map { it.first }
@@ -1039,12 +1091,13 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                                 scanned.packageName, engineSnapshot.name, pmOkTargets ?: targets,
                                 byType.entries.flatMap { (t, cs) -> cs.map { it to t } }.toMap(),
                                 addedRuleIds = selectedRuleIds,
-                                preExisting = preExistingTargets
+                                preExisting = preExistingTargets,
+                                prevState = pmOwn?.prevState,
                             )
                         } != null) {
-                        // 0.32.1：只撤销本次新造成的禁用（写前已停用的外部状态不动）
-                        val newly = RestoreAccounting.newlyDisabled(pmOkTargets ?: targets, pmDisabledBefore)
-                        return@withBusy Pair(false, ledgerFailedAndUndone(scanned.packageName, Engine.PM, "", newly, selectedRuleIds, okText))
+                        // 0.32.1/0.33.1：只撤销本次新造成的禁用，各组件回到写入前状态（写前已停用的外部状态不动）
+                        val undo = RestoreAccounting.rollbackActions(scanned.packageName, pmOkTargets ?: targets, pmStatesBefore)
+                        return@withBusy Pair(false, ledgerFailedAndUndone(scanned.packageName, Engine.PM, "", undo, selectedRuleIds, okText))
                     }
                 }
                 // 批G：写入后单包重读现场（展示层以现场为准）
@@ -1087,13 +1140,16 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 else Result.success(0)
                 val pmTargets = pmCh?.components?.filter { it !in pmCh.preExisting.toSet() }.orEmpty()
                 val skippedPre = (pmCh?.components?.size ?: 0) - pmTargets.size
-                // 批FF-B1①：pm enable 逐项（失败明细进 Operation）；账本原子语义保持——
+                // 批FF-B1①：pm 逐项（失败明细进 Operation）；账本原子语义保持——
                 // 任一失败=恢复失败不删账本（PN-07 保留重试依据）
-                val perItem = engine.enablePmPerItem(scanned.packageName, pmTargets)
+                // 0.33.1：按写入前状态还原（默认态回默认态、显式启用回启用；旧账本无记录=启用）
+                val perItem = engine.restorePmPerItem(
+                    scanned.packageName, RestoreAccounting.restoreActions(scanned.packageName, pmCh?.prevState, pmTargets)
+                )
                 if (perItem.isNotEmpty()) {
                     opCenter.record(
                         OperationKind.RESTORE, scanned.packageName,
-                        perItem.map { (c, ok) -> OperationItem(c, ok, if (ok) "" else "pm enable failed") },
+                        perItem.map { (c, ok) -> OperationItem(c, ok, if (ok) "" else "pm restore failed") },
                         "",
                     )
                 }

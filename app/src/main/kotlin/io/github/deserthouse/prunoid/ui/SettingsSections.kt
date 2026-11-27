@@ -649,20 +649,26 @@ internal fun RecoveryCards(st: AppUiState, vm: AppViewModel, onMsg: (String) -> 
                 Spacer(Modifier.height(4.dp))
                 // 批Y3（第五轮审查 R5-06）：审计模式只读——入口保持可见（批Q B03 救援例外）但不可进入
                 // 破坏性确认框；原实现可点、可确认，确认后才回一句拒绝
+                // 0.33.1：未获得 root 授权时同样置灰并给出授权路径——原只按审计模式置灰，未授权时按钮
+                // 可点、可确认，确认后才回一句拒绝，与详情页/管理页的入口表现不一致
                 val auditMode = st.workMode.id == io.github.deserthouse.prunoid.core.engine.WorkModeId.AUDIT
+                val rootMissing = !auditMode && !st.rootGranted
+                val blocked = auditMode || rootMissing
                 TextButton(
                     onClick = { confirmClearIfw = true },
-                    enabled = !st.busy && !auditMode
+                    enabled = !st.busy && !blocked
                 ) {
                     Text(
                         stringResource(R.string.clear_ifw),
-                        color = if (auditMode) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+                        color = if (blocked) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
                         else MaterialTheme.colorScheme.error
                     )
                 }
-                if (auditMode) {
+                if (blocked) {
                     Text(
-                        stringResource(R.string.recovery_clear_audit_hint),
+                        stringResource(
+                            if (auditMode) R.string.recovery_clear_audit_hint else R.string.recovery_clear_root_hint
+                        ),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

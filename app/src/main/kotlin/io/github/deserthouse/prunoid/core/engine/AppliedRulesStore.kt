@@ -17,7 +17,11 @@ class AppliedRulesStore {
         val preExisting: List<String> = emptyList(),  // 批Z3：写入前已禁用（非本工具新增，恢复跳过）
         // 批BB RV-02：该引擎的用户规则选择——重应用增量只扩展桶内 id，跨引擎不串用
         val ruleIds: Set<String> = emptySet(),
-        val at: Long = 0
+        val at: Long = 0,
+        /** 0.33.1：PM 桶各组件**写入前**的启停状态（"DEFAULT" / "ENABLED"），恢复时据此回到原状——
+         *  原来一律 `pm enable`，写入前是默认态的组件会被留下一条显式"已启用"记录。
+         *  null = 状态未知（本版本之前写的桶）：恢复仍用"启用"。非空时不在表里的组件同样按未知处理。 */
+        val prevState: Map<String, String>? = null,
     )
 
     @Serializable
@@ -196,13 +200,15 @@ class AppliedRulesStore {
     }
 
     /** 批X2（审查 R04）：合并语义——新增组件并入该引擎桶（不覆盖其他引擎桶）。
-     *  批BB RV-02：addedRuleIds 入当前引擎桶；preExisting 只增不删。 */
+     *  批BB RV-02：addedRuleIds 入当前引擎桶；preExisting 只增不删。
+     *  0.33.1：[prevState]（本次新增组件的写入前状态，null=未知）按组件合并，见 [mergePrevState]。 */
     fun recordMerge(
         pkg: String, engine: String,
         addedComponents: List<String>,
         addedTypes: Map<String, String>,
         addedRuleIds: Set<String> = emptySet(),
-        preExisting: List<String> = emptyList()
+        preExisting: List<String> = emptyList(),
+        prevState: Map<String, String>? = null,
     ) {
         if (addedComponents.isEmpty() && addedRuleIds.isEmpty()) return
         val store = load()
@@ -216,7 +222,8 @@ class AppliedRulesStore {
             types = cur?.types.orEmpty() + addedTypes,
             preExisting = (cur?.preExisting.orEmpty() + preExisting).distinct(),
             ruleIds = cur?.ruleIds.orEmpty() + addedRuleIds,
-            at = System.currentTimeMillis()
+            at = System.currentTimeMillis(),
+            prevState = mergePrevState(cur, addedComponents, prevState),
         )
         store.entries[pkg] = withCompat(
             ifw = if (isPm) old.ifw else merged,
@@ -224,6 +231,21 @@ class AppliedRulesStore {
             fallbackRuleIds = emptySet()
         )
         save(store)
+    }
+
+    /** 0.33.1：写入前状态的合并——已有组件保留首次记下的状态，本次新增的组件取本次的记录。
+     *  旧桶（null）保持未知；本次没有记录（null）时新增组件按未知处理，不拖累已有组件。 */
+    private fun mergePrevState(
+        cur: EngineChange?,
+        added: List<String>,
+        incoming: Map<String, String>?,
+    ): Map<String, String>? {
+        if (cur == null) return incoming
+        val known = cur.prevState ?: return null
+        if (incoming == null) return known
+        val fresh = added.filter { it !in cur.components }.toSet()
+        if (fresh.isEmpty()) return known
+        return known + incoming.filterKeys { it in fresh }
     }
 
     /** 批X2（审查 R04）：替换语义——该引擎桶替换；双桶全空 = 删除条目 */
@@ -236,7 +258,8 @@ class AppliedRulesStore {
             components, types,
             preExisting = old.bucket(engine)?.preExisting.orEmpty(),
             ruleIds = (old.bucket(engine)?.ruleIds.orEmpty() + ruleIds),
-            at = System.currentTimeMillis()
+            at = System.currentTimeMillis(),
+            prevState = old.bucket(engine)?.prevState,
         )
         replaceBuckets(pkg, if (isPm) old.ifw else bucket, if (isPm) bucket else old.pm, emptySet())
     }

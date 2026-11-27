@@ -179,11 +179,14 @@
     <string name="vm_apply_ok">%1$s rules applied: %2$d</string>
     <string name="vm_ledger_write_failed"> (ledger write failed: the change is already in effect on the device but was not recorded — retry; if it keeps failing, check storage space)</string>
     <string name="vm_ledger_write_rolled_back">(ledger write failed: this change was rolled back, nothing was changed — retry; if it keeps failing, check storage space)</string>
+    <string name="vm_bulk_rolled_back">Not completed: the ledger write failed and this change was rolled back (%1$d app(s)); nothing was changed — retry; if it keeps failing, check storage space</string>
+    <string name="vm_bulk_rolled_back_partial">Partly completed: %2$d app(s) recorded; the change was rolled back for the other %1$d app(s) whose ledger write failed, so device and ledger agree — retry</string>
+    <string name="vm_bulk_rollback_incomplete">Failed: the ledger write failed and the automatic rollback did not complete — %1$d app(s) still have unrecorded changes (%2$s); %3$d rolled back — retry, or roll back app by app with Restore / Clear all IFW</string>
     <string name="vm_ledger_rollback_incomplete">(ledger write failed and the automatic rollback did not complete: some components may still be disabled and unrecorded — retry, or use Restore / Clear all IFW)</string>
     <string name="vm_apply_backup_failed"> (backup failed: no snapshot was taken for this operation)</string>
     <string name="vm_apply_backup">(backup created automatically)</string>
     <string name="vm_fail_suffix"> — failed: %1$s</string>
-    <string name="vm_restore_ok">Restored (IFW removed + pm components re-enabled)</string>
+    <string name="vm_restore_ok">Restored (IFW rules removed + pm components restored)</string>
     <string name="vm_restore_skip_pre">; skipped %1$d component(s) already disabled before (not set by this tool)</string>
     <string name="vm_restore_fail">Failed: %1$s</string>
     <string name="vm_sub_ok">Subscribed: %1$d rules (version %2$s)</string>
@@ -232,6 +235,7 @@
     <string name="backup_restore_confirm">The IFW rules in the selected archive will be unpacked back to the original paths with ownership fixed, and pm component enabled states will be restored to what they were at snapshot time. Note: restore is a global point-in-time operation — IFW rules written after the snapshot (including rules from other tools) will be revoked, and this app\'s IFW records are cleared afterwards, so existing rules must be re-applied before they can be restored from here again. Continue?</string>
     <string name="recovery_cmd_title">Emergency command (tap to copy)</string>
     <string name="recovery_cmd_sub">If the UI cannot be reached, run this on a computer to clear all IFW rules (requires the app’s Realtime guard to be alive)</string>
+    <string name="recovery_clear_root_hint">No root access yet — grant Prunoid in Magisk → Superuser, then reopen</string>
     <string name="recovery_clear_audit_hint">Audit mode is read-only — switch to Root work mode to clear all IFW rules</string>
     <string name="recovery_clear_title">Clear all IFW rules</string>
     <string name="recovery_clear_desc">Clears ALL IFW rules written by this app and other tools indiscriminately; pm disabled states are unaffected.</string>

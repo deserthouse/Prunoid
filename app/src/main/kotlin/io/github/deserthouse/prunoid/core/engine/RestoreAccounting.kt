@@ -85,5 +85,55 @@ internal object RestoreAccounting {
             preExisting = b.preExisting.filter { it !in restored },
             // 批BB RV-02：关闭 SDK 同步终止该桶内对此 SDK 的意图
             ruleIds = b.ruleIds - ruleId,
+            prevState = b.prevState?.filterKeys { it !in restored },
         )?.takeIf { it.components.isNotEmpty() || it.ruleIds.isNotEmpty() }
+
+    // ── 0.33.1：PM 组件的"写入前状态"——恢复回原状、账本写失败时据此撤销 ──────────
+
+    /** PM 侧视为"已禁用"的状态名（DisableEngine.stateName 的取值） */
+    val PM_DISABLED = setOf("DISABLED", "DISABLED_USER", "DISABLED_UNTIL_USED")
+
+    /** 写入前的归属与状态。
+     *  @property preExisting 写入前已禁用（非本工具新增，恢复跳过）
+     *  @property prevState   非本工具已有的各组件写入前状态（默认态 / 已启用 / 已禁用），记账用 */
+    data class PmOwnership(val preExisting: List<String>, val prevState: Map<String, String>)
+
+    /** PM 写入前的归属判定。[states]=写入前该包全部组件的状态，null=读不出来；
+     *  [owned]=账本 PM 桶已负责的组件（本工具自己的写入，不算外部既有——重复 apply 不得污染成"原本已禁用"）。
+     *  返回 null=[states] 未知：调用方按"状态未知"记账，恢复时保守用"启用"。 */
+    fun pmOwnership(
+        targets: Collection<String>,
+        states: Map<String, String>?,
+        owned: Set<String>,
+    ): PmOwnership? {
+        if (states == null) return null
+        val fresh = targets.distinct().filter { it !in owned }
+            .associateWith { states[it] ?: PmStateSnapshot.DEFAULT }
+        return PmOwnership(
+            preExisting = fresh.filterValues { it in PM_DISABLED }.keys.toList(),
+            prevState = fresh,
+        )
+    }
+
+    /** 恢复某组件应执行的 pm 命令：写入前是默认态→回默认态，是显式启用→回启用；
+     *  状态未知 / 旧账本 → 启用（原行为） */
+    fun restoreCmd(prevState: Map<String, String>?, comp: String): PmStateSnapshot.Cmd =
+        prevState?.get(comp)?.let { PmStateSnapshot.cmdFor(it) } ?: PmStateSnapshot.Cmd.ENABLE
+
+    fun restoreActions(
+        pkg: String, prevState: Map<String, String>?, comps: Collection<String>,
+    ): List<PmStateSnapshot.Action> =
+        comps.map { PmStateSnapshot.Action(pkg, it, restoreCmd(prevState, it)) }
+
+    /** 账本写失败时的撤销命令：本次新造成的禁用（写入前不是禁用态）各自回到写入前状态。
+     *  写入前状态未知返回 null——分不清哪些是外部既有禁用，不能贸然启用 */
+    fun rollbackActions(
+        pkg: String, okComps: Collection<String>, statesBefore: Map<String, String>?,
+    ): List<PmStateSnapshot.Action>? {
+        if (statesBefore == null) return null
+        return okComps.distinct().mapNotNull { c ->
+            val st = statesBefore[c] ?: PmStateSnapshot.DEFAULT
+            if (st in PM_DISABLED) null else PmStateSnapshot.Action(pkg, c, PmStateSnapshot.cmdFor(st))
+        }
+    }
 }

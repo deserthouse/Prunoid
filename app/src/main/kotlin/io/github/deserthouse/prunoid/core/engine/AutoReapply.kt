@@ -65,7 +65,7 @@ object AutoReapply {
                     .filter { it.key in compNames }
                     .groupBy({ it.value }, { it.key })
                     .toMutableMap()
-                var freshPreExisting: List<String> = emptyList()
+                var freshOwn: RestoreAccounting.PmOwnership? = null
                 if (ch.ruleIds.isNotEmpty()) {
                     val freshClasses = scanned.matchedSdks
                         .filter { it.ruleId in ch.ruleIds && (it.safety == Safety.CAUTION || it.safety == Safety.SAFE) }
@@ -77,12 +77,12 @@ object AutoReapply {
                     }
                     // 批BB RV-01：PM 桶新增组件的所有权采集——写入前已禁用者记 preExisting
                     // （排除本桶已有组件，它们是本工具自己的写入不算外部既有）
+                    // 0.33.1：改用完整启停状态——同时记下新增组件的写入前状态，恢复时回到原状
                     if (eng == "PM") {
                         val owned = ch.components.toSet()
                         val freshComps = freshClasses.values.flatten().filter { it !in owned }
                         if (freshComps.isNotEmpty()) {
-                            val pre = engine.readPmDisabled(pkg)
-                            freshPreExisting = freshComps.filter { it in pre }
+                            freshOwn = RestoreAccounting.pmOwnership(freshComps, engine.readPmStates(pkg), owned)
                         }
                     }
                 }
@@ -107,7 +107,8 @@ object AutoReapply {
                                 okComps.toList(),
                                 writeByType.entries.flatMap { (t, cs) -> cs.map { it to t } }
                                     .filter { it.first in okComps }.toMap(),
-                                preExisting = freshPreExisting.filter { it in okComps }
+                                preExisting = freshOwn?.preExisting.orEmpty().filter { it in okComps },
+                                prevState = freshOwn?.prevState?.filterKeys { it in okComps },
                             )
                             wroteAny = true
                             Log.d("SdkPruner", "auto-reapply: done $pkg [PM] (${okComps.size}/${writeComps.size} comps)")
@@ -123,7 +124,7 @@ object AutoReapply {
                     pkg, eng,
                     writeComps,
                     writeByType.entries.flatMap { (t, cs) -> cs.map { it to t } }.toMap(),
-                    preExisting = freshPreExisting
+                    preExisting = freshOwn?.preExisting.orEmpty()
                 )
                 wroteAny = true
                 Log.d("SdkPruner", "auto-reapply: done $pkg [$eng] (${writeComps.size} comps)")

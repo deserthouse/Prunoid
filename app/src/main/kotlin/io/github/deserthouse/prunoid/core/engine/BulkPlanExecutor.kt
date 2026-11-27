@@ -1,5 +1,7 @@
 package io.github.deserthouse.prunoid.core.engine
 
+import io.github.deserthouse.prunoid.ui.operations.OperationItem
+
 /** 批Q1（B01）：批量执行核心——只消费冻结的 [RuleActionPlan]，按计划 engine 分派
  *  （IFW→applyIfw / PM→applyPmPerItem），逐目标调用并产出逐项结果；不重算目标集、不静默扩范围。
  *  引擎调用以 lambda 注入（生产=DisableEngine 方法引用，单测=伪引擎记录实际调用），
@@ -18,6 +20,9 @@ internal object BulkPlanExecutor {
         val compWritten: Int,
         /** 批T2（C02）：实际成功组件集（PM=逐项回执；IFW 成功=计划集）——账本与恢复只认此集。 */
         val okComponents: List<String>,
+        /** 0.33.1：写入失败的组件——PM 部分失败=未成功的那些；IFW 整文件写入失败=该包全部计划组件；
+         *  守卫拒绝（引擎未调用）与成功为空。结果卡据此列出失败组件（原来只有应用级的 "partial 46/51"）。 */
+        val failedComponents: List<String> = emptyList(),
     )
 
     data class ExecutionResult(
@@ -64,6 +69,7 @@ internal object BulkPlanExecutor {
                         results += TargetResult(
                             pa.packageName, false,
                             r.exceptionOrNull()?.message?.take(120) ?: "ifw write failed", 0, emptyList(),
+                            failedComponents = components,
                         )
                     }
                 }
@@ -83,15 +89,69 @@ internal object BulkPlanExecutor {
                         results += TargetResult(
                             pa.packageName, false,
                             "partial ${okComps.size}/${components.size}", okComps.size, okComps,
+                            failedComponents = components.filter { it !in okComps },
                         )
                     } else {
                         val why = perItem.firstOrNull { !it.second }?.let { _ -> "pm disable failed" } ?: "pm disable failed"
-                        results += TargetResult(pa.packageName, false, why, 0, emptyList())
+                        results += TargetResult(pa.packageName, false, why, 0, emptyList(), failedComponents = components)
                     }
                 }
             }
         }
         return ExecutionResult(plan.engine, ok, compWritten, touched, results, calls)
+    }
+
+    /** 0.33.1：结果卡条目。失败/部分失败的应用在原因后逐行列出失败组件（明细底表可见）；
+     *  超过 [max] 个只列前 [max] 个并标出剩余数（默认 60——覆盖常见规则集，如穿山甲 51 个组件）。
+     *  成功条目的 detail 保持为空。 */
+    fun resultItem(res: TargetResult, max: Int = 60): OperationItem {
+        val failed = res.failedComponents
+        val detail = if (res.ok || failed.isEmpty()) res.detail else buildString {
+            append(res.detail)
+            append('\n')
+            failed.take(max.coerceAtLeast(1)).joinTo(this, "\n")
+            if (failed.size > max) append("\n… +").append(failed.size - max)
+        }
+        return OperationItem(res.pkg, res.ok, detail)
+    }
+
+    // ── 0.33.1：账本写失败后的批量撤销 ────────────────────────────────────
+
+    const val ROLLED_BACK = "ledger write failed, change rolled back"
+    const val ROLLBACK_INCOMPLETE = "ledger write failed, rollback incomplete"
+
+    /** 撤销结果。[undone]=已撤销的包数；[leftover]=仍有未记账变更的包；[detail]=各包的结果卡文案 */
+    data class UndoOutcome(val undone: Int, val leftover: List<String>, val detail: Map<String, String>)
+
+    /** 把"账本没记上"的包恢复到本次批量之前：IFW 规则文件写回原文；pm 只还原本次新造成的禁用，
+     *  各组件回到写入前状态（写入前已禁用的外部状态不动）。写入前状态未知的包不动 pm、计入 leftover——
+     *  分不清哪些是外部既有禁用，宁可如实报告"撤销未完成"也不贸然启用。
+     *  引擎调用以 lambda 注入（生产=DisableEngine，单测=伪引擎），与 [execute] 同一做法。 */
+    suspend fun undoUnrecorded(
+        engine: Engine,
+        unrecorded: List<TargetResult>,
+        ifwBefore: Map<String, String>,
+        pmBefore: Map<String, Map<String, String>?>,
+        rollbackIfw: suspend (String, String) -> Boolean,
+        restorePm: suspend (String, List<PmStateSnapshot.Action>) -> List<Pair<String, Boolean>>,
+    ): UndoOutcome {
+        var undone = 0
+        val leftover = mutableListOf<String>()
+        val detail = LinkedHashMap<String, String>()
+        for (res in unrecorded) {
+            val pkg = res.pkg
+            val ok = when (engine) {
+                Engine.IFW -> rollbackIfw(pkg, ifwBefore[pkg].orEmpty())
+                Engine.PM -> {
+                    val undo = RestoreAccounting.rollbackActions(pkg, res.okComponents, pmBefore[pkg])
+                    undo != null && (undo.isEmpty() ||
+                        restorePm(pkg, undo).let { rc -> rc.size == undo.size && rc.all { it.second } })
+                }
+            }
+            detail[pkg] = if (ok) ROLLED_BACK else ROLLBACK_INCOMPLETE
+            if (ok) undone++ else leftover += pkg
+        }
+        return UndoOutcome(undone, leftover, detail)
     }
 
     /** 批T1（C01）：PM 归属准备——外部已禁用 = 写前现场 ∩ 目标 − 本工具 PM 桶已有。

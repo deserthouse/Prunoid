@@ -201,15 +201,21 @@ fun SdkManageScreen(
                                     modifier = Modifier.padding(bottom = 2.dp)
                                 )
                                 Text(op.message, style = MaterialTheme.typography.labelMedium)
-                                op.items.filter { !it.ok }.take(3).forEach { f ->
+                                // 0.33.1：最多看 3 个失败项、每项 3 行原因（原因后逐行是失败组件）
+                                val failedItems = op.items.filter { !it.ok }
+                                failedItems.take(3).forEach { f ->
                                     // 批V2（ME-03）：共享失败行构件（原 "✗" 文本前缀）
-                                    FailureItemRow(f)
+                                    FailureItemRow(f, detailMaxLines = 3)
                                 }
-                                if (op.items.count { !it.ok } > 3) {
+                                // 结果卡放不下的（失败项超过 3 个，或某项的原因超过 3 行）必须有全量明细入口——
+                                // 原来只在失败项超过 3 个时出现，单个应用有 4 个以上组件失败时其余的哪儿都看不到
+                                val truncated = failedItems.size > 3 ||
+                                    failedItems.take(3).any { it.detail.count { c -> c == '\n' } >= 3 }
+                                if (truncated) {
                                     // 批U2（C05）：全量明细入口（共享 OpResultSheet）
                                     TextButton(onClick = { showResultSheet = true }) {
                                         Text(
-                                            stringResource(R.string.result_view_all, op.items.count { !it.ok }),
+                                            stringResource(R.string.result_view_all, failedItems.size),
                                             style = MaterialTheme.typography.labelSmall
                                         )
                                     }
